@@ -7,6 +7,7 @@ function Item.new()
     local self     = setmetatable({}, Item)
     self.sprite    = Sprite.new(0, 0, 40, 40)
     self.carriable = true
+    self.sellable  = true
     return self
 end
 

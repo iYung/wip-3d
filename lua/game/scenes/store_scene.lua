@@ -2,7 +2,11 @@ local Scene        = require("lua/core/scene")
 local WateringCan  = require("lua/game/items/watering_can")
 local PCStore      = require("lua/game/items/pc_store")
 local Grafter      = require("lua/game/items/grafter")
+local SellBin      = require("lua/game/items/sell_bin")
 local BuyScene     = require("lua/game/scenes/buy_scene")
+local config       = require("lua/game/config")
+
+local SELL_VALUE = config.SELL_VALUE
 
 local CAMERA_Y    = 500  -- fixed world y the camera locks to
 local CAMERA_LERP = 0.85 -- smoothing: 0=instant, 1=no movement; 0.85 = smooth lag
@@ -42,6 +46,7 @@ function StoreScene:_setup_store()
     local self_ref = self
 
     store.slots[1].item = WateringCan.new()
+    store.slots[2].item = SellBin.new()
 
     store.slots[5].item = Grafter.new()
 
@@ -104,8 +109,19 @@ function StoreScene:_handle_interact()
     local player = self.game_state.player
     local store  = self.game_state.store
     local slot   = player:active_slot(store)
-    local item   = player.held_item or (slot and slot.item)
 
+    -- held item + sell bin → sell (plants: stage 3 = SELL_VALUE, others = 1; tools = 0)
+    if player.held_item and player.held_item.sellable ~= false and slot and slot.item and slot.item.is_sell_bin then
+        local value = 0
+        if player.held_item.stage then
+            value = player.held_item.stage == 3 and SELL_VALUE or 1
+        end
+        self.game_state.currency = self.game_state.currency + value
+        player.held_item = nil
+        return
+    end
+
+    local item = player.held_item or (slot and slot.item)
     if item then
         item:interact(player, store, self.scene_manager)
     end
@@ -122,6 +138,7 @@ function StoreScene:draw()
     love.graphics.setColor(1, 1, 1, 0.8)
     love.graphics.print("Slot: " .. (slot and slot.index or "?"), 10, 10)
     love.graphics.print("Move: A/D   Pick Up: E   Interact: F", 10, 30)
+    love.graphics.print("Currency: " .. gs.currency, 10, 50)
     love.graphics.setColor(1, 1, 1, 1)
 end
 

@@ -12,7 +12,7 @@ function GameState.new()
     local self    = setmetatable({}, GameState)
     self.store    = Store.new(INITIAL_SLOTS, SLOT_WIDTH)
     self.player   = Player.new(SLOT_WIDTH / 2)
-    self.currency = 0
+    self.currency = 20
     return self
 end
 

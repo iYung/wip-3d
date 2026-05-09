@@ -11,6 +11,7 @@ function PCStore.new(buy_scene_factory)
     self.sprite            = Sprite.new(0, 0, 6 * U, 6 * U)
     self.sprite.color      = {0.7, 0.75, 0.9, 1}
     self.carriable         = true
+    self.sellable          = false
     self.buy_scene_factory = buy_scene_factory
     return self
 end
