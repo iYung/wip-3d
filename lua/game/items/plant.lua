@@ -62,14 +62,16 @@ end
 
 function Plant:draw()
     self.sprite:draw()
-    if self.bubble.visible then
-        local active = self.sprite:_active()
-        if active then
-            self.bubble.x = active.x + active.width / 2 - self.bubble.width / 2
-            self.bubble.y = active.y - self.bubble.height
-        end
-        self.bubble:draw()
+end
+
+function Plant:draw_bubble()
+    if not self.bubble.visible then return end
+    local active = self.sprite:_active()
+    if active then
+        self.bubble.x = active.x + active.width / 2 - self.bubble.width / 2
+        self.bubble.y = active.y - self.bubble.height
     end
+    self.bubble:draw()
 end
 
 return Plant

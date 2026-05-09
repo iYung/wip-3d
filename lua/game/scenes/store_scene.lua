@@ -39,9 +39,12 @@ function StoreScene:on_enter()
     end
 
     self.drawer:clear()
-    self.drawer:add(gs.store,       0)
-    self.drawer:add(self._customer, 1)
-    self.drawer:add(gs.player,      2)
+    self.drawer:add(gs.store,              0)
+    self.drawer:add(self._customer,        1)
+    self.drawer:add(self._wall,            2)
+    self.drawer:add(self._plant_bubbles,   3)
+    self.drawer:add(gs.player,             4)
+    self.drawer:add(self._customer_bubble, 5)
 
     self.camera.x = gs.player.x
     self.camera.y = CAMERA_Y
@@ -67,6 +70,46 @@ function StoreScene:_setup_store()
     local customer_y = 620  -- same world y as player center (31 * U)
     self._customer    = Customer.new(target_x, exit_x, customer_y)
     self._spawn_timer = math.random(3, 6)
+
+    -- assets/cashier_wall.png
+    --   canvas size : 400 × 800 px
+    --   drawn at    : world position (-400, 0)  [left edge of cashier zone]
+    --
+    --   TRANSPARENT region (the window cutout):
+    --     x : 0 – 400   (full width)
+    --     y : 520 – 680  (160 px tall; exposes customer upper body through the wall)
+    --
+    --   everything outside that rectangle should be opaque wall art
+    --
+    -- placeholder: generated canvas until the real PNG exists
+    -- replace the canvas block below with:
+    --   local wall_img = love.graphics.newImage("assets/cashier_wall.png")
+    local wall_canvas = love.graphics.newCanvas(ZONE_WIDTH, 800)
+    love.graphics.setCanvas(wall_canvas)
+    love.graphics.clear(0, 0, 0, 0)
+    love.graphics.setColor(0.32, 0.22, 0.38, 1)
+    love.graphics.rectangle("fill", 0, 0,   ZONE_WIDTH, 520)        -- above window
+    love.graphics.rectangle("fill", 0, 680, ZONE_WIDTH, 800 - 680)  -- below window
+    love.graphics.setCanvas()
+    love.graphics.setColor(1, 1, 1, 1)
+    local wall_img = wall_canvas
+
+    self._wall = {
+        draw = function()
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(wall_img, -ZONE_WIDTH, 0)
+        end
+    }
+
+    local customer_ref = self._customer
+    self._customer_bubble = {
+        draw = function() customer_ref:draw_bubble() end
+    }
+
+    local store_ref = gs.store
+    self._plant_bubbles = {
+        draw = function() store_ref:draw_bubbles() end
+    }
 end
 
 function StoreScene:on_exit()
@@ -105,6 +148,8 @@ function StoreScene:_handle_pick_up_down()
     local player = self.game_state.player
     local store  = self.game_state.store
     local slot   = player:active_slot(store)
+
+    if player.x < 0 then return end
 
     -- loaded grafter + empty slot → place clone, grafter stays in hand
     if player.held_item and player.held_item.loaded_plant and slot and not slot.item then
@@ -173,12 +218,14 @@ function StoreScene:_hud_labels()
     local slot_label = slot_item and slot_item.name and ("HOVER: " .. slot_item.name:upper())
 
     local e_label
-    if held and held.loaded_plant and slot and not slot_item then
-        e_label = "E: PLACE CLONE"
-    elseif held and slot and not slot_item then
-        e_label = "E: PUT DOWN"
-    elseif not held and slot_item and slot_item.carriable then
-        e_label = "E: PICK UP"
+    if player.x >= 0 then
+        if held and held.loaded_plant and slot and not slot_item then
+            e_label = "E: PLACE CLONE"
+        elseif held and slot and not slot_item then
+            e_label = "E: PUT DOWN"
+        elseif not held and slot_item and slot_item.carriable then
+            e_label = "E: PICK UP"
+        end
     end
 
     local f_label
@@ -206,12 +253,9 @@ end
 function StoreScene:draw()
     self.camera:attach()
 
-    -- zone floor
-    local SLOT_Y = 30 * 20  -- 600
+    -- zone background (wall PNG draws on top of this via the drawer)
     love.graphics.setColor(0.10, 0.09, 0.14, 1)
     love.graphics.rectangle("fill", -ZONE_WIDTH, 0, ZONE_WIDTH, 800)
-    love.graphics.setColor(0.28, 0.20, 0.32, 1)
-    love.graphics.rectangle("fill", -ZONE_WIDTH, SLOT_Y, ZONE_WIDTH, 200)
 
     self.drawer:draw()
     self.camera:detach()

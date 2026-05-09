@@ -79,12 +79,14 @@ end
 function Customer:draw()
     if self.state == "idle" then return end
     self.sprite:draw()
-    if self.bubble.visible then
-        self.bubble:draw()
-        love.graphics.setColor(1, 1, 1, 0.9)
-        love.graphics.print(PLANT_DATA[self.plant_type].name, self.bubble.x, self.bubble.y - 16)
-        love.graphics.setColor(1, 1, 1, 1)
-    end
+end
+
+function Customer:draw_bubble()
+    if not self.bubble.visible then return end
+    self.bubble:draw()
+    love.graphics.setColor(1, 1, 1, 0.9)
+    love.graphics.print(PLANT_DATA[self.plant_type].name, self.bubble.x, self.bubble.y - 16)
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 return Customer

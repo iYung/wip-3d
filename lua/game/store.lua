@@ -42,4 +42,12 @@ function Store:draw()
     end
 end
 
+function Store:draw_bubbles()
+    for _, slot in ipairs(self.slots) do
+        if slot.item and slot.item.draw_bubble then
+            slot.item:draw_bubble()
+        end
+    end
+end
+
 return Store

@@ -2,7 +2,7 @@
 
 ## What's Built
 
-All MVP steps are implemented and running. Expand Store, Shop UI, Plant Types, and Context HUD features complete.
+All MVP steps are implemented and running. Expand Store, Shop UI, Plant Types, Context HUD, and Cashier Zone features complete.
 
 Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`, `shop-ui-steps.md`, `plant-types-steps.md`, `context-hud-steps.md`.
 
@@ -25,12 +25,13 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 | File | What it does |
 |------|-------------|
-| `config.lua` | Shared constants — `U = 20` (base pixel unit), `SLOT_COST` |
+| `config.lua` | Shared constants — `U`, `SLOT_COST`, `ZONE_WIDTH` (400px cashier zone) |
 | `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
 | `game_state.lua` | Holds store, player, currency; survives scene switches |
-| `player.lua` | Moves left/right, holds one item, two-frame walk animation |
+| `player.lua` | Moves left/right into cashier zone; holds one item; two-frame walk animation; `speed` property |
 | `slot.lua` | One store cell; positions its item every frame |
-| `store.lua` | Array of slots; slot_at(x) returns slot under a world x position; grow() appends a slot |
+| `store.lua` | Array of slots; `slot_at(x)`, `grow()`, `draw_bubbles()` for high-priority bubble rendering |
+| `customer.lua` | Cashier zone NPC; walks in, waits with speech bubble, walks out after sale; state machine: idle → walking_in → waiting → walking_out |
 
 ### Items (`lua/game/items/`)
 
@@ -39,7 +40,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 | `item.lua` | Base class for all carriable objects; `carriable = true`, `sellable = true`, `name = "Item"` by default |
 | `watering_can.lua` | interact() waters the plant in the active slot |
 | `pc_store.lua` | interact() opens BuyScene; blocked if player is holding anything; `sellable = false` |
-| `plant.lua` | 6 types, 3 stages each; per-type cooldown and stage colors from `plant_data`; yellow bubble when ready |
+| `plant.lua` | 6 types, 3 stages each; per-type cooldown and stage colors from `plant_data`; yellow bubble via `draw_bubble()` (rendered at high priority so it's never covered) |
 | `grafter.lua` | Clones a stage-3 plant (resets original to stage 1, stores clone); places clone into empty slot on E; renders clone above itself when loaded |
 | `sell_bin.lua` | Sell station; F while holding any sellable item sells it for currency |
 
@@ -47,7 +48,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 | File | What it does |
 |------|-------------|
-| `store_scene.lua` | Main loop — player moves, camera follows on x, pick up/interact handled here; context HUD bottom-left (HOVER/E/F labels) |
+| `store_scene.lua` | Main loop — player moves, camera follows on x, pick up/interact handled here; cashier zone logic; context HUD bottom-left (HOVER/E/F labels); layered draw order for wall/bubbles |
 | `buy_scene.lua` | Carousel UI — 9 items (6 plants + Watering Can + Grafter + Expand Slot); A/D cycle, F buy, E cancel; per-type price and preview color |
 
 ### Data (`lua/game/data/`)
@@ -67,8 +68,11 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 | Player size | 6U × 12U (120×240) |
 | All items | 6U × 6U (120×120) |
 | Initial slots | 8 |
-| Player speed | 220 px/s |
+| Player speed | 220 px/s (base); upgradeable to 280 / 340 / 400 |
 | Camera lerp | 0.85 (smooth follow on x, locked y) |
+| Cashier zone width | 20U (400px), 2 slots wide, at x = -400 to 0 |
+| Customer walk speed | 80 px/s |
+| Customer spawn interval | 3–6s (testing); intended 15–30s |
 
 ---
 
@@ -97,7 +101,13 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 ---
 
+## Up Next
+
+- [speed-upgrade-steps.md](speed-upgrade-steps.md) — purchasable speed boost tiers in the shop
+- [player-walk-steps.md](player-walk-steps.md) — 4-frame walk animation (held / not-held × neutral / step)
+
 ## Cut / Not Yet Built
 
-- Real sprites (all rectangles)
+- Real sprites (all rectangles; cashier wall uses placeholder canvas until `assets/cashier_wall.png` is provided)
 - Win condition or idle loop
+- Customer patience timer (customer never leaves until served)

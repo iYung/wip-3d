@@ -164,21 +164,23 @@ Shared state passed between scenes. Survives scene switches.
 - `store` — the Store instance
 - `player` — the Player instance
 - `currency` — player's current funds
+- `speed_level` — current speed upgrade tier (0 = base) *(planned)*
 
 ---
 
 ### Player
 
-The player character. Moves left/right, holds at most one item.
+The player character. Moves left/right into the cashier zone, holds at most one item.
 
 **Properties**
-- `x` — world position
+- `x` — world position (can go negative into cashier zone)
 - `held_item` — the Item currently held, or `nil`
+- `speed` — movement speed in px/s; defaults to 220, increased by speed upgrades
 - `sprite` — SpriteSet (walk frames a/b)
 
 **Methods**
 - `new(x)` — constructor
-- `update(dt, input, store)` — handle movement and derive active slot from x
+- `update(dt, input, store)` — handle movement; left bound extends into cashier zone via `ZONE_WIDTH`
 - `active_slot(store)` — returns the slot index the player is standing over
 - `draw()` — delegates to sprite
 
@@ -257,14 +259,44 @@ The 1D array of slots. Handles layout and growth.
 - `grow()` — append one new slot at the designated end
 - `slot_at(x)` — return the Slot at world x position
 - `update(dt)` — delegates to all slots/items
-- `draw()` — delegates to all slots
+- `draw()` — delegates to all slots (floor + items)
+- `draw_bubbles()` — draws only plant ready bubbles; called at a higher drawer priority so bubbles appear above the player
+
+---
+
+### Customer
+
+NPC that appears in the cashier zone and requests a specific plant.
+
+**Properties**
+- `state` — `"idle"` | `"walking_in"` | `"waiting"` | `"walking_out"`
+- `plant_type` — integer type of requested plant
+- `x`, `y` — world position
+- `target_x` — counter position (walk-in destination)
+- `exit_x` — off-screen left position (walk-out destination)
+- `speed` — 80 px/s
+- `sprite` — Sprite
+- `bubble` — Sprite shown only in `"waiting"` state
+
+**Methods**
+- `new(target_x, exit_x, y)` — constructor; `state = "idle"`
+- `show(plant_type)` — place at `exit_x`, begin walking in
+- `serve()` — begin walking out (called on successful sale)
+- `arrived()` — returns `state == "waiting"`
+- `active()` — returns `state ~= "idle"`
+- `update(dt)` — advances walk-in / walk-out movement
+- `draw()` — draws body sprite (not bubble)
+- `draw_bubble()` — draws bubble + plant name label; called at priority 5
 
 ---
 
 ## Layer Priorities (Drawer)
 
-| Priority | Content        |
-|----------|----------------|
-| 0        | Store slots    |
-| 1        | Items in slots |
-| 2        | Player         |
+| Priority | Content |
+|----------|---------|
+| 0 | Store (floor, slots, items) |
+| 1 | Customer body |
+| 2 | Cashier wall (PNG with transparent window) |
+| 3 | Plant ready bubbles (`Store:draw_bubbles()`) |
+| 4 | Player (+ held item) |
+| 5 | Customer speech bubble |

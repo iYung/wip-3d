@@ -48,7 +48,8 @@ Bottom-left overlay showing context-sensitive labels. Each line only appears whe
 | `F: OPEN SHOP` | Empty hands, over PC Store |
 | `F: WATER` | Holding watering can, over a plant |
 | `F: CLONE` | Holding unloaded grafter, over a stage-3 plant |
-| `F: SELL` | Holding any sellable item, over sell bin |
+| `F: SELL ($X)` | Holding any sellable item, over sell bin |
+| `F: SELL TO CUSTOMER ($X)` | In cashier zone, customer waiting, holding the requested stage-3 plant |
 
 ### Player Interaction
 
@@ -122,17 +123,61 @@ When a plant is ready, a speech bubble appears above it as a visual indicator.
 
 ---
 
+---
+
+## Cashier Zone
+
+A walkable zone to the left of the store (x = -400 to 0). Visually separated by a wall with a window cutout.
+
+### Layout
+
+```
+[ cashier zone (400px) ][ slot 1 ][ slot 2 ] ...
+x = -400               x = 0
+```
+
+### Customer
+
+- Spawns periodically (walks in from the left, off-screen)
+- Waits at the counter window with a speech bubble showing the requested plant
+- Requests a stage-3 **Fern** (plant_type 1)
+- Sale via F while holding the requested plant: pays **2× normal sell value**
+- After sale: walks back out to the left and disappears
+- Next customer spawns after a delay once the previous has fully exited
+
+### Cashier Rules
+
+- E key does nothing in the cashier zone (no putting items down)
+- F only triggers the cashier sale when the customer has fully arrived (`waiting` state)
+- Sale value shown live in the context HUD: `F: SELL TO CUSTOMER ($X)`
+
+---
+
+## Upgrades
+
+### Speed Boost *(planned)*
+
+Purchasable in the shop. Three tiers, each permanently increasing player movement speed.
+
+| Tier | Cost | Speed |
+|------|------|-------|
+| 1 | $10 | 280 px/s |
+| 2 | $20 | 340 px/s |
+| 3 | $35 | 400 px/s |
+
+---
+
 ## Scenes
 
 | Scene      | Description                                         |
 |------------|-----------------------------------------------------|
-| StoreScene | Main gameplay — player moves in the store                                    |
+| StoreScene | Main gameplay — player moves in store and cashier zone |
 | BuyScene   | Full scene swap; browse and buy items (Plant, Expand, Watering Can, Grafter) |
 
 ---
 
 ## Open Questions
 
-- How many waterings per growth stage?
-- What are the 6 plant types?
 - Is there a win condition or is it an idle/loop game?
+- Should customers have a patience timer and leave if not served?
+- Should customers request different plant types over time?
