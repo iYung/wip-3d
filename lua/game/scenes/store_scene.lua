@@ -3,7 +3,7 @@ local WateringCan  = require("lua/game/watering_can")
 local PCStore      = require("lua/game/pc_store")
 local BuyScene     = require("lua/game/scenes/buy_scene")
 
-local CAMERA_Y    = 430  -- fixed world y the camera locks to
+local CAMERA_Y    = 500  -- fixed world y the camera locks to
 local CAMERA_LERP = 0.85 -- smoothing: 0=instant, 1=no movement; 0.85 = smooth lag
 
 local StoreScene = setmetatable({}, { __index = Scene })

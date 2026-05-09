@@ -7,7 +7,7 @@ PCStore.__index = PCStore
 function PCStore.new(buy_scene_factory)
     local self             = Item.new()
     setmetatable(self, PCStore)
-    self.sprite            = Sprite.new(0, 0, 60, 50)
+    self.sprite            = Sprite.new(0, 0, 100, 80)
     self.sprite.color      = {0.7, 0.75, 0.9, 1}
     self.carriable         = true
     self.buy_scene_factory = buy_scene_factory

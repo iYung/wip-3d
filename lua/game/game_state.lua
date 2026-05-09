@@ -1,7 +1,7 @@
 local Store  = require("lua/game/store")
 local Player = require("lua/game/player")
 
-local SLOT_WIDTH    = 120
+local SLOT_WIDTH    = 200
 local INITIAL_SLOTS = 8
 
 local GameState = {}

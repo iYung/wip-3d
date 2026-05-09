@@ -12,7 +12,7 @@ local STAGE_COLORS = {
     {0.0, 0.40, 0.1, 1},
 }
 
-local STAGE_HEIGHTS = { 40, 55, 70 }
+local STAGE_HEIGHTS = { 80, 110, 140 }
 
 function Plant.new(plant_type)
     local self       = Item.new()
@@ -25,14 +25,14 @@ function Plant.new(plant_type)
 
     local ss = SpriteSet.new()
     for i = 1, 3 do
-        local s       = Sprite.new(0, 0, 40, STAGE_HEIGHTS[i])
+        local s       = Sprite.new(0, 0, 80, STAGE_HEIGHTS[i])
         s.color       = STAGE_COLORS[i]
         ss:add(tostring(i), s)
     end
     ss:set("1")
     self.sprite = ss
 
-    self.bubble         = Sprite.new(0, 0, 28, 28)
+    self.bubble         = Sprite.new(0, 0, 48, 48)
     self.bubble.color   = {1.0, 1.0, 0.0, 1.0}
     self.bubble.visible = false
 
@@ -68,8 +68,8 @@ function Plant:draw()
     if self.bubble.visible then
         local active = self.sprite:_active()
         if active then
-            self.bubble.x = active.x + active.width / 2 - 14
-            self.bubble.y = active.y - 40  -- above slot top
+            self.bubble.x = active.x + active.width / 2 - 24
+            self.bubble.y = active.y - 60  -- above slot top
         end
         self.bubble:draw()
     end

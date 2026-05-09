@@ -1,7 +1,7 @@
 local Sprite = require("lua/core/sprite")
 
-local SLOT_HEIGHT = 120
-local SLOT_Y      = 440  -- world y of slot top
+local SLOT_HEIGHT = 200
+local SLOT_Y      = 600  -- world y of slot top (aligned to player feet)
 
 local Slot = {}
 Slot.__index = Slot
@@ -27,8 +27,8 @@ function Slot:update(dt)
     self.item:update(dt)
     local spr = self.item.sprite
     if spr then
-        spr.x = self.x + 40
-        spr.y = self.y + 30
+        spr.x = self.x + 60
+        spr.y = self.y + 50
     end
 end
 
