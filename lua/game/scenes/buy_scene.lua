@@ -121,8 +121,9 @@ function BuyScene:draw()
 
     -- item name
     love.graphics.setColor(1, 1, 1, 1)
-    local name_scale = 2
-    local name_w     = #ent.label * 12 * name_scale  -- rough estimate
+    local font        = love.graphics.getFont()
+    local name_scale  = 2
+    local name_w      = font:getWidth(ent.label) * name_scale
     love.graphics.print(ent.label, CENTER_X - name_w / 2, CENTER_Y - 40, 0, name_scale, name_scale)
 
     -- description
@@ -131,9 +132,10 @@ function BuyScene:draw()
     for line in (ent.description .. "\n"):gmatch("([^\n]*)\n") do
         desc_lines[#desc_lines + 1] = line
     end
+    local desc_scale = 1.2
     for i, line in ipairs(desc_lines) do
-        local lw = #line * 8
-        love.graphics.print(line, CENTER_X - lw / 2, CENTER_Y + 10 + (i - 1) * 24, 0, 1.2, 1.2)
+        local lw = font:getWidth(line) * desc_scale
+        love.graphics.print(line, CENTER_X - lw / 2, CENTER_Y + 10 + (i - 1) * 24, 0, desc_scale, desc_scale)
     end
 
     -- price
@@ -142,9 +144,10 @@ function BuyScene:draw()
     else
         love.graphics.setColor(0.6, 0.3, 0.3, 1)
     end
-    local price_str = "$" .. ent.cost
-    local price_w   = #price_str * 14
-    love.graphics.print(price_str, CENTER_X - price_w / 2, CENTER_Y + 80, 0, 1.6, 1.6)
+    local price_scale = 1.6
+    local price_str   = "$" .. ent.cost
+    local price_w     = font:getWidth(price_str) * price_scale
+    love.graphics.print(price_str, CENTER_X - price_w / 2, CENTER_Y + 80, 0, price_scale, price_scale)
 
     -- cycle arrows
     love.graphics.setColor(0.7, 0.7, 0.7, 1)
