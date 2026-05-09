@@ -49,15 +49,15 @@ Goal: the PC shop sells two things — a plant and a slot expansion. The player 
 
 ## Step 4 — End-to-End Test
 
-- [ ] Open shop with 20 currency — all four options visible and priced
-- [ ] Select Plant, buy with F — plant in hand, currency drops by PLANT_COST
-- [ ] Grow plant to stage 3, walk to sell bin, press F — currency goes up by SELL_VALUE, hand emptied
-- [ ] Open shop, select Expand, buy with F — new slot appears at right end
-- [ ] Walk into the new slot, place a plant — confirms slot is live
-- [ ] Sell a non-stage-3 plant — currency goes up by 1
-- [ ] Drain currency to 0, confirm no buy option fires
-- [ ] Press E in shop — returns to store with no change
-- [ ] Graft a stage-3 plant, walk to sell bin, press F — loaded plant sold, grafter emptied
+- [x] Open shop with 20 currency — all four options visible and priced
+- [x] Select Plant, buy with F — plant in hand, currency drops by PLANT_COST
+- [x] Grow plant to stage 3, walk to sell bin, press F — currency goes up by SELL_VALUE, hand emptied
+- [x] Open shop, select Expand, buy with F — new slot appears at right end
+- [x] Walk into the new slot, place a plant — confirms slot is live
+- [x] Sell a non-stage-3 plant — currency goes up by 1
+- [x] Drain currency to 0, confirm no buy option fires
+- [x] Press E in shop — returns to store with no change
+- [x] Graft a stage-3 plant, walk to sell bin, press F — loaded plant sold, grafter emptied
 
 ---
 
@@ -65,7 +65,7 @@ Goal: the PC shop sells two things — a plant and a slot expansion. The player 
 
 Draw a wall rect in `Store:draw()` before the slot loop. The store already knows its total width so it automatically covers new slots when `grow()` is called.
 
-- [ ] In `lua/game/store.lua` `Store:draw()`, before the slot loop:
+- [x] In `lua/game/store.lua` `Store:draw()`, before the slot loop:
   - Draw a filled rect: `x=0`, `y=0`, `width=self:width()`, `height=SLOT_Y + SLOT_HEIGHT` (= 800)
   - Color: `{0.15, 0.12, 0.10, 1}` (dark neutral, distinct from slot border brown)
 

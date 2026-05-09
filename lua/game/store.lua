@@ -35,6 +35,8 @@ function Store:update(dt)
 end
 
 function Store:draw()
+    love.graphics.setColor(0.15, 0.12, 0.10, 1)
+    love.graphics.rectangle("fill", 0, 0, self:width(), 800)
     for _, slot in ipairs(self.slots) do
         slot:draw()
     end

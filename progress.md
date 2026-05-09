@@ -2,9 +2,9 @@
 
 ## What's Built
 
-All MVP steps are implemented and running. Expand Store feature complete (Steps 1–3).
+All MVP steps are implemented and running. Expand Store feature complete (all steps).
 
-Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`.
+Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`.
 
 ---
 
@@ -99,7 +99,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 ## Up Next
 
-See [expand-store-steps.md](expand-store-steps.md) — Step 4 (end-to-end test) remaining.
+See [shop-ui-steps.md](shop-ui-steps.md) — redesign BuyScene to single-item carousel.
 
 ## Cut / Not Yet Built
 
