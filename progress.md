@@ -2,7 +2,7 @@
 
 ## What's Built
 
-All 16 MVP steps are implemented and running.
+All MVP steps are implemented and running. Expand Store feature complete (Steps 1–3).
 
 ---
 
@@ -34,18 +34,19 @@ All 16 MVP steps are implemented and running.
 
 | File | What it does |
 |------|-------------|
-| `item.lua` | Base class for all carriable objects |
+| `item.lua` | Base class for all carriable objects; `carriable = true`, `sellable = true` by default |
 | `watering_can.lua` | interact() waters the plant in the active slot |
-| `pc_store.lua` | interact() opens BuyScene; blocked if player is holding anything |
+| `pc_store.lua` | interact() opens BuyScene; blocked if player is holding anything; `sellable = false` |
 | `plant.lua` | Three stages, cooldown timer, yellow bubble when ready; bubble hidden at stage 3 |
 | `grafter.lua` | Clones a stage-3 plant (resets original to stage 1, stores clone); places clone into empty slot on E; renders clone above itself when loaded |
+| `sell_bin.lua` | Sell station; F while holding any sellable item sells it for currency |
 
 ### Scenes (`lua/game/scenes/`)
 
 | File | What it does |
 |------|-------------|
 | `store_scene.lua` | Main loop — player moves, camera follows on x, pick up/interact handled here |
-| `buy_scene.lua` | Overlay UI — F to buy plant (goes into player's hand), E to cancel |
+| `buy_scene.lua` | Overlay UI — 4 options (Plant, Expand, Watering Can, Grafter); A/D select, F buy, E cancel |
 
 ### Data (`lua/game/data/`)
 
@@ -96,10 +97,7 @@ All 16 MVP steps are implemented and running.
 
 ## Up Next
 
-See [expand-store-steps.md](expand-store-steps.md) for the next feature set:
-- Currency system (PLANT_COST, SLOT_COST, SELL_VALUE)
-- Buy scene two-option menu (plant / expand slot)
-- Sell bin station (sell stage-3 plants for currency)
+See [expand-store-steps.md](expand-store-steps.md) — Step 4 (end-to-end test) remaining.
 
 ## Cut / Not Yet Built
 

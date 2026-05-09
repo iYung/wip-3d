@@ -44,7 +44,7 @@ The player moves freely left and right as a separate visual layer rendered on to
 
 ### Store Growth
 
-The player can increase the number of slots. Adding a slot expands the store width by one `slot_width`. New slots are added at one end only (which end TBD).
+The player can increase the number of slots. Adding a slot expands the store width by one `slot_width`. New slots are added at the **right end**.
 
 ---
 
@@ -63,6 +63,16 @@ The player can increase the number of slots. Adding a slot expands the store wid
 - Using it (F) on a slot with a plant: resets the original plant to stage 1, stores a clone inside the grafter (loaded state)
 - Putting it down (E) over an empty slot while loaded: places the clone into that slot; grafter empties and stays in the player's hand
 - Does nothing if already loaded, or if the target slot has no plant
+
+### Sell Bin
+
+- Can be picked up and placed
+- Player presses Interact (F) while holding an item over the sell bin to sell it
+- Sale values: stage-3 plant → `SELL_VALUE`; stage 1–2 plant → 1; tools → 0
+- Selling a loaded grafter sells the stored plant clone and empties the grafter
+- PC Store cannot be sold
+
+---
 
 ### PC Store
 
@@ -101,15 +111,13 @@ When a plant is ready, a speech bubble appears above it as a visual indicator.
 
 | Scene      | Description                                         |
 |------------|-----------------------------------------------------|
-| StoreScene | Main gameplay — player moves in the store           |
-| BuyScene   | Full scene swap; browse and buy plants, then return |
+| StoreScene | Main gameplay — player moves in the store                                    |
+| BuyScene   | Full scene swap; browse and buy items (Plant, Expand, Watering Can, Grafter) |
 
 ---
 
 ## Open Questions
 
-- Which end does the store expand from — left or right?
 - How many waterings per growth stage?
-- What happens when a plant reaches Done — is it harvested for currency?
 - What are the 6 plant types?
 - Is there a win condition or is it an idle/loop game?

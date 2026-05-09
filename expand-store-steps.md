@@ -21,54 +21,40 @@ Goal: the PC shop sells two things — a plant and a slot expansion. The player 
 
 ## Step 1 — Currency
 
-- [ ] Add `PLANT_COST = 5`, `SLOT_COST = 10`, and `SELL_VALUE = 5` to `lua/game/config.lua`
-- [ ] Set `self.currency = 20` in `GameState.new()` (starting funds)
-- [ ] In `StoreScene:draw()` add a HUD line: `"Currency: " .. gs.currency`
+- [x] Add `PLANT_COST = 5`, `SLOT_COST = 10`, and `SELL_VALUE = 5` to `lua/game/config.lua`
+- [x] Set `self.currency = 20` in `GameState.new()` (starting funds)
+- [x] In `StoreScene:draw()` add a HUD line: `"Currency: " .. gs.currency`
 
 ---
 
 ## Step 2 — Buy Scene Menu
 
-- [ ] Add `self.selected = 1` to `BuyScene.new()` (1 = Plant, 2 = Expand Slot)
-- [ ] In `BuyScene:update(dt)`:
-  - `move_left` pressed → `self.selected = 1`
-  - `move_right` pressed → `self.selected = 2`
-  - `interact` pressed → call `self:_confirm()`, then switch back to store scene
-  - `pick_up_down` pressed → switch back to store scene (cancel, unchanged)
-- [ ] Replace `_buy_plant()` with `_confirm()`:
-  - If `selected == 1` and `currency >= PLANT_COST`: deduct cost, give plant to player
-  - If `selected == 2` and `currency >= SLOT_COST`: deduct cost, call `store:grow()`
-  - Otherwise: do nothing (no scene switch)
-- [ ] In `BuyScene:draw()`:
-  - Show both options side by side (or stacked); highlight the selected one
-  - Show price next to each; grey it out if player can't afford it
-  - Show current currency
+- [x] Add `self.selected = 1` to `BuyScene.new()`
+- [x] A/D navigates between 4 options: Plant, Expand Slot, Watering Can, Grafter
+- [x] `_confirm()`: deducts cost and gives item / grows store; does nothing if too poor
+- [x] Draw shows all options with prices; highlights selected; greys out unaffordable
 
 ---
 
 ## Step 3 — Sell Bin
 
-- [ ] Create `lua/game/items/sell_bin.lua`
-  - `carriable = false`
-  - Sprite: red (e.g. `{0.9, 0.2, 0.2, 1}`)
-  - No `interact()` needed — sale is triggered from `_handle_pick_up_down`
-- [ ] In `StoreScene:_handle_pick_up_down()`, before the normal placement path:
-  - If player is holding a plant at `stage == 3` AND target slot has a SellBin:
-    - Add `SELL_VALUE` to `game_state.currency`
-    - Set `player.held_item = nil`
-    - Return early
-- [ ] Require `SellBin` in `store_scene.lua`
-- [ ] Place `SellBin.new()` in slot 2 in `StoreScene:_setup_store()`
+- [x] Created `lua/game/items/sell_bin.lua` — carriable, red sprite, `is_sell_bin = true`
+- [x] Selling triggered by F (interact) over sell bin
+- [x] Stage-3 plant → `SELL_VALUE`; stage 1-2 plant → 1; tools (watering can, grafter) → 0
+- [x] Loaded plant in grafter → sells the loaded plant, resets grafter to empty
+- [x] PCStore has `sellable = false`; `sellable = true` is the default on `Item`
+- [x] SellBin placed in slot 2
 
 ---
 
 ## Step 4 — End-to-End Test
 
-- [ ] Open shop with 20 currency — both options visible and priced
-- [ ] Select Plant (A), buy with F — plant in hand, currency drops by 5
-- [ ] Grow plant to stage 3, walk to sell bin, press E — currency goes up by 5, hand emptied
-- [ ] Open shop again, select Expand (D), buy with F — new slot appears at right end, currency drops by 10
+- [ ] Open shop with 20 currency — all four options visible and priced
+- [ ] Select Plant, buy with F — plant in hand, currency drops by PLANT_COST
+- [ ] Grow plant to stage 3, walk to sell bin, press F — currency goes up by SELL_VALUE, hand emptied
+- [ ] Open shop, select Expand, buy with F — new slot appears at right end
 - [ ] Walk into the new slot, place a plant — confirms slot is live
-- [ ] Try selling a non-stage-3 plant at sell bin — nothing happens
-- [ ] Drain currency to 0, confirm neither buy option fires
+- [ ] Sell a non-stage-3 plant — currency goes up by 1
+- [ ] Drain currency to 0, confirm no buy option fires
 - [ ] Press E in shop — returns to store with no change
+- [ ] Graft a stage-3 plant, walk to sell bin, press F — loaded plant sold, grafter emptied
