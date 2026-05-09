@@ -1,6 +1,7 @@
 local Scene        = require("lua/core/scene")
 local WateringCan  = require("lua/game/items/watering_can")
 local PCStore      = require("lua/game/items/pc_store")
+local Grafter      = require("lua/game/items/grafter")
 local BuyScene     = require("lua/game/scenes/buy_scene")
 
 local CAMERA_Y    = 500  -- fixed world y the camera locks to
@@ -42,6 +43,8 @@ function StoreScene:_setup_store()
 
     store.slots[1].item = WateringCan.new()
 
+    store.slots[5].item = Grafter.new()
+
     store.slots[3].item = PCStore.new(function()
         local slot = gs.player:active_slot(store)
         return BuyScene.new(gs, self_ref.input, self_ref.scene_manager, self_ref, slot)
@@ -76,9 +79,17 @@ function StoreScene:_handle_pick_up_down()
     local store  = self.game_state.store
     local slot   = player:active_slot(store)
 
+    -- loaded grafter + empty slot → place clone, grafter stays in hand
+    if player.held_item and player.held_item.loaded_plant and slot and not slot.item then
+        slot.item                         = player.held_item.loaded_plant
+        player.held_item.loaded_plant     = nil
+        player.held_item.sprite.color     = {1.0, 0.5, 0.0, 1}
+        return
+    end
+
     if player.held_item then
         if slot and not slot.item then
-            slot.item       = player.held_item
+            slot.item        = player.held_item
             player.held_item = nil
         end
     else
