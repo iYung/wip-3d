@@ -8,6 +8,7 @@ function Item.new()
     self.sprite    = Sprite.new(0, 0, 40, 40)
     self.carriable = true
     self.sellable  = true
+    self.name      = "Item"
     return self
 end
 

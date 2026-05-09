@@ -11,6 +11,7 @@ function WateringCan.new()
     self.sprite       = Sprite.new(0, 0, 6 * U, 6 * U)
     self.sprite.color = {0.3, 0.6, 1.0, 1}
     self.carriable    = true
+    self.name         = "Watering Can"
     return self
 end
 

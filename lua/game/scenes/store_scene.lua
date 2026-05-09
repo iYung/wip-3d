@@ -136,18 +136,66 @@ function StoreScene:_handle_interact()
     end
 end
 
+function StoreScene:_hud_labels()
+    local player    = self.game_state.player
+    local store     = self.game_state.store
+    local slot      = player:active_slot(store)
+    local held      = player.held_item
+    local slot_item = slot and slot.item
+
+    local slot_label = slot_item and slot_item.name and ("HOVER: " .. slot_item.name:upper())
+
+    local e_label
+    if held and held.loaded_plant and slot and not slot_item then
+        e_label = "E: PLACE CLONE"
+    elseif held and slot and not slot_item then
+        e_label = "E: PUT DOWN"
+    elseif not held and slot_item and slot_item.carriable then
+        e_label = "E: PICK UP"
+    end
+
+    local f_label
+    if not held and slot_item and slot_item.buy_scene_factory then
+        f_label = "F: OPEN SHOP"
+    elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then
+        f_label = "F: WATER"
+    elseif held and held.name == "Grafter" and not held.loaded_plant and slot_item and slot_item.stage == 3 then
+        f_label = "F: CLONE"
+    elseif held and held.sellable ~= false and slot_item and slot_item.is_sell_bin then
+        local value
+        if held.loaded_plant then
+            value = plant_sell_value(held.loaded_plant)
+        else
+            value = held.stage and plant_sell_value(held) or 0
+        end
+        f_label = "F: SELL ($" .. value .. ")"
+    end
+
+    return { slot = slot_label, e = e_label, f = f_label }
+end
+
 function StoreScene:draw()
     self.camera:attach()
     self.drawer:draw()
     self.camera:detach()
 
-    -- HUD: show active slot index (screen space)
-    local gs   = self.game_state
-    local slot = gs.player:active_slot(gs.store)
+    local gs = self.game_state
     love.graphics.setColor(1, 1, 1, 0.8)
-    love.graphics.print("Slot: " .. (slot and slot.index or "?"), 10, 10)
-    love.graphics.print("Move: A/D   Pick Up: E   Interact: F", 10, 30)
-    love.graphics.print("Currency: " .. gs.currency, 10, 50)
+    love.graphics.print("Currency: " .. gs.currency, 10, 10)
+
+    -- context HUD: bottom-left, stacked upward (hover at bottom, then f, then e)
+    local hud    = self:_hud_labels()
+    local labels = {}
+    if hud.slot then table.insert(labels, hud.slot) end
+    if hud.f    then table.insert(labels, hud.f) end
+    if hud.e    then table.insert(labels, hud.e) end
+
+    local y = 700
+    for _, label in ipairs(labels) do
+        love.graphics.print(label, 10, y)
+        y = y - 20
+    end
+
     love.graphics.setColor(1, 1, 1, 1)
 end
 

@@ -15,6 +15,7 @@ function Grafter.new()
     setmetatable(self, Grafter)
     self.carriable    = true
     self.loaded_plant = nil
+    self.name         = "Grafter"
     self.sprite       = Sprite.new(0, 0, 6 * U, 6 * U)
     self.sprite.color = COLOR_EMPTY
     return self

@@ -12,6 +12,7 @@ function PCStore.new(buy_scene_factory)
     self.sprite.color      = {0.7, 0.75, 0.9, 1}
     self.carriable         = true
     self.sellable          = false
+    self.name              = "PC Store"
     self.buy_scene_factory = buy_scene_factory
     return self
 end

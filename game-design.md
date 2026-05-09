@@ -35,6 +35,21 @@ The player moves freely left and right as a separate visual layer rendered on to
 | Pick Up/Down | Pick up item from active slot, or place held item   |
 | Interact     | Use held item on active slot, or interact with station |
 
+### Context HUD
+
+Bottom-left overlay showing context-sensitive labels. Each line only appears when the action is available.
+
+| Line | When shown |
+|------|-----------|
+| `HOVER: <name>` | Player is over a slot with an item |
+| `E: PICK UP` | Empty hands, slot has a carriable item |
+| `E: PUT DOWN` | Holding an item, slot is empty |
+| `E: PLACE CLONE` | Holding a loaded grafter, slot is empty |
+| `F: OPEN SHOP` | Empty hands, over PC Store |
+| `F: WATER` | Holding watering can, over a plant |
+| `F: CLONE` | Holding unloaded grafter, over a stage-3 plant |
+| `F: SELL` | Holding any sellable item, over sell bin |
+
 ### Player Interaction
 
 - The player can **pick up** the item in the active slot
@@ -90,16 +105,16 @@ The player can increase the number of slots. Adding a slot expands the store wid
 | 2     | Growing | Mid stage, visibly developing      |
 | 3     | Done    | Fully grown, ready to harvest      |
 
-Plant types (names TBD):
+Plant types:
 
-| # | Type |
-|---|------|
-| 1 | TBD  |
-| 2 | TBD  |
-| 3 | TBD  |
-| 4 | TBD  |
-| 5 | TBD  |
-| 6 | TBD  |
+| # | Name | Cost | Sell | Cooldowns |
+|---|------|------|------|-----------|
+| 1 | Fern | $1 | $5 | 10s, 15s |
+| 2 | Cactus | $3 | $8 | 8s, 12s |
+| 3 | Rose | $6 | $13 | 6s, 9s |
+| 4 | Sunflower | $10 | $20 | 4s, 7s |
+| 5 | Lavender | $15 | $28 | 3s, 5s |
+| 6 | Golden Lotus | $20 | $40 | 2s, 3s |
 
 Each growth stage has a cooldown timer. When the timer reaches zero the plant is ready to be watered. Watering a ready plant advances it to the next stage and resets the timer for the new stage. Watering a plant that is not ready does nothing.
 

@@ -2,9 +2,9 @@
 
 ## What's Built
 
-All MVP steps are implemented and running. Expand Store, Shop UI, and Plant Types features complete.
+All MVP steps are implemented and running. Expand Store, Shop UI, Plant Types, and Context HUD features complete.
 
-Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`, `shop-ui-steps.md`, `plant-types-steps.md`.
+Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`, `shop-ui-steps.md`, `plant-types-steps.md`, `context-hud-steps.md`.
 
 ---
 
@@ -36,7 +36,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 | File | What it does |
 |------|-------------|
-| `item.lua` | Base class for all carriable objects; `carriable = true`, `sellable = true` by default |
+| `item.lua` | Base class for all carriable objects; `carriable = true`, `sellable = true`, `name = "Item"` by default |
 | `watering_can.lua` | interact() waters the plant in the active slot |
 | `pc_store.lua` | interact() opens BuyScene; blocked if player is holding anything; `sellable = false` |
 | `plant.lua` | 6 types, 3 stages each; per-type cooldown and stage colors from `plant_data`; yellow bubble when ready |
@@ -47,7 +47,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 
 | File | What it does |
 |------|-------------|
-| `store_scene.lua` | Main loop — player moves, camera follows on x, pick up/interact handled here |
+| `store_scene.lua` | Main loop — player moves, camera follows on x, pick up/interact handled here; context HUD bottom-left (HOVER/E/F labels) |
 | `buy_scene.lua` | Carousel UI — 9 items (6 plants + Watering Can + Grafter + Expand Slot); A/D cycle, F buy, E cancel; per-type price and preview color |
 
 ### Data (`lua/game/data/`)
@@ -96,10 +96,6 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 8. Stage 3 = done, no more bubble
 
 ---
-
-## Up Next
-
-See [context-hud-steps.md](context-hud-steps.md) — context-sensitive HUD labels for E and F.
 
 ## Cut / Not Yet Built
 

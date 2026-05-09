@@ -15,6 +15,7 @@ function Plant.new(plant_type)
     self.plant_type  = plant_type or 1
     self.stage       = 1
     self.carriable   = true
+    self.name        = PLANT_DATA[self.plant_type].name
     self.cooldown    = PLANT_DATA[self.plant_type].cooldowns[1]
     self.ready       = false
 
