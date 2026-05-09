@@ -112,12 +112,21 @@ function StoreScene:_handle_interact()
 
     -- held item + sell bin → sell (plants: stage 3 = SELL_VALUE, others = 1; tools = 0)
     if player.held_item and player.held_item.sellable ~= false and slot and slot.item and slot.item.is_sell_bin then
-        local value = 0
-        if player.held_item.stage then
-            value = player.held_item.stage == 3 and SELL_VALUE or 1
+        local held = player.held_item
+        if held.loaded_plant then
+            -- sell the loaded plant, keep grafter in hand
+            local value = held.loaded_plant.stage == 3 and SELL_VALUE or 1
+            self.game_state.currency  = self.game_state.currency + value
+            held.loaded_plant         = nil
+            held.sprite.color         = {1.0, 0.5, 0.0, 1}
+        else
+            local value = 0
+            if held.stage then
+                value = held.stage == 3 and SELL_VALUE or 1
+            end
+            self.game_state.currency = self.game_state.currency + value
+            player.held_item = nil
         end
-        self.game_state.currency = self.game_state.currency + value
-        player.held_item = nil
         return
     end
 
