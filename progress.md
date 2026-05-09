@@ -27,12 +27,18 @@ All 16 MVP steps are implemented and running.
 | `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
 | `game_state.lua` | Holds store, player, currency; survives scene switches |
 | `player.lua` | Moves left/right, holds one item, two-frame walk animation |
+| `slot.lua` | One store cell; positions its item every frame |
+| `store.lua` | Array of slots; slot_at(x) returns slot under a world x position; grow() appends a slot |
+
+### Items (`lua/game/items/`)
+
+| File | What it does |
+|------|-------------|
 | `item.lua` | Base class for all carriable objects |
 | `watering_can.lua` | interact() waters the plant in the active slot |
 | `pc_store.lua` | interact() opens BuyScene; blocked if player is holding anything |
 | `plant.lua` | Three stages, cooldown timer, yellow bubble when ready; bubble hidden at stage 3 |
-| `slot.lua` | One store cell; positions its item every frame |
-| `store.lua` | Array of slots; slot_at(x) returns slot under a world x position |
+| `grafter.lua` | Clones a stage-3 plant (resets original to stage 1, stores clone); places clone into empty slot on E; renders clone above itself when loaded |
 
 ### Scenes (`lua/game/scenes/`)
 
@@ -88,11 +94,15 @@ All 16 MVP steps are implemented and running.
 
 ---
 
-## Cut from MVP
+## Up Next
 
-- Currency and harvesting
-- Grafter
+See [expand-store-steps.md](expand-store-steps.md) for the next feature set:
+- Currency system (PLANT_COST, SLOT_COST, SELL_VALUE)
+- Buy scene two-option menu (plant / expand slot)
+- Sell bin station (sell stage-3 plants for currency)
+
+## Cut / Not Yet Built
+
 - Plant types 2–6
-- Selling
-- Store growth (slot count fixed)
 - Real sprites (all rectangles)
+- Win condition or idle loop

@@ -14,16 +14,18 @@ luagame/
     │   ├── scene.lua
     │   └── scene_manager.lua
     └── game/
+        ├── config.lua
         ├── input.lua
         ├── game_state.lua
         ├── player.lua
         ├── store.lua
         ├── slot.lua
-        ├── item.lua
-        ├── watering_can.lua
-        ├── grafter.lua
-        ├── pc_store.lua
-        ├── plant.lua
+        ├── items/
+        │   ├── item.lua
+        │   ├── watering_can.lua
+        │   ├── grafter.lua
+        │   ├── pc_store.lua
+        │   └── plant.lua
         ├── scenes/
         │   ├── store_scene.lua
         │   └── buy_scene.lua
