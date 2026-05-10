@@ -19,7 +19,8 @@ end
 function Sprite:draw()
     if not self.visible then return end
     love.graphics.push()
-    love.graphics.translate(self.x, self.y)
+    local flip_ox = (self.scale_x < 0) and self.width or 0
+    love.graphics.translate(self.x + flip_ox, self.y)
     love.graphics.scale(self.scale_x, self.scale_y)
     if self.shader then love.graphics.setShader(self.shader) end
     love.graphics.setColor(self.color)

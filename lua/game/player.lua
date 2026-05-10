@@ -34,6 +34,7 @@ function Player.new(x)
 
     self._anim_timer = 0
     self._anim_frame = "idle"
+    self.facing      = "right"
 
     return self
 end
@@ -41,12 +42,14 @@ end
 function Player:update(dt, input, store)
     local moving = false
     if input:is_down("move_left") then
-        self.x  = self.x - self.speed * dt
-        moving  = true
+        self.x      = self.x - self.speed * dt
+        self.facing = "left"
+        moving      = true
     end
     if input:is_down("move_right") then
-        self.x  = self.x + self.speed * dt
-        moving  = true
+        self.x      = self.x + self.speed * dt
+        self.facing = "right"
+        moving      = true
     end
 
     if store then
@@ -68,8 +71,9 @@ function Player:update(dt, input, store)
         self.sprite:set(idle_key)
     end
 
-    self.sprite.x = self.x - W / 2
-    self.sprite.y = self.y - H / 2
+    self.sprite.x       = self.x - W / 2
+    self.sprite.y       = self.y - H / 2
+    self.sprite.scale_x = self.facing == "left" and -1 or 1
 
     if self.held_item then
         local spr = self.held_item.sprite

@@ -102,6 +102,7 @@ function Customer:update(dt)
         end
     end
 
+    self.sprite.scale_x = (self.state == "walking_out") and -1 or 1
     self.sprite.x = self.x - CW / 2
     self.sprite.y = self.y - CH / 2
     self.bubble.x = self.x - BW / 2

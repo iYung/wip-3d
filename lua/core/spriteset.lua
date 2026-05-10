@@ -7,6 +7,7 @@ function SpriteSet.new()
     self.current  = nil
     self.x        = 0
     self.y        = 0
+    self.scale_x  = 1
     self.visible  = true
     return self
 end
@@ -30,8 +31,9 @@ function SpriteSet:draw()
     if not self.visible then return end
     local s = self:_active()
     if not s then return end
-    s.x = self.x
-    s.y = self.y
+    s.x       = self.x
+    s.y       = self.y
+    s.scale_x = self.scale_x
     s:draw()
 end
 
