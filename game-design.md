@@ -49,7 +49,8 @@ Bottom-left overlay showing context-sensitive labels. Each line only appears whe
 | `F: WATER` | Holding watering can, over a plant |
 | `F: CLONE` | Holding unloaded grafter, over a stage-3 plant |
 | `F: SELL ($X)` | Holding any sellable item, over sell bin |
-| `F: SELL TO CUSTOMER ($X)` | In cashier zone, customer waiting, holding the requested stage-3 plant |
+| `F: NEXT` | In cashier zone, customer waiting, still in dialog |
+| `F: SELL TO CUSTOMER ($X)` | In cashier zone, customer done talking, holding the requested stage-3 plant |
 
 ### Player Interaction
 
@@ -138,17 +139,26 @@ x = -400               x = 0
 
 ### Customer
 
-- Spawns periodically (walks in from the left, off-screen)
-- Waits at the counter window with a speech bubble showing the requested plant
-- Requests a stage-3 **Fern** (plant_type 1)
-- Sale via F while holding the requested plant: pays **2× normal sell value**
-- After sale: walks back out to the left and disappears
-- Next customer spawns after a delay once the previous has fully exited
+Two kinds of customers can spawn:
+
+**Scripted customers** — defined in `customer_scripts.lua`. Each has a trigger condition (a specific plant type must have reached stage 3 a minimum number of times). Scripts are checked in order; the first unseen eligible script spawns. Scripted customers have a unique name, body color, and multi-line dialog.
+
+**Random customers** — pick a plant type uniformly at random from all plants the player has unlocked (purchased). Fern is unlocked from the start.
+
+**Dialog flow:**
+- Scripted customers: F advances through messages one at a time; after the last message the plant-colored bubble appears
+- Random customers: no dialog — plant bubble appears immediately on arrival
+- Once the plant bubble is showing, F while holding the correct stage-3 plant completes the sale
+
+**Sale:**
+- Pays **2× normal sell value**
+- After sale: customer walks back out to the left and disappears
+- Next customer spawns after a random delay once the previous has fully exited
 
 ### Cashier Rules
 
 - E key does nothing in the cashier zone (no putting items down)
-- F only triggers the cashier sale when the customer has fully arrived (`waiting` state)
+- F only triggers dialog/sale when the customer has fully arrived (`waiting` state)
 - Sale value shown live in the context HUD: `F: SELL TO CUSTOMER ($X)`
 
 ---
@@ -180,4 +190,3 @@ Purchasable in the shop. Three tiers, each permanently increasing player movemen
 
 - Is there a win condition or is it an idle/loop game?
 - Should customers have a patience timer and leave if not served?
-- Should customers request different plant types over time?

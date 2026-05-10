@@ -4,8 +4,9 @@ local PCStore      = require("lua/game/items/pc_store")
 local Grafter      = require("lua/game/items/grafter")
 local SellBin      = require("lua/game/items/sell_bin")
 local BuyScene     = require("lua/game/scenes/buy_scene")
-local PLANT_DATA   = require("lua/game/data/plant_data")
-local Customer     = require("lua/game/customer")
+local PLANT_DATA        = require("lua/game/data/plant_data")
+local CUSTOMER_SCRIPTS  = require("lua/game/data/customer_scripts")
+local Customer          = require("lua/game/customer")
 local ZONE_WIDTH   = require("lua/game/config").ZONE_WIDTH
 
 local function plant_sell_value(plant)
@@ -112,6 +113,28 @@ function StoreScene:_setup_store()
     }
 end
 
+function StoreScene:_next_customer_cfg()
+    local gs = self.game_state
+
+    for _, script in ipairs(CUSTOMER_SCRIPTS) do
+        if not gs.seen_scripts[script.id] then
+            local t = script.trigger
+            if (gs.stage3_counts[t.plant_type] or 0) >= t.count then
+                gs.seen_scripts[script.id] = true
+                return script
+            end
+        end
+    end
+
+    local keys = {}
+    for pt in pairs(gs.unlocked_plants) do
+        keys[#keys + 1] = pt
+    end
+    if #keys == 0 then return nil end
+    local pt = keys[math.random(#keys)]
+    return { plant_type = pt }
+end
+
 function StoreScene:on_exit()
     self.drawer:clear()
 end
@@ -127,7 +150,10 @@ function StoreScene:update(dt)
     if not self._customer:active() then
         self._spawn_timer = self._spawn_timer - dt
         if self._spawn_timer <= 0 then
-            self._customer:show(1)
+            local cfg = self:_next_customer_cfg()
+            if cfg then
+                self._customer:show(cfg)
+            end
             self._spawn_timer = math.random(3, 6)
         end
     end
@@ -177,12 +203,17 @@ function StoreScene:_handle_interact()
     local store  = self.game_state.store
     local slot   = player:active_slot(store)
 
-    -- cashier zone sale (2× value)
-    if player.x < 0 and self._customer:arrived() and player.held_item and player.held_item.plant_type == self._customer.plant_type and player.held_item.stage == 3 then
-        local value = plant_sell_value(player.held_item) * 2
-        self.game_state.currency = self.game_state.currency + value
-        player.held_item = nil
-        self._customer:serve()
+    -- cashier zone: dialog advance or sale
+    if player.x < 0 and self._customer:arrived() then
+        local held = player.held_item
+        if self._customer:on_last_message() and held and held.plant_type == self._customer.plant_type and held.stage == 3 then
+            local value = plant_sell_value(held) * 2
+            self.game_state.currency = self.game_state.currency + value
+            player.held_item = nil
+            self._customer:serve()
+        else
+            self._customer:advance()
+        end
         return
     end
 
@@ -204,7 +235,12 @@ function StoreScene:_handle_interact()
 
     local item = player.held_item or (slot and slot.item)
     if item then
+        local prev_stage = slot and slot.item and slot.item.stage
         item:interact(player, store, self.scene_manager)
+        if slot and slot.item and slot.item.stage == 3 and prev_stage == 2 then
+            local pt = slot.item.plant_type
+            self.game_state.stage3_counts[pt] = (self.game_state.stage3_counts[pt] or 0) + 1
+        end
     end
 end
 
@@ -229,8 +265,14 @@ function StoreScene:_hud_labels()
     end
 
     local f_label
-    if player.x < 0 and self._customer and self._customer:arrived() and held and held.plant_type == self._customer.plant_type and held.stage == 3 then
-        f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) * 2 .. ")"
+    if player.x < 0 and self._customer and self._customer:arrived() then
+        if self._customer:on_last_message() then
+            if held and held.plant_type == self._customer.plant_type and held.stage == 3 then
+                f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) * 2 .. ")"
+            end
+        else
+            f_label = "F: NEXT"
+        end
     elseif not held and slot_item and slot_item.buy_scene_factory then
         f_label = "F: OPEN SHOP"
     elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then

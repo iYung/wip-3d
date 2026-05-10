@@ -22,15 +22,15 @@ gs.seen_scripts         -- set { [script_id] = true } — prevents a scripted cu
 
 ## Step 1 — GameState
 
-- [ ] Add `unlocked_plants = { [1] = true }` to `GameState.new()` — Fern is unlocked from the start
-- [ ] Add `stage3_counts  = {}` to `GameState.new()`
-- [ ] Add `seen_scripts   = {}` to `GameState.new()`
+- [x] Add `unlocked_plants = { [1] = true }` to `GameState.new()` — Fern is unlocked from the start
+- [x] Add `stage3_counts  = {}` to `GameState.new()`
+- [x] Add `seen_scripts   = {}` to `GameState.new()`
 
 ---
 
 ## Step 2 — Track Plant Purchases (BuyScene)
 
-- [ ] In `BuyScene:_confirm()`, after a successful `kind == "plant"` purchase, set `gs.unlocked_plants[ent.plant_type] = true`
+- [x] In `BuyScene:_confirm()`, after a successful `kind == "plant"` purchase, set `gs.unlocked_plants[ent.plant_type] = true`
 
 ---
 
@@ -38,7 +38,7 @@ gs.seen_scripts         -- set { [script_id] = true } — prevents a scripted cu
 
 Detect when a watering action advances a plant to stage 3.
 
-- [ ] In `StoreScene:_handle_interact()`, in the watering-can branch, snapshot `slot.item.stage` before calling `item:interact()`, then check if it became 3 afterward:
+- [x] In `StoreScene:_handle_interact()`, in the watering-can branch, snapshot `slot.item.stage` before calling `item:interact()`, then check if it became 3 afterward:
   ```lua
   local prev_stage = slot.item and slot.item.stage
   item:interact(player, store, self.scene_manager)
@@ -98,8 +98,8 @@ return {
 
 ## Step 5 — Customer Class
 
-- [ ] Add properties: `name`, `messages`, `msg_index`
-- [ ] Change `Customer:show(cfg)` — `cfg` is a table:
+- [x] Add properties: `name`, `messages`, `msg_index`
+- [x] Change `Customer:show(cfg)` — `cfg` is a table:
   ```lua
   {
       plant_type = 1,
@@ -108,12 +108,12 @@ return {
       body_color = nil,            -- falls back to orange {0.85, 0.55, 0.30, 1}
   }
   ```
-- [ ] In `show()`:
+- [x] In `show()`:
   - Copy all cfg fields onto self; set `self.msg_index = 1`
   - Apply `cfg.body_color` to `self.sprite.color` if provided, else reset to default orange
-- [ ] Add `Customer:advance()` — increments `msg_index` if not on the last message
-- [ ] Add `Customer:on_last_message()` — returns `msg_index >= #self.messages`
-- [ ] In `draw_bubble()`, show current message:
+- [x] Add `Customer:advance()` — increments `msg_index` if not on the last message
+- [x] Add `Customer:on_last_message()` — returns `msg_index >= #self.messages`
+- [x] In `draw_bubble()`, show current message:
   ```lua
   local line = self.messages[self.msg_index]
   love.graphics.print(self.name .. ": " .. line, ...)
@@ -134,8 +134,8 @@ if player.x < 0 AND customer:arrived():
     return
 ```
 
-- [ ] Update `StoreScene:_handle_interact()` with the above
-- [ ] Update `StoreScene:_hud_labels()`:
+- [x] Update `StoreScene:_handle_interact()` with the above
+- [x] Update `StoreScene:_hud_labels()`:
   - Last message + correct plant held → `"F: SELL TO CUSTOMER ($X)"`
   - Otherwise (still in dialog, or wrong/no plant) → `"F: NEXT"`
 
@@ -143,8 +143,8 @@ if player.x < 0 AND customer:arrived():
 
 ## Step 7 — Spawn Logic (StoreScene)
 
-- [ ] Require `CUSTOMER_SCRIPTS` from `lua/game/data/customer_scripts`
-- [ ] Add `StoreScene:_next_customer_cfg()`:
+- [x] Require `CUSTOMER_SCRIPTS` from `lua/game/data/customer_scripts`
+- [x] Add `StoreScene:_next_customer_cfg()`:
   ```
   gs = self.game_state
 
@@ -162,21 +162,21 @@ if player.x < 0 AND customer:arrived():
   pick random plant_type N
   return { plant_type = N, messages = { PLANT_DATA[N].name } }
   ```
-- [ ] In the spawn block: if cfg is nil, reset timer and skip; otherwise `_customer:show(cfg)`
+- [x] In the spawn block: if cfg is nil, reset timer and skip; otherwise `_customer:show(cfg)`
 
 ---
 
 ## Step 8 — End-to-End Test
 
-- [ ] From the start, random customers spawn and ask for Fern (unlocked by default)
-- [ ] Buy Cactus → random customers now ask for Fern or Cactus; F on last message sells, F before last advances
-- [ ] Grow Fern to stage 3 twice → Old Pete becomes eligible; next spawn is Old Pete (blue body, 3-message dialog, wants Cactus)
-- [ ] Old Pete spawns regardless of whether Cactus is in `unlocked_plants`
-- [ ] Work through Old Pete's dialog; F on messages 1–2 advances; F on message 3 with Cactus in hand → sale
-- [ ] F on message 3 without Cactus → nothing (no accidental advance or sale)
-- [ ] Grow Rose to stage 3 → Mayor Bloom becomes eligible on next scripted spawn
-- [ ] Grow Golden Lotus to stage 3 → The Collector becomes eligible
-- [ ] After all scripts seen, spawn falls back to random unlocked plants indefinitely
+- [x] From the start, random customers spawn and ask for Fern (unlocked by default)
+- [x] Buy Cactus → random customers now ask for Fern or Cactus; F on last message sells, F before last advances
+- [x] Grow Fern to stage 3 twice → Old Pete becomes eligible; next spawn is Old Pete (blue body, 3-message dialog, wants Cactus)
+- [x] Old Pete spawns regardless of whether Cactus is in `unlocked_plants`
+- [x] Work through Old Pete's dialog; F on messages 1–2 advances; F on message 3 with Cactus in hand → sale
+- [x] F on message 3 without Cactus → nothing (no accidental advance or sale)
+- [x] Grow Rose to stage 3 → Mayor Bloom becomes eligible on next scripted spawn
+- [x] Grow Golden Lotus to stage 3 → The Collector becomes eligible
+- [x] After all scripts seen, spawn falls back to random unlocked plants indefinitely
 
 ---
 

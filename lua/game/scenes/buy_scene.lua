@@ -109,6 +109,7 @@ function BuyScene:_confirm()
     local kind = ent.kind
     if kind == "plant" then
         gs.player.held_item = Plant.new(ent.plant_type)
+        gs.unlocked_plants[ent.plant_type] = true
     elseif kind == "tool_watering_can" then
         gs.player.held_item = WateringCan.new()
     elseif kind == "tool_grafter" then

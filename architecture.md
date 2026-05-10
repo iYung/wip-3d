@@ -164,7 +164,10 @@ Shared state passed between scenes. Survives scene switches.
 - `store` — the Store instance
 - `player` — the Player instance
 - `currency` — player's current funds
-- `speed_level` — current speed upgrade tier (0 = base) *(planned)*
+- `speed_level` — current speed upgrade tier (0 = base)
+- `unlocked_plants` — set `{ [plant_type] = true }`; Fern (`[1]`) pre-populated; updated on plant purchase
+- `stage3_counts` — `{ [plant_type] = n }`; incremented each time that plant type reaches stage 3
+- `seen_scripts` — set `{ [script_id] = true }`; prevents a scripted customer from firing twice
 
 ---
 
@@ -271,22 +274,28 @@ NPC that appears in the cashier zone and requests a specific plant.
 **Properties**
 - `state` — `"idle"` | `"walking_in"` | `"waiting"` | `"walking_out"`
 - `plant_type` — integer type of requested plant
+- `name` — display name shown in dialog (default `"Customer"`)
+- `messages` — ordered array of dialog strings; empty = skip straight to plant bubble
+- `msg_index` — index of the current message
+- `done_talking` — bool; true once all messages have been advanced through
 - `x`, `y` — world position
 - `target_x` — counter position (walk-in destination)
 - `exit_x` — off-screen left position (walk-out destination)
 - `speed` — 80 px/s
-- `sprite` — Sprite
-- `bubble` — Sprite shown only in `"waiting"` state
+- `sprite` — Sprite; `color` set per customer (default orange, scripted customers get a custom color)
+- `bubble` — Sprite colored to match the requested plant's stage-3 color; shown only in `"waiting"` state
 
 **Methods**
 - `new(target_x, exit_x, y)` — constructor; `state = "idle"`
-- `show(plant_type)` — place at `exit_x`, begin walking in
+- `show(cfg)` — accepts `{ plant_type, messages, name, body_color }`; places customer at `exit_x` and begins walk-in; no `messages` field skips dialog
+- `advance()` — increments `msg_index` up to the last message, then sets `done_talking = true`
+- `on_last_message()` — returns `done_talking`
 - `serve()` — begin walking out (called on successful sale)
 - `arrived()` — returns `state == "waiting"`
 - `active()` — returns `state ~= "idle"`
 - `update(dt)` — advances walk-in / walk-out movement
 - `draw()` — draws body sprite (not bubble)
-- `draw_bubble()` — draws bubble + plant name label; called at priority 5
+- `draw_bubble()` — during dialog: draws centered name + message text; once `done_talking`: draws the plant-colored bubble square
 
 ---
 

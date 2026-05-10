@@ -2,9 +2,9 @@
 
 ## What's Built
 
-All MVP steps are implemented and running. Expand Store, Shop UI, Plant Types, Context HUD, Cashier Zone, Speed Upgrade, and Player Walk features complete.
+All MVP steps are implemented and running. Expand Store, Shop UI, Plant Types, Context HUD, Cashier Zone, Speed Upgrade, Player Walk, and Customer System features complete.
 
-Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`, `shop-ui-steps.md`, `plant-types-steps.md`, `context-hud-steps.md`, `cashier-zone-steps.md`, `speed-upgrade-steps.md`, `player-walk-steps.md`.
+Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `grafter-steps.md`, `expand-store-steps.md`, `shop-ui-steps.md`, `plant-types-steps.md`, `context-hud-steps.md`, `cashier-zone-steps.md`, `speed-upgrade-steps.md`, `player-walk-steps.md`, `customer-system-steps.md`.
 
 ---
 
@@ -27,11 +27,11 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 |------|-------------|
 | `config.lua` | Shared constants — `U`, `SLOT_COST`, `ZONE_WIDTH` (400px cashier zone) |
 | `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
-| `game_state.lua` | Holds store, player, currency; survives scene switches |
+| `game_state.lua` | Holds store, player, currency, `unlocked_plants`, `stage3_counts`, `seen_scripts`; survives scene switches |
 | `player.lua` | Moves left/right into cashier zone; holds one item; 4-frame walk animation (idle/walk × no-held/held); `speed` property upgradeable via shop |
 | `slot.lua` | One store cell; positions its item every frame |
 | `store.lua` | Array of slots; `slot_at(x)`, `grow()`, `draw_bubbles()` for high-priority bubble rendering |
-| `customer.lua` | Cashier zone NPC; walks in, waits with speech bubble, walks out after sale; state machine: idle → walking_in → waiting → walking_out |
+| `customer.lua` | Cashier zone NPC; scripted or random; dialog advances with F, plant bubble shows after last message; state machine: idle → walking_in → waiting → walking_out |
 
 ### Items (`lua/game/items/`)
 
@@ -56,6 +56,7 @@ Completed step files are moved to [`archive/`](archive/) — `mvp-steps.md`, `gr
 | File | What it does |
 |------|-------------|
 | `plant_data.lua` | Per-type name, buy cost, sell value, cooldowns, and 3-stage color palette for all 6 plant types |
+| `customer_scripts.lua` | Ordered array of scripted customers; each has an `id`, `trigger` (plant_type + stage-3 count), name, body color, requested plant, and dialog messages |
 
 ---
 

@@ -27,16 +27,45 @@ function Customer.new(target_x, exit_x, y)
     self.bubble         = Sprite.new(0, 0, BW, BH)
     self.bubble.visible = false
 
+    self.name         = "Customer"
+    self.messages     = {}
+    self.msg_index    = 1
+    self.done_talking = false
+
     return self
 end
 
-function Customer:show(plant_type)
-    self.plant_type       = plant_type or 1
-    self.x                = self.exit_x
-    self.state            = "walking_in"
-    self.sprite.visible   = true
-    self.bubble.color     = PLANT_DATA[self.plant_type].colors[3]
-    self.bubble.visible   = false
+local DEFAULT_COLOR = {0.85, 0.55, 0.30, 1}
+
+function Customer:show(cfg)
+    self.plant_type    = cfg.plant_type or 1
+    self.name          = cfg.name or "Customer"
+    self.messages      = cfg.messages or {}
+    self.msg_index     = 1
+    self.done_talking  = #self.messages == 0
+    self.x             = self.exit_x
+    self.state         = "walking_in"
+    self.sprite.visible = true
+    self.bubble.color  = PLANT_DATA[self.plant_type].colors[3]
+    self.bubble.visible = false
+    if cfg.body_color then
+        self.sprite.color = cfg.body_color
+    else
+        self.sprite.color = DEFAULT_COLOR
+    end
+end
+
+function Customer:advance()
+    if self.done_talking then return end
+    if self.msg_index < #self.messages then
+        self.msg_index = self.msg_index + 1
+    else
+        self.done_talking = true
+    end
+end
+
+function Customer:on_last_message()
+    return self.done_talking
 end
 
 function Customer:serve()
@@ -83,10 +112,16 @@ end
 
 function Customer:draw_bubble()
     if not self.bubble.visible then return end
-    self.bubble:draw()
-    love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.print(PLANT_DATA[self.plant_type].name, self.bubble.x, self.bubble.y - 16)
-    love.graphics.setColor(1, 1, 1, 1)
+    if self.done_talking then
+        self.bubble:draw()
+    else
+        love.graphics.setColor(1, 1, 1, 0.9)
+        local line = self.messages[self.msg_index] or ""
+        local text = self.name .. ": " .. line
+        local tw   = love.graphics.getFont():getWidth(text)
+        love.graphics.print(text, self.bubble.x + BW / 2 - tw / 2, self.bubble.y)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
 end
 
 return Customer
