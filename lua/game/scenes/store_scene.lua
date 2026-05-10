@@ -72,28 +72,7 @@ function StoreScene:_setup_store()
     self._customer    = Customer.new(target_x, exit_x, customer_y)
     self._spawn_timer = math.random(3, 6)
 
-    -- assets/cashier_wall.png
-    --   canvas size : 400 × 800 px
-    --   drawn at    : world position (-400, 0)  [left edge of cashier zone]
-    --
-    --   TRANSPARENT region (the window cutout):
-    --     x : 0 – 400   (full width)
-    --     y : 520 – 680  (160 px tall; exposes customer upper body through the wall)
-    --
-    --   everything outside that rectangle should be opaque wall art
-    --
-    -- placeholder: generated canvas until the real PNG exists
-    -- replace the canvas block below with:
-    --   local wall_img = love.graphics.newImage("assets/cashier_wall.png")
-    local wall_canvas = love.graphics.newCanvas(ZONE_WIDTH, 800)
-    love.graphics.setCanvas(wall_canvas)
-    love.graphics.clear(0, 0, 0, 0)
-    love.graphics.setColor(0.32, 0.22, 0.38, 1)
-    love.graphics.rectangle("fill", 0, 0,   ZONE_WIDTH, 520)        -- above window
-    love.graphics.rectangle("fill", 0, 680, ZONE_WIDTH, 800 - 680)  -- below window
-    love.graphics.setCanvas()
-    love.graphics.setColor(1, 1, 1, 1)
-    local wall_img = wall_canvas
+    local wall_img = require("lua/game/assets").cashier_wall
 
     self._wall = {
         draw = function()
@@ -179,9 +158,8 @@ function StoreScene:_handle_pick_up_down()
 
     -- loaded grafter + empty slot → place clone, grafter stays in hand
     if player.held_item and player.held_item.loaded_plant and slot and not slot.item then
-        slot.item                         = player.held_item.loaded_plant
-        player.held_item.loaded_plant     = nil
-        player.held_item.sprite.color     = {1.0, 0.5, 0.0, 1}
+        slot.item = player.held_item.loaded_plant
+        player.held_item:unload()
         return
     end
 
@@ -222,9 +200,8 @@ function StoreScene:_handle_interact()
         local held = player.held_item
         if held.loaded_plant then
             -- sell the loaded plant, keep grafter in hand
-            self.game_state.currency  = self.game_state.currency + plant_sell_value(held.loaded_plant)
-            held.loaded_plant         = nil
-            held.sprite.color         = {1.0, 0.5, 0.0, 1}
+            self.game_state.currency = self.game_state.currency + plant_sell_value(held.loaded_plant)
+            held:unload()
         else
             local value = held.stage and plant_sell_value(held) or 0
             self.game_state.currency = self.game_state.currency + value

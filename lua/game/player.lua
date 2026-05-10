@@ -1,6 +1,7 @@
 local SpriteSet = require("lua/core/spriteset")
 local Sprite    = require("lua/core/sprite")
 local CONFIG     = require("lua/game/config")
+local A          = require("lua/game/assets")
 local U          = CONFIG.U
 local ZONE_WIDTH = CONFIG.ZONE_WIDTH
 
@@ -19,10 +20,10 @@ function Player.new(x)
     self.held_item   = nil
     self.speed       = BASE_SPEED
 
-    local idle      = Sprite.new(0, 0, W, H); idle.color      = {0.30, 0.55, 1.0,  1}
-    local walk      = Sprite.new(0, 0, W, H); walk.color      = {0.20, 0.45, 0.90, 1}
-    local idle_held = Sprite.new(0, 0, W, H); idle_held.color = {0.30, 0.75, 0.55, 1}
-    local walk_held = Sprite.new(0, 0, W, H); walk_held.color = {0.20, 0.65, 0.45, 1}
+    local idle      = Sprite.new(0, 0, W, H); idle.image      = A.player_idle;      idle.color      = {1, 1, 1, 1}
+    local walk      = Sprite.new(0, 0, W, H); walk.image      = A.player_walk;      walk.color      = {1, 1, 1, 1}
+    local idle_held = Sprite.new(0, 0, W, H); idle_held.image = A.player_idle_held; idle_held.color = {1, 1, 1, 1}
+    local walk_held = Sprite.new(0, 0, W, H); walk_held.image = A.player_walk_held; walk_held.color = {1, 1, 1, 1}
 
     self.sprite = SpriteSet.new()
     self.sprite:add("idle",      idle)

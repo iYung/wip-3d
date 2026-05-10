@@ -2,6 +2,7 @@ local Item       = require("lua/game/items/item")
 local Plant      = require("lua/game/items/plant")
 local Sprite     = require("lua/core/sprite")
 local PLANT_DATA = require("lua/game/data/plant_data")
+local A          = require("lua/game/assets")
 local U          = require("lua/game/config").U
 
 local Grafter = setmetatable({}, { __index = Item })
@@ -17,7 +18,8 @@ function Grafter.new()
     self.loaded_plant = nil
     self.name         = "Grafter"
     self.sprite       = Sprite.new(0, 0, 6 * U, 6 * U)
-    self.sprite.color = COLOR_EMPTY
+    self.sprite.image = A.grafter_empty
+    self.sprite.color = {1, 1, 1, 1}
     return self
 end
 
@@ -37,7 +39,12 @@ function Grafter:interact(player, store, scene_manager)
     plant.sprite:set("1")
 
     self.loaded_plant    = Plant.new(plant.plant_type)
-    self.sprite.color    = COLOR_LOADED
+    self.sprite.image    = A.grafter_loaded
+end
+
+function Grafter:unload()
+    self.loaded_plant = nil
+    self.sprite.image = A.grafter_empty
 end
 
 function Grafter:draw()

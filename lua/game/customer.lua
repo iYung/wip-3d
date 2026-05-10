@@ -1,11 +1,12 @@
 local Sprite     = require("lua/core/sprite")
 local PLANT_DATA = require("lua/game/data/plant_data")
+local A          = require("lua/game/assets")
 local U          = require("lua/game/config").U
 
 local CW    = 6 * U   -- 120
 local CH    = 12 * U  -- 240
-local BW    = 3 * U   -- bubble width  60
-local BH    = 3 * U   -- bubble height 60
+local BW    = 6 * U   -- bubble width  120  (matches plant sprite size)
+local BH    = 6 * U   -- bubble height 120
 local SPEED = 80
 
 local Customer = {}
@@ -21,10 +22,12 @@ function Customer.new(target_x, exit_x, y)
     self.exit_x       = exit_x
 
     self.sprite         = Sprite.new(0, 0, CW, CH)
+    self.sprite.image   = A.customer
     self.sprite.color   = {0.85, 0.55, 0.30, 1}
     self.sprite.visible = false
 
     self.bubble         = Sprite.new(0, 0, BW, BH)
+    self.bubble.image   = A.customer_bubble
     self.bubble.visible = false
 
     self.name         = "Customer"

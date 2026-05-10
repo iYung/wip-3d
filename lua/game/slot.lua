@@ -1,4 +1,5 @@
 local Sprite = require("lua/core/sprite")
+local A      = require("lua/game/assets")
 local U      = require("lua/game/config").U
 
 local SLOT_HEIGHT = 10 * U  -- 200
@@ -15,10 +16,9 @@ function Slot.new(index, slot_width)
     self.y           = SLOT_Y
     self.item        = nil
 
-    self.bg          = Sprite.new(self.x + 1, self.y + 1, self.slot_width - 2, SLOT_HEIGHT - 2)
-    self.bg.color    = {0.22, 0.18, 0.14, 1}
-    self.border      = Sprite.new(self.x, self.y, self.slot_width, SLOT_HEIGHT)
-    self.border.color = {0.35, 0.28, 0.20, 1}
+    self.bg       = Sprite.new(self.x, self.y, self.slot_width, SLOT_HEIGHT)
+    self.bg.image = A.slot
+    self.bg.color = {1, 1, 1, 1}
 
     return self
 end
@@ -34,7 +34,6 @@ function Slot:update(dt)
 end
 
 function Slot:draw()
-    self.border:draw()
     self.bg:draw()
     if self.item then
         self.item:draw()

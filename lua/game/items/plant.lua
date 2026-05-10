@@ -2,6 +2,7 @@ local Item       = require("lua/game/items/item")
 local SpriteSet  = require("lua/core/spriteset")
 local Sprite     = require("lua/core/sprite")
 local PLANT_DATA = require("lua/game/data/plant_data")
+local A          = require("lua/game/assets")
 local U          = require("lua/game/config").U
 
 local Plant = setmetatable({}, { __index = Item })
@@ -24,12 +25,14 @@ function Plant.new(plant_type)
     for i = 1, 3 do
         local s       = Sprite.new(0, 0, ITEM_SIZE, ITEM_SIZE)
         s.color       = colors[i]
+        s.image       = A["plant_" .. self.plant_type][i]
         ss:add(tostring(i), s)
     end
     ss:set("1")
     self.sprite = ss
 
     self.bubble         = Sprite.new(0, 0, 3 * U, 3 * U)  -- 60x60
+    self.bubble.image   = A.plant_bubble
     self.bubble.color   = {1.0, 1.0, 0.0, 1.0}
     self.bubble.visible = false
 

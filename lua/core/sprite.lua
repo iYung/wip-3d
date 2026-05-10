@@ -24,7 +24,9 @@ function Sprite:draw()
     if self.shader then love.graphics.setShader(self.shader) end
     love.graphics.setColor(self.color)
     if self.image then
-        love.graphics.draw(self.image, 0, 0)
+        local sx = self.width  / self.image:getWidth()
+        local sy = self.height / self.image:getHeight()
+        love.graphics.draw(self.image, 0, 0, 0, sx, sy)
     else
         love.graphics.rectangle("fill", 0, 0, self.width, self.height)
     end
