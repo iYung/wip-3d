@@ -30,11 +30,8 @@ function Slot:update(dt)
     self.item:update(dt)
     local spr = self.item.sprite
     if spr then
-        local eff = (spr._active and spr:_active()) or spr
-        local iw  = eff and eff.width  or self.slot_width
-        local ih  = eff and eff.height or SLOT_HEIGHT
-        spr.x = self.x + (self.slot_width - iw) / 2
-        spr.y = self.y + (SLOT_HEIGHT     - ih) / 2
+        spr.x = self.x + (self.slot_width - spr.width)  / 2
+        spr.y = self.y + (SLOT_HEIGHT     - spr.height) / 2
     end
 end
 

@@ -1,5 +1,11 @@
 local SpriteSet = {}
-SpriteSet.__index = SpriteSet
+SpriteSet.__index = function(t, k)
+    if k == "width" or k == "height" then
+        local active = rawget(t, "sprites")[rawget(t, "current")]
+        return active and active[k] or 0
+    end
+    return SpriteSet[k]
+end
 
 function SpriteSet.new()
     local self    = setmetatable({}, SpriteSet)

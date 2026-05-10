@@ -78,11 +78,8 @@ function Player:update(dt, input, store)
     if self.held_item then
         local spr = self.held_item.sprite
         if spr then
-            local active = spr._active and spr:_active() or spr
-            local iw = active and active.width  or 4 * U
-            local ih = active and active.height or 4 * U
-            spr.x = self.x - iw / 2
-            spr.y = self.y - H / 2 - ih
+            spr.x = self.x - spr.width  / 2
+            spr.y = self.y - H / 2 - spr.height
         end
     end
 end
