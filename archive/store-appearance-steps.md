@@ -11,7 +11,7 @@ Current layout (world → screen with camera.y = 500):
 
 ## Step 1 — Lower the scene to close the gap
 
-- [ ] Reduce `CAMERA_Y` in `store_scene.lua` from `500` to `460`
+- [x] Reduce `CAMERA_Y` in `store_scene.lua` from `500` to `460`
 
 `CAMERA_Y` in `store_scene.lua` controls the vertical lock. Decreasing it shifts all world content downward on screen (counter-intuitive: lower camera y = content appears lower).
 
@@ -30,9 +30,9 @@ No other files need changing: player y, customer y, and slot y are all world-spa
 
 ## Step 2 — Highlight the hovered slot
 
-- [ ] Add `self.highlighted = false` to `Slot.new()` in `slot.lua`
-- [ ] Draw a faint white overlay in `Slot:draw()` when `self.highlighted` is true
-- [ ] Clear all highlights and set the active slot's each frame in `StoreScene:update()`
+- [x] Add `self.highlighted = false` to `Slot.new()` in `slot.lua`
+- [x] Draw a faint white overlay in `Slot:draw()` when `self.highlighted` is true
+- [x] Clear all highlights and set the active slot's each frame in `StoreScene:update()`
 
 ### Add `highlighted` to Slot
 

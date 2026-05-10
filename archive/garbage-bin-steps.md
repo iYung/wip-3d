@@ -6,18 +6,18 @@ Goal: money comes only from selling to customers. The bin disposes of unwanted i
 
 ## Step 1 — Rename Sell Bin → Garbage Bin
 
-- [ ] Rename `lua/game/items/sell_bin.lua` to `garbage_bin.lua`
-- [ ] Rename class `SellBin` → `GarbageBin` and field `is_sell_bin` → `is_garbage_bin` throughout
-- [ ] Update `self.name` to `"Garbage Bin"`
-- [ ] Rename asset key `A.sell_bin` → `A.garbage_bin` in `assets.lua`
-- [ ] Rename asset filename `assets/sell_bin.png` → `assets/garbage_bin.png` and update `generate_assets.py`
-- [ ] Update `store_scene.lua` require and all references (`is_sell_bin`, `SellBin`)
+- [x] Rename `lua/game/items/sell_bin.lua` to `garbage_bin.lua`
+- [x] Rename class `SellBin` → `GarbageBin` and field `is_sell_bin` → `is_garbage_bin` throughout
+- [x] Update `self.name` to `"Garbage Bin"`
+- [x] Rename asset key `A.sell_bin` → `A.garbage_bin` in `assets.lua`
+- [x] Rename asset filename `assets/sell_bin.png` → `assets/garbage_bin.png` and update `generate_assets.py`
+- [x] Update `store_scene.lua` require and all references (`is_sell_bin`, `SellBin`)
 
 ---
 
 ## Step 2 — Bin no longer pays currency
 
-- [ ] Remove currency grant from the garbage bin F-interact block in `store_scene.lua`
+- [x] Remove currency grant from the garbage bin F-interact block in `store_scene.lua`
 
 In `store_scene.lua`, the F-interact block that detects the garbage bin currently adds currency before discarding the item. Remove the currency grant — just discard.
 
@@ -54,7 +54,7 @@ end
 
 ## Step 3 — Update context HUD label
 
-- [ ] Change bin HUD label from `F: SELL ($X)` to `F: DISCARD` and remove the value calculation
+- [x] Change bin HUD label from `F: SELL ($X)` to `F: DISCARD` and remove the value calculation
 
 The HUD currently shows `F: SELL ($X)` when hovering the bin with a sellable item. Change to `F: DISCARD`.
 
@@ -72,8 +72,8 @@ Remove the `value` calculation in that branch — it's no longer needed.
 
 ## Step 4 — Remove 2× multiplier from cashier sale
 
-- [ ] Remove `* 2` from the sale value in `_handle_interact`
-- [ ] Update the matching HUD label to show the correct value
+- [x] Remove `* 2` from the sale value in `_handle_interact`
+- [x] Update the matching HUD label to show the correct value
 
 In `_handle_interact`, the cashier sale currently pays double:
 ```lua

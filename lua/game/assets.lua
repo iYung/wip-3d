@@ -23,7 +23,7 @@ end
 A.watering_can  = img("assets/watering_can.png")
 A.grafter_empty  = img("assets/grafter_empty.png")
 A.grafter_loaded = img("assets/grafter_loaded.png")
-A.sell_bin       = img("assets/sell_bin.png")
+A.garbage_bin    = img("assets/garbage_bin.png")
 A.pc_store       = img("assets/pc_store.png")
 
 A.slot         = img("assets/slot.png")

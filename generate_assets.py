@@ -38,7 +38,7 @@ for pt in range(1, 7):
 rect("watering_can.png",   120, 120, 0.30, 0.60, 1.00)
 rect("grafter_empty.png",  120, 120, 1.00, 0.50, 0.00)
 rect("grafter_loaded.png", 120, 120, 1.00, 0.90, 0.00)
-rect("sell_bin.png",       120, 120, 0.90, 0.20, 0.20)
+rect("garbage_bin.png",    120, 120, 0.90, 0.20, 0.20)
 rect("pc_store.png",       120, 120, 0.70, 0.75, 0.90)
 
 # ── Slot (120×200) – baked border color ───────────────────────

@@ -20,6 +20,8 @@ function Slot.new(index, slot_width)
     self.bg.image = A.slot
     self.bg.color = {1, 1, 1, 1}
 
+    self.highlighted = false
+
     return self
 end
 
@@ -35,6 +37,11 @@ end
 
 function Slot:draw()
     self.bg:draw()
+    if self.highlighted then
+        love.graphics.setColor(1, 1, 1, 0.08)
+        love.graphics.rectangle("fill", self.x, self.y, self.slot_width, SLOT_HEIGHT)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
     if self.item then
         self.item:draw()
     end

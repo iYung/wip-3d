@@ -4,6 +4,7 @@ local WateringCan = require("lua/game/items/watering_can")
 local Grafter     = require("lua/game/items/grafter")
 local config      = require("lua/game/config")
 local PLANT_DATA  = require("lua/game/data/plant_data")
+local A           = require("lua/game/assets")
 local SPEED_TIERS = config.SPEED_TIERS
 
 local CATALOGUE = {}
@@ -98,7 +99,6 @@ function BuyScene:_confirm()
         gs.currency     = gs.currency - tier.cost
         gs.speed_level  = gs.speed_level + 1
         gs.player.speed = tier.speed
-        self.scene_manager:switch(self.store_scene)
         return
     end
 
@@ -110,15 +110,16 @@ function BuyScene:_confirm()
     if kind == "plant" then
         gs.player.held_item = Plant.new(ent.plant_type)
         gs.unlocked_plants[ent.plant_type] = true
+        self.scene_manager:switch(self.store_scene)
     elseif kind == "tool_watering_can" then
         gs.player.held_item = WateringCan.new()
+        self.scene_manager:switch(self.store_scene)
     elseif kind == "tool_grafter" then
         gs.player.held_item = Grafter.new()
+        self.scene_manager:switch(self.store_scene)
     elseif kind == "expand" then
         gs.store:grow()
     end
-
-    self.scene_manager:switch(self.store_scene)
 end
 
 function BuyScene:draw()
@@ -152,12 +153,23 @@ function BuyScene:draw()
     love.graphics.setColor(1, 1, 1, 0.9)
     love.graphics.print("Currency: " .. currency, 1100, 20, 0, 1.2, 1.2)
 
-    -- item preview rectangle
-    love.graphics.setColor(ent.color)
-    love.graphics.rectangle("fill",
-        CENTER_X - PREVIEW_SIZE / 2,
-        CENTER_Y - 140 - PREVIEW_SIZE / 2,
-        PREVIEW_SIZE, PREVIEW_SIZE)
+    -- item preview
+    if ent.kind == "plant" then
+        local img = A["plant_" .. ent.plant_type][3]
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(img,
+            CENTER_X - PREVIEW_SIZE / 2,
+            CENTER_Y - 140 - PREVIEW_SIZE / 2,
+            0,
+            PREVIEW_SIZE / img:getWidth(),
+            PREVIEW_SIZE / img:getHeight())
+    else
+        love.graphics.setColor(ent.color)
+        love.graphics.rectangle("fill",
+            CENTER_X - PREVIEW_SIZE / 2,
+            CENTER_Y - 140 - PREVIEW_SIZE / 2,
+            PREVIEW_SIZE, PREVIEW_SIZE)
+    end
 
     -- item name
     love.graphics.setColor(1, 1, 1, 1)

@@ -6,8 +6,8 @@ Goal: plant previews in the shop show real plant images instead of colored recta
 
 ## Step 1 — Use real plant images in the preview
 
-- [ ] Add `local A = require("lua/game/assets")` to `buy_scene.lua`
-- [ ] Replace the colored rectangle preview with the stage-3 plant image for plant entries
+- [x] Add `local A = require("lua/game/assets")` to `buy_scene.lua`
+- [x] Replace the colored rectangle preview with the stage-3 plant image for plant entries
 
 Currently `buy_scene.lua` draws a colored rectangle for each catalogue entry using `ent.color`. For plant entries, replace this with the actual stage-3 plant image from `assets`.
 
@@ -46,8 +46,8 @@ Add `local A = require("lua/game/assets")` at the top of `buy_scene.lua`.
 
 ## Step 2 — Expand Slot and Speed Boost stay in the shop after purchase
 
-- [ ] Remove `scene_manager:switch` from the speed boost branch
-- [ ] Remove `scene_manager:switch` from the expand branch; keep it only for hand items (plant, watering can, grafter)
+- [x] Remove `scene_manager:switch` from the speed boost branch
+- [x] Remove `scene_manager:switch` from the expand branch; keep it only for hand items (plant, watering can, grafter)
 
 In `BuyScene:_confirm()`, every successful purchase currently ends with `self.scene_manager:switch(self.store_scene)`. Expand Slot and Speed Boost are upgrades — they should apply and stay in the shop so the player can buy another or browse. Only items that go into the player's hand (plants, watering can, grafter) should close the shop.
 

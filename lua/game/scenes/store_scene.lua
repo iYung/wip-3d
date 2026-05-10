@@ -1,7 +1,7 @@
 local Scene        = require("lua/core/scene")
 local WateringCan  = require("lua/game/items/watering_can")
 local PCStore      = require("lua/game/items/pc_store")
-local SellBin      = require("lua/game/items/sell_bin")
+local GarbageBin   = require("lua/game/items/garbage_bin")
 local BuyScene     = require("lua/game/scenes/buy_scene")
 local PLANT_DATA        = require("lua/game/data/plant_data")
 local CUSTOMER_SCRIPTS  = require("lua/game/data/customer_scripts")
@@ -14,7 +14,7 @@ local function plant_sell_value(plant)
     return pd and pd.sell or 5
 end
 
-local CAMERA_Y    = 500  -- fixed world y the camera locks to
+local CAMERA_Y    = 440  -- fixed world y the camera locks to
 local CAMERA_LERP = 0.85 -- smoothing: 0=instant, 1=no movement; 0.85 = smooth lag
 
 local StoreScene = setmetatable({}, { __index = Scene })
@@ -56,7 +56,7 @@ function StoreScene:_setup_store()
     local self_ref = self
 
     store.slots[1].item = WateringCan.new()
-    store.slots[2].item = SellBin.new()
+    store.slots[2].item = GarbageBin.new()
 
     store.slots[3].item = PCStore.new(function()
         local slot = gs.player:active_slot(store)
@@ -139,6 +139,14 @@ function StoreScene:update(dt)
     gs.player:update(dt, input, gs.store)
     self._customer:update(dt)
 
+    for _, slot in ipairs(gs.store.slots) do
+        slot.highlighted = false
+    end
+    if gs.player.x >= 0 then
+        local active = gs.player:active_slot(gs.store)
+        if active then active.highlighted = true end
+    end
+
     if not self._customer:active() then
         self._spawn_timer = self._spawn_timer - dt
         if self._spawn_timer <= 0 then
@@ -198,7 +206,7 @@ function StoreScene:_handle_interact()
     if player.x < 0 and self._customer:arrived() then
         local held = player.held_item
         if self._customer:on_last_message() and held and held.plant_type == self._customer.plant_type and held.stage == 3 then
-            local value = plant_sell_value(held) * 2
+            local value = plant_sell_value(held)
             self.game_state.currency = self.game_state.currency + value
             player.held_item = nil
             self._customer:serve()
@@ -208,16 +216,12 @@ function StoreScene:_handle_interact()
         return
     end
 
-    -- held item + sell bin → sell (plants: stage 3 = SELL_VALUE, others = 1; tools = 0)
-    if player.held_item and player.held_item.sellable ~= false and slot and slot.item and slot.item.is_sell_bin then
+    -- held item + garbage bin → discard
+    if player.held_item and player.held_item.sellable ~= false and slot and slot.item and slot.item.is_garbage_bin then
         local held = player.held_item
         if held.loaded_plant then
-            -- sell the loaded plant, keep grafter in hand
-            self.game_state.currency = self.game_state.currency + plant_sell_value(held.loaded_plant)
             held:unload()
         else
-            local value = held.stage and plant_sell_value(held) or 0
-            self.game_state.currency = self.game_state.currency + value
             player.held_item = nil
         end
         return
@@ -258,7 +262,7 @@ function StoreScene:_hud_labels()
     if player.x < 0 and self._customer and self._customer:arrived() then
         if self._customer:on_last_message() then
             if held and held.plant_type == self._customer.plant_type and held.stage == 3 then
-                f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) * 2 .. ")"
+                f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")"
             end
         else
             f_label = "F: NEXT"
@@ -269,14 +273,8 @@ function StoreScene:_hud_labels()
         f_label = "F: WATER"
     elseif held and held.name == "Grafter" and not held.loaded_plant and slot_item and slot_item.stage == 3 then
         f_label = "F: CLONE"
-    elseif held and held.sellable ~= false and slot_item and slot_item.is_sell_bin then
-        local value
-        if held.loaded_plant then
-            value = plant_sell_value(held.loaded_plant)
-        else
-            value = held.stage and plant_sell_value(held) or 0
-        end
-        f_label = "F: SELL ($" .. value .. ")"
+    elseif held and held.sellable ~= false and slot_item and slot_item.is_garbage_bin then
+        f_label = "F: DISCARD"
     end
 
     return { slot = slot_label, e = e_label, f = f_label }
