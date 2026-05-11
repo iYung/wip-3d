@@ -6,7 +6,9 @@ local BuyScene     = require("lua/game/scenes/buy_scene")
 local PLANT_DATA        = require("lua/game/data/plant_data")
 local CUSTOMER_SCRIPTS  = require("lua/game/data/customer_scripts")
 local Customer          = require("lua/game/customer")
-local ZONE_WIDTH   = require("lua/game/config").ZONE_WIDTH
+local config       = require("lua/game/config")
+local ZONE_WIDTH   = config.ZONE_WIDTH
+local U            = config.U
 
 local function plant_sell_value(plant)
     if plant.stage ~= 3 then return 1 end
@@ -42,6 +44,7 @@ function StoreScene:on_enter()
     self.drawer:add(gs.store,              0)
     self.drawer:add(self._customer,        1)
     self.drawer:add(self._wall,            2)
+    self.drawer:add(self._cashier_floor,   2.5)
     self.drawer:add(self._plant_bubbles,   3)
     self.drawer:add(gs.player,             4)
     self.drawer:add(self._customer_bubble, 5)
@@ -69,7 +72,9 @@ function StoreScene:_setup_store()
     self._customer    = Customer.new(target_x, exit_x, customer_y)
     self._spawn_timer = math.random(3, 6)
 
-    local wall_img = require("lua/game/assets").cashier_wall
+    local A        = require("lua/game/assets")
+    local wall_img = A.cashier_wall
+    local slot_img = A.slot
 
     self._wall = {
         draw = function()
@@ -86,6 +91,21 @@ function StoreScene:_setup_store()
     local store_ref = gs.store
     self._plant_bubbles = {
         draw = function() store_ref:draw_bubbles() end
+    }
+
+    local floor_y  = 30 * U
+    local slot_w   = store_ref.slot_width
+    local sx = slot_w / slot_img:getWidth()
+    local sy = slot_w / slot_img:getHeight()
+    self._cashier_floor = {
+        draw = function()
+            love.graphics.setColor(1, 1, 1, 1)
+            local fx = -ZONE_WIDTH
+            while fx < 0 do
+                love.graphics.draw(slot_img, fx, floor_y, 0, sx, sy)
+                fx = fx + slot_w
+            end
+        end
     }
 end
 
