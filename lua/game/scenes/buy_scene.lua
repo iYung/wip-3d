@@ -43,14 +43,21 @@ CATALOGUE[#CATALOGUE + 1] = {
     color       = {0.8, 0.8, 0.8, 1},
 }
 CATALOGUE[#CATALOGUE + 1] = {
-    label = "Speed Boost",
-    kind  = "speed_boost",
-    color = {1.0, 0.85, 0.2, 1},
+    label       = "Sneakers",
+    description = "New shoes.\nMove faster!",
+    kind        = "speed_boost",
+    color       = {1.0, 0.85, 0.2, 1},
 }
 
-local PREVIEW_SIZE = 120
+local PREVIEW_SIZE = 160
 local CENTER_X     = 640
 local CENTER_Y     = 360
+local ARROW_SIZE   = 60
+
+local font_name  = love.graphics.newFont(32)
+local font_desc  = love.graphics.newFont(20)
+local font_price = love.graphics.newFont(26)
+local font_ui    = love.graphics.newFont(16)
 
 local BuyScene = setmetatable({}, { __index = Scene })
 BuyScene.__index = BuyScene
@@ -136,7 +143,7 @@ function BuyScene:draw()
         else
             local tier   = SPEED_TIERS[gs.speed_level + 1]
             display_cost = "$" .. tier.cost
-            display_desc = "Speed: " .. tier.speed .. " px/s"
+            display_desc = ent.description
             can_buy      = currency >= tier.cost
         end
     else
@@ -145,81 +152,100 @@ function BuyScene:draw()
         can_buy      = currency >= ent.cost
     end
 
-    -- overlay
-    love.graphics.setColor(0, 0, 0, 0.88)
-    love.graphics.rectangle("fill", 0, 0, 1280, 720)
+    -- background
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(A.buy_bg, 0, 0)
+
+    local prev_font = love.graphics.getFont()
 
     -- currency top-right
-    love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.print("Currency: " .. currency, 1100, 20, 0, 1.2, 1.2)
+    love.graphics.setFont(font_ui)
+    love.graphics.setColor(0.15, 0.15, 0.15, 1)
+    love.graphics.print("Currency: " .. currency, 1100, 80)
+
+    -- build desc lines early so we can measure total height
+    local desc_lines = {}
+    for line in (display_desc .. "\n"):gmatch("([^\n]*)\n") do
+        desc_lines[#desc_lines + 1] = line
+    end
+
+    local gap1    = 40   -- preview → name
+    local gap2    = 20   -- name → description
+    local gap3    = 28   -- description → price
+    local line_h  = 28
+    local total_h = PREVIEW_SIZE
+                  + gap1 + font_name:getHeight()
+                  + gap2 + #desc_lines * line_h
+                  + gap3 + font_price:getHeight()
+    local y = math.floor((720 - total_h) / 2)
 
     -- item preview
     if ent.kind == "plant" then
         local img = A["plant_" .. ent.plant_type][3]
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(img,
-            CENTER_X - PREVIEW_SIZE / 2,
-            CENTER_Y - 140 - PREVIEW_SIZE / 2,
+            CENTER_X - PREVIEW_SIZE / 2, y,
             0,
             PREVIEW_SIZE / img:getWidth(),
             PREVIEW_SIZE / img:getHeight())
     else
         love.graphics.setColor(ent.color)
-        love.graphics.rectangle("fill",
-            CENTER_X - PREVIEW_SIZE / 2,
-            CENTER_Y - 140 - PREVIEW_SIZE / 2,
-            PREVIEW_SIZE, PREVIEW_SIZE)
+        love.graphics.rectangle("fill", CENTER_X - PREVIEW_SIZE / 2, y, PREVIEW_SIZE, PREVIEW_SIZE)
     end
+    y = y + PREVIEW_SIZE + gap1
 
     -- item name
-    love.graphics.setColor(1, 1, 1, 1)
-    local font        = love.graphics.getFont()
-    local name_scale  = 2
-    local name_w      = font:getWidth(ent.label) * name_scale
-    love.graphics.print(ent.label, CENTER_X - name_w / 2, CENTER_Y - 40, 0, name_scale, name_scale)
+    love.graphics.setFont(font_name)
+    love.graphics.setColor(0.1, 0.1, 0.1, 1)
+    local name_w = font_name:getWidth(ent.label)
+    love.graphics.print(ent.label, CENTER_X - name_w / 2, y)
+    y = y + font_name:getHeight() + gap2
 
     -- description
-    love.graphics.setColor(0.8, 0.8, 0.8, 1)
-    local desc_lines = {}
-    for line in (display_desc .. "\n"):gmatch("([^\n]*)\n") do
-        desc_lines[#desc_lines + 1] = line
-    end
-    local desc_scale = 1.2
+    love.graphics.setFont(font_desc)
+    love.graphics.setColor(0.25, 0.25, 0.25, 1)
     for i, line in ipairs(desc_lines) do
-        local lw = font:getWidth(line) * desc_scale
-        love.graphics.print(line, CENTER_X - lw / 2, CENTER_Y + 10 + (i - 1) * 24, 0, desc_scale, desc_scale)
+        local lw = font_desc:getWidth(line)
+        love.graphics.print(line, CENTER_X - lw / 2, y + (i - 1) * line_h)
     end
+    y = y + #desc_lines * line_h + gap3
 
     -- price
+    love.graphics.setFont(font_price)
     if can_buy then
-        love.graphics.setColor(0.4, 1.0, 0.4, 1)
+        love.graphics.setColor(0.1, 0.45, 0.1, 1)
     else
-        love.graphics.setColor(0.6, 0.3, 0.3, 1)
+        love.graphics.setColor(0.5, 0.1, 0.1, 1)
     end
-    local price_scale = 1.6
-    local price_w     = font:getWidth(display_cost) * price_scale
-    love.graphics.print(display_cost, CENTER_X - price_w / 2, CENTER_Y + 80, 0, price_scale, price_scale)
+    local price_w = font_price:getWidth(display_cost)
+    love.graphics.print(display_cost, CENTER_X - price_w / 2, y)
 
-    -- cycle arrows
-    love.graphics.setColor(0.7, 0.7, 0.7, 1)
-    love.graphics.print("<", CENTER_X - 220, CENTER_Y - 40, 0, 2.5, 2.5)
-    love.graphics.print(">", CENTER_X + 190, CENTER_Y - 40, 0, 2.5, 2.5)
+    -- cycle arrows (unchanged)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(A.arrow_left,  CENTER_X - 230 - ARROW_SIZE / 2, CENTER_Y - ARROW_SIZE / 2)
+    love.graphics.draw(A.arrow_right, CENTER_X + 230 - ARROW_SIZE / 2, CENTER_Y - ARROW_SIZE / 2)
 
     -- index dots
-    local dot_gap = 18
+    local dot_size  = 20
+    local dot_gap   = 22
     local dot_start = CENTER_X - (#CATALOGUE - 1) * dot_gap / 2
+    love.graphics.setColor(1, 1, 1, 1)
     for i = 1, #CATALOGUE do
-        if i == self.selected then
-            love.graphics.setColor(1, 1, 1, 1)
-        else
-            love.graphics.setColor(0.4, 0.4, 0.4, 1)
-        end
-        love.graphics.circle("fill", dot_start + (i - 1) * dot_gap, CENTER_Y + 130, 5)
+        local img = (i == self.selected) and A.dot_active or A.dot_inactive
+        love.graphics.draw(img, dot_start + (i - 1) * dot_gap - dot_size / 2, CENTER_Y + 252)
     end
 
     -- controls hint
-    love.graphics.setColor(0.5, 0.5, 0.5, 1)
-    love.graphics.print("A/D cycle   F buy   E cancel", 460, 680, 0, 1.1, 1.1)
+    love.graphics.setFont(font_ui)
+    love.graphics.setColor(0.35, 0.35, 0.35, 1)
+    local hints = { "A/D: CYCLE", "F: BUY", "E: CANCEL" }
+    local y = 652
+    for _, hint in ipairs(hints) do
+        love.graphics.print(hint, 56, y)
+        y = y - 20
+    end
+
+    love.graphics.setFont(prev_font)
 
     love.graphics.setColor(1, 1, 1, 1)
 end

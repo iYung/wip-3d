@@ -24,6 +24,13 @@ rect_faced("player_walk.png",      120, 240, 0.20, 0.45, 0.90)
 rect_faced("player_idle_held.png", 120, 240, 0.30, 0.75, 0.55)
 rect_faced("player_walk_held.png", 120, 240, 0.20, 0.65, 0.45)
 
+# ── Buy scene (hand-drawn art, listed for reference) ──────────
+# rect("buy_bg.png",       1280, 720, 0, 0, 0)  # full-scene background
+# rect("arrow_left.png",     60,  60, 1, 1, 1)  # left cycle arrow
+# rect("arrow_right.png",    60,  60, 1, 1, 1)  # right cycle arrow
+# rect("dot_active.png",     20,  20, 0, 0, 0)  # selected dot
+# rect("dot_inactive.png",   20,  20, 1, 1, 1)  # unselected dot
+
 # ── Customer (white – body_color tint stays dynamic) ──────────
 rect_faced("customer.png",        120, 240, 1, 1, 1)
 rect_faced("customer_walk.png",   120, 240, 1, 1, 1)

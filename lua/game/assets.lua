@@ -9,6 +9,12 @@ A.player_walk      = img("assets/player_walk.png")
 A.player_idle_held = img("assets/player_idle_held.png")
 A.player_walk_held = img("assets/player_walk_held.png")
 
+A.buy_bg      = img("assets/buy_bg.png")
+A.arrow_left  = img("assets/arrow_left.png")
+A.arrow_right = img("assets/arrow_right.png")
+A.dot_active   = img("assets/dot_active.png")
+A.dot_inactive = img("assets/dot_inactive.png")
+
 A.customer        = img("assets/customer.png")
 A.customer_walk   = img("assets/customer_walk.png")
 A.customer_bubble = img("assets/customer_bubble.png")
