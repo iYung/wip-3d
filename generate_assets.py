@@ -42,7 +42,7 @@ rect("garbage_bin.png",    120, 120, 0.90, 0.20, 0.20)
 rect("pc_store.png",       120, 120, 0.70, 0.75, 0.90)
 
 # ── Slot (120×200) – baked border color ───────────────────────
-rect("slot.png", 120, 200, 0.35, 0.28, 0.20)
+rect("slot.png", 200, 200, 0.35, 0.28, 0.20)
 
 # ── Cashier wall (400×800, transparent window y:360-520) ──────
 img = Image.new("RGBA", (400, 800), (0, 0, 0, 0))
