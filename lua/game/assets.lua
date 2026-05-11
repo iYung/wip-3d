@@ -10,7 +10,9 @@ A.player_idle_held = img("assets/player_idle_held.png")
 A.player_walk_held = img("assets/player_walk_held.png")
 
 A.customer        = img("assets/customer.png")
+A.customer_walk   = img("assets/customer_walk.png")
 A.customer_bubble = img("assets/customer_bubble.png")
+A.heart_bubble    = img("assets/heart_bubble.png")
 
 A.plant_bubble = img("assets/plant_bubble.png")
 for pt = 1, 6 do

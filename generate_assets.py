@@ -26,10 +26,12 @@ rect_faced("player_walk_held.png", 120, 240, 0.20, 0.65, 0.45)
 
 # ── Customer (white – body_color tint stays dynamic) ──────────
 rect_faced("customer.png",        120, 240, 1, 1, 1)
+rect_faced("customer_walk.png",   120, 240, 1, 1, 1)
 rect("customer_bubble.png",        60,  60, 1, 1, 1)   # tinted to plant colors[3]
+rect("heart_bubble.png",          120, 120, 1, 1, 1)   # tinted pink at runtime
 
 # ── Plants (white – colors from plant_data tint stays) ────────
-rect("plant_bubble.png", 60, 60, 1, 1, 1)         # tinted yellow
+rect("plant_bubble.png", 120, 120, 1, 1, 1)        # tinted yellow
 for pt in range(1, 7):
     for stage in range(1, 4):
         rect(f"plant_{pt}_{stage}.png", 120, 120, 1, 1, 1)

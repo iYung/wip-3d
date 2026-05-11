@@ -31,7 +31,7 @@ function Plant.new(plant_type)
     ss:set("1")
     self.sprite = ss
 
-    self.bubble         = Sprite.new(0, 0, 3 * U, 3 * U)  -- 60x60
+    self.bubble         = Sprite.new(0, 0, 6 * U, 6 * U)  -- 120x120
     self.bubble.image   = A.plant_bubble
     self.bubble.color   = {1.0, 1.0, 0.0, 1.0}
     self.bubble.visible = false
