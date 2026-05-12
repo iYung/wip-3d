@@ -3,45 +3,90 @@
 ## Goal
 
 Customer dialog lines reveal character-by-character (typewriter effect). A
-background speech bubble box is drawn behind the text and expands in width as
-characters appear. Pressing F while text is still typing skips to the full line;
-pressing F again advances to the next message (existing behaviour).
+speech bubble image is drawn behind the text using 9-slice scaling so corners
+and the tail stay crisp while the box stretches to fit. Pressing F while text
+is still typing skips to the full line; pressing F again advances (existing
+behaviour).
 
-## Constants
+## Asset
+
+| File | Size | Slice margins |
+|------|------|---------------|
+| `assets/speech_bubble.png` | 96 × 72 | top=12, right=12, bottom=24, left=12 |
+
+The bottom margin is larger to include a downward-pointing tail. The centre of
+the image is the stretchable region. Missing file → fall back to no bubble
+(text only).
+
+## Constants (top of customer.lua)
 
 ```lua
-local REVEAL_SPEED = 40   -- characters per second
-local PAD          = 12   -- px padding inside the bubble box on each axis
-local MIN_BOX_W    = 120  -- minimum box width so it doesn't flash tiny
-local BOX_COLOR    = {0.08, 0.07, 0.10, 0.88}
-local BOX_OUTLINE  = {0.60, 0.55, 0.70, 0.70}
+local REVEAL_SPEED  = 40   -- characters per second
+local PAD           = 14   -- px between text and bubble edge
+local MIN_BOX_W     = 120
+local BUBBLE_MARGIN = { top = 12, right = 12, bottom = 24, left = 12 }
+```
+
+## Load asset in assets.lua
+
+```lua
+local function try_img(path)
+    if love.filesystem.getInfo(path) then return love.graphics.newImage(path) end
+end
+A.speech_bubble = try_img("assets/speech_bubble.png")
+```
+
+(`try_img` is already defined in assets.lua above the store_bg lines.)
+
+## 9-slice helper (top of customer.lua)
+
+```lua
+local function draw9(img, x, y, w, h, m)
+    local iw, ih = img:getDimensions()
+    local function q(qx, qy, qw, qh) return love.graphics.newQuad(qx, qy, qw, qh, iw, ih) end
+    local cx = iw - m.left - m.right   -- centre source width
+    local cy = ih - m.top  - m.bottom  -- centre source height
+    local dx = w  - m.left - m.right   -- centre dest width
+    local dy = h  - m.top  - m.bottom  -- centre dest height
+    local sx = dx / cx
+    local sy = dy / cy
+    -- corners
+    love.graphics.draw(img, q(0,           0,          m.left, m.top),    x,            y)
+    love.graphics.draw(img, q(iw-m.right,  0,          m.right, m.top),   x+w-m.right,  y)
+    love.graphics.draw(img, q(0,           ih-m.bottom, m.left, m.bottom), x,            y+h-m.bottom)
+    love.graphics.draw(img, q(iw-m.right,  ih-m.bottom, m.right, m.bottom), x+w-m.right, y+h-m.bottom)
+    -- edges
+    love.graphics.draw(img, q(m.left, 0,           cx, m.top),    x+m.left, y,            0, sx, 1)
+    love.graphics.draw(img, q(m.left, ih-m.bottom, cx, m.bottom), x+m.left, y+h-m.bottom, 0, sx, 1)
+    love.graphics.draw(img, q(0,          m.top, m.left,  cy),  x,           y+m.top, 0, 1, sy)
+    love.graphics.draw(img, q(iw-m.right, m.top, m.right, cy),  x+w-m.right, y+m.top, 0, 1, sy)
+    -- centre
+    love.graphics.draw(img, q(m.left, m.top, cx, cy), x+m.left, y+m.top, 0, sx, sy)
+end
 ```
 
 ## State added to Customer
 
-Three fields, reset whenever a new line begins:
-
 ```lua
-self.reveal_index = 0    -- characters of current full_text revealed so far
-self.reveal_t     = 0    -- accumulated seconds since this line started
-self._full_text   = ""   -- cached "Name: message" for the current line
+self.reveal_index = 0
+self.reveal_t     = 0
+self._full_text   = ""
 ```
 
-Helper (not a method, just inside customer.lua):
+Local helper (not a method):
 
 ```lua
-local function full_text(customer)
-    local line = customer.messages[customer.msg_index] or ""
-    return customer.name .. ": " .. line
+local function make_full_text(c)
+    return c.name .. ": " .. (c.messages[c.msg_index] or "")
 end
 ```
 
-## Step 1 — reset reveal state on new line
+## Step 1 — reset reveal on new line
 
-In `Customer:show()`, after setting `self.msg_index = 1`:
+In `Customer:show()`, after `self.msg_index = 1`:
 
 ```lua
-self._full_text   = full_text(self)
+self._full_text   = make_full_text(self)
 self.reveal_index = 0
 self.reveal_t     = 0
 ```
@@ -50,16 +95,13 @@ In `Customer:advance()`, after incrementing `self.msg_index`:
 
 ```lua
 if not self.done_talking then
-    self._full_text   = full_text(self)
+    self._full_text   = make_full_text(self)
     self.reveal_index = 0
     self.reveal_t     = 0
 end
 ```
 
-## Step 2 — advance reveal in `Customer:update(dt)`
-
-Add at the end of `update`, only when dialog is active
-(`self.bubble.visible and not self.done_talking`):
+## Step 2 — advance reveal in Customer:update(dt)
 
 ```lua
 if self.bubble.visible and not self.done_talking then
@@ -73,24 +115,7 @@ end
 
 ## Step 3 — skip-to-end on F in StoreScene
 
-In `StoreScene:_handle_interact()`, in the cashier dialog block, before calling
-`self._customer:advance()`:
-
-```lua
-if self._customer:arrived() then
-    -- existing sell check …
-
-    -- typewriter skip: first F completes the line, second advances
-    if not self._customer:line_complete() then
-        self._customer:skip_reveal()
-        return
-    end
-    self._customer:advance()
-    return
-end
-```
-
-Add two methods to Customer:
+Two new methods on Customer:
 
 ```lua
 function Customer:line_complete()
@@ -103,45 +128,44 @@ function Customer:skip_reveal()
 end
 ```
 
-## Step 4 — draw background box + revealed text in `Customer:draw_bubble()`
+In `StoreScene:_handle_interact()`, in the cashier dialog block, before the
+existing `self._customer:advance()` call:
+
+```lua
+if not self._customer:line_complete() then
+    self._customer:skip_reveal()
+    return
+end
+self._customer:advance()
+```
+
+## Step 4 — draw bubble + revealed text in Customer:draw_bubble()
 
 Replace the plain `love.graphics.print` block:
 
 ```lua
 else
-    local font      = love.graphics.getFont()
-    local revealed  = string.sub(self._full_text, 1, self.reveal_index)
-    local text_w    = font:getWidth(self._full_text)  -- size box to FULL width so it doesn't shrink
-    local text_h    = font:getHeight()
-    local box_w     = math.max(MIN_BOX_W, text_w + PAD * 2)
-    local box_h     = text_h + PAD * 2
-    local box_x     = self.bubble.x + BW / 2 - box_w / 2
-    local box_y     = self.bubble.y - box_h - 4  -- sit just above where the sprite bubble would be
+    local font     = love.graphics.getFont()
+    local revealed = string.sub(self._full_text, 1, self.reveal_index)
+    local text_w   = font:getWidth(self._full_text)   -- full width so box doesn't resize
+    local text_h   = font:getHeight()
+    local box_w    = math.max(MIN_BOX_W, text_w + PAD * 2)
+    local box_h    = text_h + PAD * 2
+    -- position: centred on bubble sprite, sitting above it (tail points down at customer)
+    local box_x    = self.bubble.x + BW / 2 - box_w / 2
+    local box_y    = self.bubble.y - box_h - BUBBLE_MARGIN.bottom + 4
 
-    -- filled background
-    love.graphics.setColor(BOX_COLOR)
-    love.graphics.rectangle("fill", box_x, box_y, box_w, box_h, 6, 6)
-
-    -- outline
-    love.graphics.setColor(BOX_OUTLINE)
-    love.graphics.rectangle("line", box_x, box_y, box_w, box_h, 6, 6)
-
-    -- revealed text
-    love.graphics.setColor(1, 1, 1, 0.95)
-    love.graphics.print(revealed, box_x + PAD, box_y + PAD)
+    love.graphics.setColor(1, 1, 1, 1)
+    if A.speech_bubble then
+        draw9(A.speech_bubble, box_x, box_y, box_w, box_h, BUBBLE_MARGIN)
+    end
+    love.graphics.setColor(0.08, 0.07, 0.10, 0.95)
+    love.graphics.print(revealed, box_x + PAD, box_y + BUBBLE_MARGIN.top / 2 + PAD / 2)
     love.graphics.setColor(1, 1, 1, 1)
 end
 ```
 
-> **Box sizing note:** the box width is fixed to the full line's width (not the
-> revealed portion) so it doesn't jump around. Only the text inside grows.
-> If you prefer the box to expand with the text, use `font:getWidth(revealed)`
-> instead and accept the resize animation.
-
-## F-label update in `StoreScene:_hud_labels()`
-
-The existing `f_label = "F: NEXT"` covers both the skip and advance cases, so
-no label change is needed. Optionally show "F: SKIP" while typing:
+## Step 5 — F label in StoreScene:_hud_labels()
 
 ```lua
 elseif not self._customer:line_complete() then
@@ -149,4 +173,31 @@ elseif not self._customer:line_complete() then
 else
     f_label = "F: NEXT"
 end
+```
+
+## Placeholder asset
+
+Run once to create `assets/speech_bubble.png`:
+
+```python
+from PIL import Image, ImageDraw
+
+W, H, M = 96, 72, 12
+TAIL = 24   # bottom margin including tail
+
+img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+d = ImageDraw.Draw(img)
+
+# bubble body
+d.rounded_rectangle([(0, 0), (W-1, H-TAIL-1)], radius=M, fill=(30, 25, 40, 230), outline=(160, 140, 200, 200), width=2)
+
+# tail triangle (centred, pointing down)
+cx = W // 2
+ty = H - TAIL  # top of tail = bottom of body
+d.polygon([(cx-10, ty), (cx+10, ty), (cx, H-1)], fill=(30, 25, 40, 230))
+# outline for tail sides (not the tip edge)
+d.line([(cx-10, ty), (cx, H-1)], fill=(160, 140, 200, 200), width=2)
+d.line([(cx+10, ty), (cx, H-1)], fill=(160, 140, 200, 200), width=2)
+
+img.save("assets/speech_bubble.png")
 ```
