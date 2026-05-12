@@ -163,6 +163,7 @@ Loads every PNG once at startup and returns a shared table. All other modules `r
 - `store_wall` — repeating store wall tile (200×720); one slot wide
 - `store_window` — store window frame with transparent cutout (400×720); two slots wide
 - `store_bg_far`, `store_bg_mid`, `store_bg_near` — parallax background layers tiled across the full world width (cashier zone + store); loaded conditionally — missing files silently skipped; currently alias `shop_bg_far/mid/near`
+- `speech_bubble` — 9-slice speech bubble image (96×72, margins top=12 right=12 bottom=24 left=12); loaded conditionally — missing file silently skipped (dialog falls back to text-only)
 - `accessories` — table of lazily-loaded accessory images, keyed by name
 
 **Methods**
@@ -326,6 +327,9 @@ NPC that appears in the cashier zone and requests a specific plant.
 - `messages` — ordered array of dialog strings; empty = skip straight to plant bubble
 - `msg_index` — index of the current message
 - `done_talking` — bool; true once all messages have been advanced through
+- `_full_text` — `"Name: message"` string for the current line; rebuilt on each `show()` / `advance()`
+- `reveal_index` — number of characters currently visible (typewriter progress)
+- `reveal_t` — accumulated time driving the reveal; reset with each new line
 - `x`, `y` — world position
 - `speed` — 80 px/s
 - `sprite` — Sprite (120×240) backed by `customer.png` (white); `color` set per customer as a tint — default orange, scripted customers get a unique body color
@@ -335,14 +339,16 @@ NPC that appears in the cashier zone and requests a specific plant.
 **Methods**
 - `new(target_x, exit_x, y)` — constructor; `state = "idle"`
 - `show(cfg)` — accepts `{ plant_type, messages, name, body_color, accessory }`; places customer at `exit_x` and begins walk-in; `accessory` is a string key passed to `A.load_accessory()`
-- `advance()` — increments `msg_index`; sets `done_talking` after the last message
+- `advance()` — increments `msg_index`; sets `done_talking` after the last message; resets `reveal_index`/`reveal_t`/`_full_text` for the new line
+- `line_complete()` — returns true if `done_talking` or `reveal_index >= #_full_text`
+- `skip_reveal()` — snaps `reveal_index` to the end of the current line instantly
 - `on_last_message()` — returns `done_talking`
 - `serve()` — begin walking out (called on successful sale)
 - `arrived()` — returns `state == "waiting"`
 - `active()` — returns `state ~= "idle"`
-- `update(dt)` — advances walk-in / walk-out movement; positions sprite, bubble, and accessory sprite; accessory mirrors body `x`, `y`, `scale_x`, and `visible`
+- `update(dt)` — advances walk-in / walk-out movement; advances typewriter reveal while `bubble.visible` and not `done_talking`; positions sprite, bubble, and accessory sprite
 - `draw()` — draws body sprite, then accessory sprite if set
-- `draw_bubble()` — during dialog: draws centered name + message text; once `done_talking`: draws the plant-colored bubble square
+- `draw_bubble()` — during dialog: draws 9-slice `speech_bubble` sized to the full line width, then prints the revealed substring on top; once `done_talking`: draws the plant-colored bubble square
 
 ---
 

@@ -29,7 +29,7 @@ luagame/
         │   ├── item.lua
         │   ├── watering_can.lua
         │   ├── grafter.lua
-        │   ├── sell_bin.lua
+        │   ├── garbage_bin.lua
         │   ├── pc_store.lua
         │   └── plant.lua
         ├── scenes/

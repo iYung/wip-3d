@@ -10,6 +10,35 @@ local BW    = 6 * U   -- bubble width  120  (matches plant sprite size)
 local BH    = 6 * U   -- bubble height 120
 local SPEED = 80
 
+local REVEAL_SPEED  = 40
+local PAD           = 14
+local MIN_BOX_W     = 120
+local BUBBLE_MARGIN = { top = 12, right = 12, bottom = 24, left = 12 }
+
+local function draw9(img, x, y, w, h, m)
+    local iw, ih = img:getDimensions()
+    local function q(qx, qy, qw, qh) return love.graphics.newQuad(qx, qy, qw, qh, iw, ih) end
+    local cx = iw - m.left - m.right
+    local cy = ih - m.top  - m.bottom
+    local dx = w  - m.left - m.right
+    local dy = h  - m.top  - m.bottom
+    local sx = dx / cx
+    local sy = dy / cy
+    love.graphics.draw(img, q(0,           0,           m.left,  m.top),    x,            y)
+    love.graphics.draw(img, q(iw-m.right,  0,           m.right, m.top),    x+w-m.right,  y)
+    love.graphics.draw(img, q(0,           ih-m.bottom, m.left,  m.bottom), x,            y+h-m.bottom)
+    love.graphics.draw(img, q(iw-m.right,  ih-m.bottom, m.right, m.bottom), x+w-m.right,  y+h-m.bottom)
+    love.graphics.draw(img, q(m.left, 0,           cx, m.top),    x+m.left, y,             0, sx, 1)
+    love.graphics.draw(img, q(m.left, ih-m.bottom, cx, m.bottom), x+m.left, y+h-m.bottom,  0, sx, 1)
+    love.graphics.draw(img, q(0,          m.top, m.left,  cy), x,            y+m.top, 0, 1, sy)
+    love.graphics.draw(img, q(iw-m.right, m.top, m.right, cy), x+w-m.right, y+m.top, 0, 1, sy)
+    love.graphics.draw(img, q(m.left, m.top, cx, cy), x+m.left, y+m.top, 0, sx, sy)
+end
+
+local function make_full_text(c)
+    return c.name .. ": " .. (c.messages[c.msg_index] or "")
+end
+
 local Customer = {}
 Customer.__index = Customer
 
@@ -53,6 +82,9 @@ function Customer.new(target_x, exit_x, y)
     self.msg_index       = 1
     self.done_talking    = false
     self.accessory_sprite = nil
+    self.reveal_index    = 0
+    self.reveal_t        = 0
+    self._full_text      = ""
 
     return self
 end
@@ -65,6 +97,9 @@ function Customer:show(cfg)
     self.messages      = cfg.messages or {}
     self.msg_index     = 1
     self.done_talking  = #self.messages == 0
+    self._full_text    = make_full_text(self)
+    self.reveal_index  = 0
+    self.reveal_t      = 0
     self.x             = self.exit_x
     self.state         = "walking_in"
     self.sprite.visible = true
@@ -94,6 +129,20 @@ function Customer:advance()
     else
         self.done_talking = true
     end
+    if not self.done_talking then
+        self._full_text   = make_full_text(self)
+        self.reveal_index = 0
+        self.reveal_t     = 0
+    end
+end
+
+function Customer:line_complete()
+    return self.done_talking or self.reveal_index >= #self._full_text
+end
+
+function Customer:skip_reveal()
+    self.reveal_index = #self._full_text
+    self.reveal_t     = #self._full_text / REVEAL_SPEED
 end
 
 function Customer:on_last_message()
@@ -131,6 +180,14 @@ function Customer:update(dt)
             self.bubble.visible = false
             self.heart_bubble.visible = false
         end
+    end
+
+    if self.bubble.visible and not self.done_talking then
+        self.reveal_t     = self.reveal_t + dt
+        self.reveal_index = math.min(
+            #self._full_text,
+            math.floor(self.reveal_t * REVEAL_SPEED)
+        )
     end
 
     local moving = self.state == "walking_in" or self.state == "walking_out"
@@ -175,11 +232,21 @@ function Customer:draw_bubble()
     if self.done_talking then
         self.bubble:draw()
     else
-        love.graphics.setColor(1, 1, 1, 0.9)
-        local line = self.messages[self.msg_index] or ""
-        local text = self.name .. ": " .. line
-        local tw   = love.graphics.getFont():getWidth(text)
-        love.graphics.print(text, self.bubble.x + BW / 2 - tw / 2, self.bubble.y)
+        local font     = love.graphics.getFont()
+        local revealed = string.sub(self._full_text, 1, self.reveal_index)
+        local text_w   = font:getWidth(self._full_text)
+        local text_h   = font:getHeight()
+        local box_w    = math.max(MIN_BOX_W, text_w + PAD * 2)
+        local box_h    = text_h + PAD * 2
+        local box_x    = self.bubble.x + BW / 2 - box_w / 2
+        local box_y    = self.bubble.y - box_h - BUBBLE_MARGIN.bottom + 4
+
+        love.graphics.setColor(1, 1, 1, 1)
+        if A.speech_bubble then
+            draw9(A.speech_bubble, box_x, box_y, box_w, box_h, BUBBLE_MARGIN)
+        end
+        love.graphics.setColor(0.08, 0.07, 0.10, 0.95)
+        love.graphics.print(revealed, box_x + PAD, box_y + BUBBLE_MARGIN.top / 2 + PAD / 2)
         love.graphics.setColor(1, 1, 1, 1)
     end
 end

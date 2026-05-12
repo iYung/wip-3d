@@ -242,6 +242,10 @@ function StoreScene:_handle_interact()
             player.held_item = nil
             self._customer:serve()
         else
+            if not self._customer:line_complete() then
+                self._customer:skip_reveal()
+                return
+            end
             self._customer:advance()
         end
         return
@@ -296,7 +300,11 @@ function StoreScene:_hud_labels()
                 f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")"
             end
         else
-            f_label = "F: NEXT"
+            if not self._customer:line_complete() then
+                f_label = "F: SKIP"
+            else
+                f_label = "F: NEXT"
+            end
         end
     elseif not held and slot_item and slot_item.buy_scene_factory then
         f_label = "F: OPEN SHOP"
