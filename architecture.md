@@ -160,7 +160,9 @@ Loads every PNG once at startup and returns a shared table. All other modules `r
 - `watering_can`, `grafter_empty`, `grafter_loaded`, `garbage_bin`, `pc_store` — item images (120×120)
 - `slot` — slot background image (120×200)
 - `cashier_wall` — cashier zone wall with transparent window cutout (400×800)
-- `shop_bg_far`, `shop_bg_mid`, `shop_bg_near` — parallax background layers for the cashier zone window (400×800 each); loaded conditionally at runtime — missing files are silently skipped
+- `store_wall` — repeating store wall tile (200×720); one slot wide
+- `store_window` — store window frame with transparent cutout (400×720); two slots wide
+- `store_bg_far`, `store_bg_mid`, `store_bg_near` — parallax background layers tiled across the full world width (cashier zone + store); loaded conditionally — missing files silently skipped; currently alias `shop_bg_far/mid/near`
 - `accessories` — table of lazily-loaded accessory images, keyed by name
 
 **Methods**
@@ -307,7 +309,8 @@ The 1D array of slots. Handles layout and growth.
 - `grow()` — append one new slot at the right end
 - `slot_at(x)` — return the Slot at world x position
 - `update(dt)` — delegates to all slots/items
-- `draw()` — draws store floor background, then delegates to all slots
+- `draw()` — delegates to all slots; no background (background drawn by `draw_bg` before the drawer)
+- `draw_bg(A)` — draws store wall tiles and window frames using a group-of-4 rule: slots 1–2 of each group get `store_wall`, slots 3–4 get `store_window` (if both exist and neither is the last slot); fallback to wall tiles otherwise; called manually in `StoreScene:draw()` before `drawer:draw()`
 - `draw_bubbles()` — draws only plant ready bubbles; called at a higher drawer priority so bubbles appear above the player
 
 ---
@@ -347,8 +350,9 @@ NPC that appears in the cashier zone and requests a specific plant.
 
 | Priority | Content |
 |----------|---------|
-| (pre-drawer) | Parallax background layers (`shop_bg_far/mid/near`) — drawn manually in world space before `drawer:draw()` |
-| 0 | Store (floor, slots, items) |
+| (pre-drawer) | Parallax background layers (`store_bg_far/mid/near`) — tiled across full world width (-ZONE_WIDTH → store:width()) with p = 0.05/0.20/0.45; drawn manually before `drawer:draw()` |
+| (pre-drawer) | Store wall tiles and window frames (`Store:draw_bg`) — drawn on top of parallax, before drawer |
+| 0 | Store (slots, items) |
 | 1 | Customer body |
 | 2 | Cashier wall (`cashier_wall.png` with transparent window cutout) |
 | 2.5 | Cashier floor (tiled `slot.png` across `x = -400` to `0`) |

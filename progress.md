@@ -25,13 +25,13 @@ Completed step files are moved to [`archive/`](archive/).
 
 | File | What it does |
 |------|-------------|
-| `assets.lua` | Loads all PNGs once at startup; require-cached so every file can `require` it cheaply |
+| `assets.lua` | Loads all PNGs once at startup; require-cached so every file can `require` it cheaply; `store_bg_*` loaded conditionally via `try_img` |
 | `config.lua` | Shared constants — `U`, `SLOT_COST`, `ZONE_WIDTH` (400px cashier zone) |
 | `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
 | `game_state.lua` | Holds store, player, currency, `unlocked_plants`, `stage3_counts`, `seen_scripts`; survives scene switches |
 | `player.lua` | Moves left/right into cashier zone; holds one item; 4-variant SpriteSet (idle/walk × no-held/held), each backed by a PNG; `speed` upgradeable via shop |
 | `slot.lua` | One store cell; single `slot.png` background sprite; positions its item every frame |
-| `store.lua` | Array of slots; `slot_at(x)`, `grow()`, `draw_bubbles()` for high-priority bubble rendering |
+| `store.lua` | Array of slots; `slot_at(x)`, `grow()`, `draw_bubbles()` for high-priority bubble rendering; `draw_bg(A)` draws wall tiles and window frames using group-of-4 rule |
 | `customer.lua` | Cashier zone NPC; white PNG tinted per character via `body_color`; optional `accessory_sprite` (120×120) drawn over the top half, synced to body flip; bubble is 120×120 white PNG tinted to the requested plant's stage-3 color; state machine: idle → walking_in → waiting → walking_out |
 
 ### Items (`lua/game/items/`)

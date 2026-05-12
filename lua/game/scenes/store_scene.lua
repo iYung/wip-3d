@@ -93,15 +93,10 @@ function StoreScene:_setup_store()
         draw = function() store_ref:draw_bubbles() end
     }
 
-    local function try_img(path)
-        if love.filesystem.getInfo(path) then
-            return love.graphics.newImage(path)
-        end
-    end
     self._parallax_layers = {
-        { img = try_img("assets/shop_bg_far.png"),  p = 0.05 },
-        { img = try_img("assets/shop_bg_mid.png"),  p = 0.20 },
-        { img = try_img("assets/shop_bg_near.png"), p = 0.45 },
+        { img = A.store_bg_far,  p = 0.05 },
+        { img = A.store_bg_mid,  p = 0.20 },
+        { img = A.store_bg_near, p = 0.45 },
     }
 
     local floor_y  = 30 * U
@@ -317,25 +312,31 @@ function StoreScene:_hud_labels()
 end
 
 function StoreScene:draw()
+    local gs = self.game_state
     self.camera:attach()
 
-    -- zone background (wall PNG draws on top of this via the drawer)
-    love.graphics.setColor(0.10, 0.09, 0.14, 1)
-    love.graphics.rectangle("fill", -ZONE_WIDTH, 0, ZONE_WIDTH, 800)
-
-    local cx = self.camera.x
+    local cx      = self.camera.x
+    local start_x = -ZONE_WIDTH
+    local end_x   = gs.store:width()
     love.graphics.setColor(1, 1, 1, 1)
     for _, layer in ipairs(self._parallax_layers) do
         if layer.img then
-            local draw_x = (cx - 640) * (1 - layer.p) - ZONE_WIDTH * layer.p
-            love.graphics.draw(layer.img, draw_x, 0)
+            local iw     = layer.img:getWidth()
+            local offset = -cx * (1 - layer.p)
+            local x      = math.floor((start_x + offset) / iw) * iw - offset
+            while x < end_x do
+                love.graphics.draw(layer.img, x, 0)
+                x = x + iw
+            end
         end
     end
+
+    local A = require("lua/game/assets")
+    gs.store:draw_bg(A)
 
     self.drawer:draw()
     self.camera:detach()
 
-    local gs = self.game_state
     love.graphics.setColor(1, 1, 1, 0.8)
     local cur_text = "Currency: " .. gs.currency
     love.graphics.print(cur_text, 10, 10)

@@ -34,9 +34,28 @@ function Store:update(dt)
     end
 end
 
+function Store:draw_bg(A)
+    local n  = #self.slots
+    local sw = self.slot_width
+    love.graphics.setColor(1, 1, 1, 1)
+    local g = 0
+    while g * 4 < n do
+        for i = g * 4, g * 4 + 1 do
+            if i < n then love.graphics.draw(A.store_wall, i * sw, 0) end
+        end
+        local r0, r1 = g * 4 + 2, g * 4 + 3
+        if r1 < n and r1 < n - 1 then
+            love.graphics.draw(A.store_window, r0 * sw, 0)
+        else
+            for i = r0, r1 do
+                if i < n then love.graphics.draw(A.store_wall, i * sw, 0) end
+            end
+        end
+        g = g + 1
+    end
+end
+
 function Store:draw()
-    love.graphics.setColor(0.15, 0.12, 0.10, 1)
-    love.graphics.rectangle("fill", 0, 0, self:width(), 800)
     for _, slot in ipairs(self.slots) do
         slot:draw()
     end

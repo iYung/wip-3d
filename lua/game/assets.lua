@@ -37,6 +37,17 @@ A.pc_store       = img("assets/pc_store.png")
 A.slot         = img("assets/slot.png")
 A.cashier_wall = img("assets/cashier_wall.png")
 
+A.store_wall   = img("assets/store_wall.png")
+A.store_window = img("assets/store_window.png")
+
+local function try_img(path)
+    if love.filesystem.getInfo(path) then return love.graphics.newImage(path) end
+end
+A.store_bg_far  = try_img("assets/shop_bg_far.png")
+A.store_bg_mid  = try_img("assets/shop_bg_mid.png")
+A.store_bg_near = try_img("assets/shop_bg_near.png")
+
+
 A.accessories = {}
 function A.load_accessory(name)
     if A.accessories[name] ~= nil then return A.accessories[name] end

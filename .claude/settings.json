@@ -6,7 +6,9 @@
       "Bash(python3 -c \"from PIL import Image\")",
       "Bash(mv /Users/ivan/Development/luagame/customer-scripts-steps.md /Users/ivan/Development/luagame/archive/customer-scripts-steps.md)",
       "Bash(rm /Users/ivan/Development/luagame/lua/game/items/sell_bin.lua)",
-      "Bash(grep \"\\\\.lua$\")"
+      "Bash(grep \"\\\\.lua$\")",
+      "Bash(python3 -c \"from PIL import Image; print\\('ok'\\)\")",
+      "Bash(python3 -c \"import struct, zlib; print\\('zlib ok'\\)\")"
     ],
     "additionalDirectories": [
       "/Users/ivan/Development/luagame",
