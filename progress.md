@@ -49,7 +49,7 @@ Completed step files are moved to [`archive/`](archive/).
 
 | File | What it does |
 |------|-------------|
-| `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds (left = -400+640, right = store width−640), pick up/interact handled here; cashier zone logic; context HUD bottom-left; parallax background layers drawn pre-drawer in world space; layered draw order for wall/bubbles; cashier wall loaded from `cashier_wall.png` |
+| `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds (left = -400+640, right = store width−640), pick up/interact handled here; cashier zone logic; context HUD bottom-left; unified parallax tiles `store_bg_*` across full world width pre-drawer; `Store:draw_bg` then stamps walls/windows on top; layered draw order for wall/bubbles |
 | `buy_scene.lua` | Carousel UI — 9 items (6 plants + Watering Can + Grafter + Expand Slot); A/D cycle, F buy, E cancel; per-type price and preview color |
 
 ### Data (`lua/game/data/`)
@@ -77,7 +77,7 @@ Completed step files are moved to [`archive/`](archive/).
 | All items | 6U × 6U (120×120) |
 | Customer bubble | 6U × 6U (120×120) — matches plant sprite size |
 | Plant bubble | 3U × 3U (60×60) |
-| Initial slots | 6 |
+| Initial slots | 10 |
 | Player speed | 220 px/s (base); upgradeable |
 | Camera lerp | 0.85 (smooth follow on x, locked y) |
 | Cashier zone width | 20U (400px), at x = -400 to 0 |
@@ -135,8 +135,8 @@ No active step files. See open questions in `game-design.md`.
 - **Plant bubble while held** — `Player:draw()` calls `draw_bubble()` on the held item so the bubble is visible while carrying a ready plant
 - **Garbage bin replaces sell bin** — `GarbageBin` (F: DISCARD) is the active discard station; `sell_bin.lua` removed
 - **Store camera bounds** — camera x clamped after follow so neither screen edge overruns the world; active from the start with 6 slots (world 1800px > screen 1280px)
-- **Shop window parallax** — three PNG layers (`shop_bg_far/mid/near`, 400×800) drawn with parallax factors 0.05/0.20/0.45; loaded conditionally so the game runs without them
-- **Initial slots reduced to 6**
+- **Store background walls** — `Store:draw_bg(A)` tiles `store_wall.png` and places `store_window.png` using a group-of-4 rule; parallax layers (`store_bg_*`) tile across full world width (-ZONE_WIDTH → store:width()) as a single unified system covering both the cashier zone and store; parallax factors 0.05/0.20/0.45
+- **Initial slots set to 10** (for testing)
 
 ## Cut / Not Yet Built
 
