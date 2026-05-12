@@ -313,7 +313,7 @@ function StoreScene:draw()
     local gs = self.game_state
     love.graphics.setColor(1, 1, 1, 0.8)
     local cur_text = "Currency: " .. gs.currency
-    love.graphics.print(cur_text, 1280 - love.graphics.getFont():getWidth(cur_text) - 10, 10)
+    love.graphics.print(cur_text, 10, 10)
 
     -- context HUD: bottom-left, stacked upward (hover at bottom, then f, then e)
     local hud    = self:_hud_labels()

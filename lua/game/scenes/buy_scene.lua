@@ -161,7 +161,7 @@ function BuyScene:draw()
     -- currency top-right
     love.graphics.setFont(font_ui)
     love.graphics.setColor(0.15, 0.15, 0.15, 1)
-    love.graphics.print("Currency: " .. currency, 1100, 80)
+    love.graphics.print("Currency: " .. currency, 10, 10)
 
     -- build desc lines early so we can measure total height
     local desc_lines = {}
