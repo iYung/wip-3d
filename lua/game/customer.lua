@@ -13,7 +13,8 @@ local SPEED = 80
 local REVEAL_SPEED  = 40
 local PAD           = 14
 local MIN_BOX_W     = 120
-local BUBBLE_MARGIN = { top = 12, right = 12, bottom = 24, left = 12 }
+local TAIL_H        = 24
+local BUBBLE_MARGIN = { top = 12, right = 12, bottom = 12, left = 12 }
 
 local function draw9(img, x, y, w, h, m)
     local iw, ih = img:getDimensions()
@@ -239,11 +240,15 @@ function Customer:draw_bubble()
         local box_w    = math.max(MIN_BOX_W, text_w + PAD * 2)
         local box_h    = text_h + PAD * 2
         local box_x    = self.bubble.x + BW / 2 - box_w / 2
-        local box_y    = self.bubble.y - box_h - BUBBLE_MARGIN.bottom + 4
+        local box_y    = self.bubble.y - box_h - TAIL_H + 4
 
         love.graphics.setColor(1, 1, 1, 1)
         if A.speech_bubble then
             draw9(A.speech_bubble, box_x, box_y, box_w, box_h, BUBBLE_MARGIN)
+        end
+        if A.speech_bubble_tail then
+            local tw = A.speech_bubble_tail:getWidth()
+            love.graphics.draw(A.speech_bubble_tail, box_x + box_w / 2 - tw / 2, box_y + box_h - 10)
         end
         love.graphics.setColor(0.08, 0.07, 0.10, 0.95)
         love.graphics.print(revealed, box_x + PAD, box_y + BUBBLE_MARGIN.top / 2 + PAD / 2)

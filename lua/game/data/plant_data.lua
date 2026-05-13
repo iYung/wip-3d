@@ -4,7 +4,7 @@ return {
         description = "Hardy and patient.\nSells for $5 at stage 3.",
         cost        = 1,
         sell        = 5,
-        cooldowns   = { 10, 15 },
+        cooldowns   = { 1, 1 },
         colors      = {
             {0.50, 0.90, 0.40, 1},
             {0.25, 0.70, 0.15, 1},
