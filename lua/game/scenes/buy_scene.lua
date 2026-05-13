@@ -17,7 +17,6 @@ for i = 1, #PLANT_DATA do
         cost        = pd.cost,
         kind        = "plant",
         plant_type  = i,
-        color       = pd.colors[1],
     }
 end
 

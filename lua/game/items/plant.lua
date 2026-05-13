@@ -20,11 +20,9 @@ function Plant.new(plant_type)
     self.cooldown    = PLANT_DATA[self.plant_type].cooldowns[1]
     self.ready       = false
 
-    local colors = PLANT_DATA[self.plant_type].colors
     local ss = SpriteSet.new()
     for i = 1, 3 do
         local s       = Sprite.new(0, 0, ITEM_SIZE, ITEM_SIZE)
-        s.color       = colors[i]
         s.image       = A["plant_" .. self.plant_type][i]
         ss:add(tostring(i), s)
     end

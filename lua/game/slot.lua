@@ -11,7 +11,7 @@ Slot.__index = Slot
 function Slot.new(index, slot_width)
     local self       = setmetatable({}, Slot)
     self.index       = index
-    self.slot_width  = slot_width or 120
+    self.slot_width  = slot_width
     self.x           = (index - 1) * self.slot_width
     self.y           = SLOT_Y
     self.item        = nil

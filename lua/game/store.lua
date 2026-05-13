@@ -5,7 +5,7 @@ Store.__index = Store
 
 function Store.new(initial_count, slot_width)
     local self       = setmetatable({}, Store)
-    self.slot_width  = slot_width or 120
+    self.slot_width  = slot_width
     self.slots       = {}
     for i = 1, initial_count do
         self.slots[i] = Slot.new(i, self.slot_width)

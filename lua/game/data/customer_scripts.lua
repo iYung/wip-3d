@@ -16,7 +16,7 @@ return {
     },
     {
         id         = "old_pete",
-        chaapter    = 2,
+        chapter    = 2,
         accessory  = "flat_cap",
         trigger    = { plant_type = 2, count = 3 },
         name       = "Old Pete",
