@@ -156,7 +156,11 @@ function StoreScene:_next_customer_cfg()
     end
     if #keys == 0 then return nil end
     local pt = keys[math.random(#keys)]
-    return { plant_type = pt }
+    return {
+        plant_type     = pt,
+        primary_color   = { math.random(), math.random(), math.random(), 1 },
+        secondary_color = { math.random(), math.random(), math.random(), 1 },
+    }
 end
 
 function StoreScene:on_exit()

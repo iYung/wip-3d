@@ -112,8 +112,8 @@ function Customer:show(cfg)
     self.sprite.visible = true
     self.bubble.visible = false
     self.heart_bubble.visible = false
-    self._primary   = cfg.body_color     or DEFAULT_PRIMARY
-    self._secondary = cfg.clothing_color or DEFAULT_SECONDARY
+    self._primary   = cfg.primary_color   or DEFAULT_PRIMARY
+    self._secondary = cfg.secondary_color or DEFAULT_SECONDARY
     if cfg.accessory then
         local img = A.load_accessory(cfg.accessory)
         if img then
