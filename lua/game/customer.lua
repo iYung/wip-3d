@@ -1,9 +1,10 @@
-local Sprite     = require("lua/core/sprite")
-local SpriteSet  = require("lua/core/spriteset")
-local Timer      = require("lua/core/timer")
-local PLANT_DATA = require("lua/game/data/plant_data")
-local A          = require("lua/game/assets")
-local U          = require("lua/game/config").U
+local Sprite       = require("lua/core/sprite")
+local SpriteSet    = require("lua/core/spriteset")
+local Timer        = require("lua/core/timer")
+local PLANT_DATA   = require("lua/game/data/plant_data")
+local A            = require("lua/game/assets")
+local U            = require("lua/game/config").U
+local ColorReplace = require("lua/game/shaders/color_replace")
 
 local CW    = 6 * U   -- 120
 local CH    = 12 * U  -- 240
@@ -55,17 +56,18 @@ function Customer.new(target_x, exit_x, y)
 
     local idle = Sprite.new(0, 0, CW, CH)
     idle.image = A.customer
-    idle.color = {0.85, 0.55, 0.30, 1}
 
     local walk = Sprite.new(0, 0, CW, CH)
     walk.image = A.customer_walk
-    walk.color = {0.85, 0.55, 0.30, 1}
 
     self.sprite = SpriteSet.new()
     self.sprite:add("idle", idle)
     self.sprite:add("walk", walk)
     self.sprite:set("idle")
     self.sprite.visible = true
+
+    self._primary    = {0.85, 0.55, 0.30, 1}
+    self._secondary  = {0.40, 0.30, 0.20, 1}
 
     self._anim_timer = Timer.new(0.15)
     self._anim_frame = "idle"
@@ -92,7 +94,8 @@ function Customer.new(target_x, exit_x, y)
     return self
 end
 
-local DEFAULT_COLOR = {0.85, 0.55, 0.30, 1}
+local DEFAULT_PRIMARY   = {0.85, 0.55, 0.30, 1}
+local DEFAULT_SECONDARY = {0.40, 0.30, 0.20, 1}
 
 function Customer:show(cfg)
     self.plant_type    = cfg.plant_type or 1
@@ -109,9 +112,8 @@ function Customer:show(cfg)
     self.sprite.visible = true
     self.bubble.visible = false
     self.heart_bubble.visible = false
-    local color = cfg.body_color or DEFAULT_COLOR
-    self.sprite.sprites.idle.color = color
-    self.sprite.sprites.walk.color = color
+    self._primary   = cfg.body_color     or DEFAULT_PRIMARY
+    self._secondary = cfg.clothing_color or DEFAULT_SECONDARY
     if cfg.accessory then
         local img = A.load_accessory(cfg.accessory)
         if img then
@@ -228,8 +230,10 @@ end
 
 function Customer:draw()
     if self.state == "idle" then return end
+    ColorReplace.apply(self._primary, self._secondary)
     self.sprite:draw()
     if self.accessory_sprite then self.accessory_sprite:draw() end
+    ColorReplace.clear()
 end
 
 function Customer:draw_bubble()
