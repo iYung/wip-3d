@@ -1,6 +1,7 @@
 local Item       = require("lua/game/items/item")
 local SpriteSet  = require("lua/core/spriteset")
 local Sprite     = require("lua/core/sprite")
+local Timer      = require("lua/core/timer")
 local PLANT_DATA = require("lua/game/data/plant_data")
 local A          = require("lua/game/assets")
 local U          = require("lua/game/config").U
@@ -17,7 +18,7 @@ function Plant.new(plant_type)
     self.stage       = 1
     self.carriable   = true
     self.name        = PLANT_DATA[self.plant_type].name
-    self.cooldown    = PLANT_DATA[self.plant_type].cooldowns[1]
+    self._cooldown   = Timer.new(PLANT_DATA[self.plant_type].cooldowns[1])
     self.ready       = false
 
     local ss = SpriteSet.new()
@@ -39,9 +40,7 @@ end
 
 function Plant:update(dt)
     if not self.ready and self.stage < 3 then
-        self.cooldown = self.cooldown - dt
-        if self.cooldown <= 0 then
-            self.cooldown       = 0
+        if self._cooldown:update(dt) then
             self.ready          = true
             self.bubble.visible = true
         end
@@ -57,7 +56,7 @@ function Plant:water()
     self.sprite:set(tostring(self.stage))
     local next_cd = PLANT_DATA[self.plant_type].cooldowns[self.stage]
     if next_cd then
-        self.cooldown = next_cd
+        self._cooldown:reset(next_cd)
     end
 end
 

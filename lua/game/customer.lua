@@ -1,5 +1,6 @@
 local Sprite     = require("lua/core/sprite")
 local SpriteSet  = require("lua/core/spriteset")
+local Timer      = require("lua/core/timer")
 local PLANT_DATA = require("lua/game/data/plant_data")
 local A          = require("lua/game/assets")
 local U          = require("lua/game/config").U
@@ -66,7 +67,7 @@ function Customer.new(target_x, exit_x, y)
     self.sprite:set("idle")
     self.sprite.visible = true
 
-    self._anim_timer = 0
+    self._anim_timer = Timer.new(0.15)
     self._anim_frame = "idle"
 
     self.bubble         = Sprite.new(0, 0, BW, BH)
@@ -201,9 +202,7 @@ function Customer:update(dt)
 
     local moving = self.state == "walking_in" or self.state == "walking_out"
     if moving then
-        self._anim_timer = self._anim_timer + dt
-        if self._anim_timer >= 0.15 then
-            self._anim_timer = 0
+        if self._anim_timer:update(dt) then
             self._anim_frame = (self._anim_frame == "idle") and "walk" or "idle"
             self.sprite:set(self._anim_frame)
         end

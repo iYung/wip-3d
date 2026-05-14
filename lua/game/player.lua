@@ -1,5 +1,6 @@
 local SpriteSet = require("lua/core/spriteset")
 local Sprite    = require("lua/core/sprite")
+local Timer     = require("lua/core/timer")
 local CONFIG     = require("lua/game/config")
 local A          = require("lua/game/assets")
 local U          = CONFIG.U
@@ -32,7 +33,7 @@ function Player.new(x)
     self.sprite:add("walk_held", walk_held)
     self.sprite:set("idle")
 
-    self._anim_timer = 0
+    self._anim_timer = Timer.new(0.15)
     self._anim_frame = "idle"
     self.facing      = "right"
 
@@ -60,9 +61,7 @@ function Player:update(dt, input, store)
     local walk_key = self.held_item and "walk_held" or "walk"
 
     if moving then
-        self._anim_timer = self._anim_timer + dt
-        if self._anim_timer >= 0.15 then
-            self._anim_timer = 0
+        if self._anim_timer:update(dt) then
             self._anim_frame = (self._anim_frame == idle_key) and walk_key or idle_key
             self.sprite:set(self._anim_frame)
         end

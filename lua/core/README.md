@@ -87,6 +87,18 @@ Holds the active scene and drives the game loop.
 
 ---
 
+## Timer
+
+A delta-time accumulator that fires when an interval elapses.
+
+- `Timer.new(interval)` — create a timer with the given interval in seconds
+- `update(dt)` — advance the timer; returns `true` when the interval elapses (keeps remainder for loop use)
+- `reset(interval?)` — restart the accumulator; optionally change the interval
+
+Use as an interval/metronome (loop) by acting on each `true` return. Use as a countdown by calling `reset()` after it fires. The remainder is preserved across each tick, so intervals don't drift.
+
+---
+
 ## Input
 
 Action-based keyboard polling. Call `update()` once per frame before reading input.

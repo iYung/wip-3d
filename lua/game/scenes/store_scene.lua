@@ -1,4 +1,5 @@
 local Scene        = require("lua/core/scene")
+local Timer        = require("lua/core/timer")
 local WateringCan  = require("lua/game/items/watering_can")
 local PCStore      = require("lua/game/items/pc_store")
 local GarbageBin   = require("lua/game/items/garbage_bin")
@@ -72,7 +73,7 @@ function StoreScene:_setup_store()
     local exit_x     = -(ZONE_WIDTH + 200)
     local customer_y = 500
     self._customer          = Customer.new(target_x, exit_x, customer_y)
-    self._spawn_timer       = math.random(3, 6)
+    self._spawn_timer       = Timer.new(math.random(3, 6))
     self._active_script_key = nil
     self._script_cooldowns  = {}
 
@@ -179,13 +180,12 @@ function StoreScene:update(dt)
     end
 
     if not self._customer:active() then
-        self._spawn_timer = self._spawn_timer - dt
-        if self._spawn_timer <= 0 then
+        if self._spawn_timer:update(dt) then
             local cfg = self:_next_customer_cfg()
             if cfg then
                 self._customer:show(cfg)
             end
-            self._spawn_timer = math.random(3, 6)
+            self._spawn_timer:reset(math.random(3, 6))
         end
     end
 
