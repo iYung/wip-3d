@@ -108,11 +108,11 @@ return {
         plant_type = 4,
         messages   = {
             "My dad gave me money for something important.",
-            "I want a sunflower.",
+            "I want a tulip.",
         },
     },
 
-    -- Dottie (lavender regular, 3-chapter arc)
+    -- Dottie (daisy regular, 3-chapter arc)
     {
         id         = "dottie",
         chapter    = 1,
@@ -121,7 +121,7 @@ return {
         body_color = {0.70, 0.50, 0.85, 1},
         plant_type = 5,
         messages   = {
-            "Oh! You have lavender!",
+            "Oh! You have daisies!",
             "I've been looking everywhere for this.",
             "I'll take one, please. I'm so glad I found you.",
         },

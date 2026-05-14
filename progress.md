@@ -127,12 +127,11 @@ PNG files for all sprites — player variants, plants (18 total: 6 types × 3 st
 
 ## Up Next
 
-- **Slot highlight image** — replace the white rectangle highlight with a custom `slot_highlight.png` image (see `slot_highlight.md`)
-
 See open questions in `game-design.md`.
 
 ### Recently completed
 
+- **Slot highlight image** — white rectangle replaced with `slot_highlight.png`; falls back gracefully if file is absent
 - **Plant images instead of tinting** — plant sprites now render their stage PNGs as-is; tint removed from `plant.lua`; customer request bubble replaced with a 9-slice speech bubble showing the stage-3 plant image; store preview shows stage-3 image; `colors` field no longer used for rendering
 - **Customer dismiss** — E dismisses a waiting customer without selling; scripted characters go on a 3-sale cooldown and return (chapter stays unseen until served); `seen_scripts` now written on sale, not on spawn
 - **Typewriter dialogue** — customer dialog lines reveal character-by-character at 40 chars/s inside a 9-slice `speech_bubble.png` box; F skips to the full line, a second F advances; HUD label switches between F: SKIP and F: NEXT; graceful fallback to text-only if the bubble asset is missing

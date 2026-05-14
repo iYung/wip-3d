@@ -37,10 +37,15 @@ end
 
 function Slot:draw()
     self.bg:draw()
-    if self.highlighted then
-        love.graphics.setColor(1, 1, 1, 0.08)
-        love.graphics.rectangle("fill", self.x, self.y, self.slot_width, SLOT_HEIGHT)
+    if self.highlighted and A.slot_highlight then
         love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(
+            A.slot_highlight,
+            self.x, self.y,
+            0,
+            self.slot_width / A.slot_highlight:getWidth(),
+            SLOT_HEIGHT     / A.slot_highlight:getHeight()
+        )
     end
     if self.item then
         self.item:draw()

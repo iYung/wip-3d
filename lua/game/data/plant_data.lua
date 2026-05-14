@@ -1,6 +1,6 @@
 return {
     [1] = {
-        name        = "Fern",
+        name        = "Grass",
         description = "Hardy and patient.\nSells for $5 at stage 3.",
         cost        = 1,
         sell        = 5,
@@ -21,14 +21,14 @@ return {
         cooldowns   = { 6, 9 },
     },
     [4] = {
-        name        = "Sunflower",
+        name        = "Tulip",
         description = "Turns fast for good coin.\nSells for $20 at stage 3.",
         cost        = 10,
         sell        = 20,
         cooldowns   = { 4, 7 },
     },
     [5] = {
-        name        = "Lavender",
+        name        = "Daisy",
         description = "High-yield, fast grower.\nSells for $28 at stage 3.",
         cost        = 15,
         sell        = 28,
