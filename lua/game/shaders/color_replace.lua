@@ -1,16 +1,6 @@
-local src = [[
-    uniform vec4 color_a;
-    uniform vec4 color_b;
+local Shader = require("lua/core/shader")
 
-    vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc) {
-        vec4 px     = Texel(tex, tc);
-        vec4 result = px.r * color_a + px.b * color_b;
-        result.a    = px.a;
-        return result;
-    }
-]]
-
-local shader = love.graphics.newShader(src)
+local shader = Shader.load("assets/shaders/color_replace.glsl")
 
 return {
     apply = function(primary, secondary)
