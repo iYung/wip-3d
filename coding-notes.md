@@ -169,11 +169,11 @@ Game config lives in `game/data/` as plain Lua tables returning a value:
 -- game/data/plant_data.lua
 return {
     [1] = {
-        name      = "Fern",
-        buy       = 1,
-        sell      = 5,
-        cooldowns = { 10, 15 },
-        colors    = { {r,g,b,1}, {r,g,b,1}, {r,g,b,1} },
+        name        = "Grass",
+        description = "...",
+        cost        = 1,
+        sell        = 5,
+        cooldowns   = { 1, 1 },
     },
     -- ...
 }

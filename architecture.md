@@ -162,8 +162,11 @@ Loads every PNG once at startup and returns a shared table. All other modules `r
 - `cashier_wall` — cashier zone wall with transparent window cutout (400×800)
 - `store_wall` — repeating store wall tile (200×720); one slot wide
 - `store_window` — store window frame with transparent cutout (400×720); two slots wide
-- `store_bg_far`, `store_bg_mid`, `store_bg_near` — parallax background layers tiled across the full world width (cashier zone + store); loaded conditionally — missing files silently skipped; currently alias `shop_bg_far/mid/near`
-- `speech_bubble` — 9-slice speech bubble image (96×72, margins top=12 right=12 bottom=24 left=12); loaded conditionally — missing file silently skipped (dialog falls back to text-only)
+- `slot_highlight` — overlay drawn on the active slot (120×200)
+- `store_bg_far`, `store_bg_mid`, `store_bg_near` — parallax background layers tiled across the full world width (cashier zone + store); currently alias `shop_bg_far/mid/near`
+- `speech_bubble` — 9-slice speech bubble image (96×72, margins top=12 right=12 bottom=24 left=12)
+- `speech_bubble_tail` — tail graphic drawn below the speech bubble
+- `sneakers`, `expand_slot` — buy-scene preview images; loaded conditionally via `try_img` (art not yet created; fall back to grey rectangle in preview)
 - `accessories` — table of lazily-loaded accessory images, keyed by name
 
 **Methods**
@@ -333,7 +336,7 @@ NPC that appears in the cashier zone and requests a specific plant.
 - `x`, `y` — world position
 - `speed` — 80 px/s
 - `sprite` — Sprite (120×240) backed by `customer.png` (white); `color` set per customer as a tint — default orange, scripted customers get a unique body color
-- `bubble` — Sprite (120×120) backed by `customer_bubble.png` (white); tinted to `colors[3]` of the requested plant; same dimensions as a plant sprite so it looks like the stage-3 plant
+- `bubble` — Sprite used as a visibility gate and position reference; `bubble.visible` controls whether the dialog/plant-request UI is shown; not drawn directly
 - `accessory_sprite` — Sprite (120×120) drawn over the top half of the body; nil for anonymous customers or when the accessory file is missing
 
 **Methods**
@@ -348,7 +351,7 @@ NPC that appears in the cashier zone and requests a specific plant.
 - `active()` — returns `state ~= "idle"`
 - `update(dt)` — advances walk-in / walk-out movement; advances typewriter reveal while `bubble.visible` and not `done_talking`; positions sprite, bubble, and accessory sprite
 - `draw()` — draws body sprite, then accessory sprite if set
-- `draw_bubble()` — during dialog: draws 9-slice `speech_bubble` sized to the full line width, then prints the revealed substring on top; once `done_talking`: draws the plant-colored bubble square
+- `draw_bubble()` — during dialog: draws 9-slice `speech_bubble` sized to the full line width with `speech_bubble_tail`, then prints the revealed substring on top; once `done_talking`: draws a 9-slice speech bubble containing the stage-3 plant image (80×80 inside 12px padding)
 
 ---
 

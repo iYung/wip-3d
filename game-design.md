@@ -48,7 +48,7 @@ Bottom-left overlay showing context-sensitive labels. Each line only appears whe
 | `F: OPEN SHOP` | Empty hands, over PC Store |
 | `F: WATER` | Holding watering can, over a plant |
 | `F: CLONE` | Holding unloaded grafter, over a stage-3 plant |
-| `F: SELL ($X)` | Holding any sellable item, over sell bin |
+| `F: DISCARD` | Holding any sellable item, over garbage bin |
 | `F: NEXT` | In cashier zone, customer waiting, still in dialog |
 | `F: SELL TO CUSTOMER ($X)` | In cashier zone, customer done talking, holding the requested stage-3 plant |
 
@@ -81,13 +81,12 @@ The player can increase the number of slots. Adding a slot expands the store wid
 - Putting it down (E) over an empty slot while loaded: places the clone into that slot; grafter empties and stays in the player's hand
 - Does nothing if already loaded, or if the target slot has no plant
 
-### Sell Bin
+### Garbage Bin
 
 - Can be picked up and placed
-- Player presses Interact (F) while holding an item over the sell bin to sell it
-- Sale values: stage-3 plant → `SELL_VALUE`; stage 1–2 plant → 1; tools → 0
-- Selling a loaded grafter sells the stored plant clone and empties the grafter
-- PC Store cannot be sold
+- Player presses Interact (F) while holding any sellable item over the bin to discard it
+- Discarding a loaded grafter unloads the clone (both clone and grafter are discarded)
+- PC Store cannot be discarded
 
 ---
 
@@ -111,11 +110,11 @@ Plant types:
 
 | # | Name | Cost | Sell | Cooldowns |
 |---|------|------|------|-----------|
-| 1 | Fern | $1 | $5 | 10s, 15s |
+| 1 | Grass | $1 | $5 | 1s, 1s |
 | 2 | Cactus | $3 | $8 | 8s, 12s |
 | 3 | Rose | $6 | $13 | 6s, 9s |
-| 4 | Sunflower | $10 | $20 | 4s, 7s |
-| 5 | Lavender | $15 | $28 | 3s, 5s |
+| 4 | Tulip | $10 | $20 | 4s, 7s |
+| 5 | Daisy | $15 | $28 | 3s, 5s |
 | 6 | Golden Lotus | $20 | $40 | 2s, 3s |
 
 Each growth stage has a cooldown timer. When the timer reaches zero the plant is ready to be watered. Watering a ready plant advances it to the next stage and resets the timer for the new stage. Watering a plant that is not ready does nothing.
@@ -152,8 +151,8 @@ Two kinds of customers can spawn:
 | Old Pete | Cactus | 3 | Gruff regular who warms up over time; wears a flat cap |
 | Mayor Bloom | Rose | 2 | Formal first visit; returns privately for himself |
 | The Collector | Golden Lotus | 2 | Mysterious; hints at what he did with the first one |
-| Mira | Sunflower | 1 | Kid with her dad's money, no explanation |
-| Dottie | Lavender | 3 | Cheerful regular; presses flowers in books; brings one back as a gift |
+| Mira | Tulip | 1 | Kid with her dad's money, no explanation |
+| Dottie | Daisy | 3 | Cheerful regular; presses flowers in books; brings one back as a gift |
 
 **Dialog flow:**
 - Scripted customers: F advances through messages one at a time; after the last message the plant-colored bubble appears
@@ -175,7 +174,7 @@ Two kinds of customers can spawn:
 
 ## Upgrades
 
-### Speed Boost *(planned)*
+### Speed Boost
 
 Purchasable in the shop. Three tiers, each permanently increasing player movement speed.
 

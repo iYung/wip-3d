@@ -25,7 +25,7 @@ Completed step files are moved to [`archive/`](archive/).
 
 | File | What it does |
 |------|-------------|
-| `assets.lua` | Loads all PNGs once at startup; require-cached so every file can `require` it cheaply; `store_bg_*` and `speech_bubble` loaded conditionally via `try_img` |
+| `assets.lua` | Loads all PNGs once at startup; require-cached so every file can `require` it cheaply; `sneakers` and `expand_slot` loaded conditionally via `try_img` (art not yet created); all other assets use `img()` and are required to exist |
 | `config.lua` | Shared constants — `U`, `SLOT_COST`, `ZONE_WIDTH` (400px cashier zone) |
 | `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
 | `game_state.lua` | Holds store, player, currency, `unlocked_plants`, `stage3_counts`, `seen_scripts`; survives scene switches |
@@ -131,7 +131,9 @@ See open questions in `game-design.md`.
 
 ### Recently completed
 
-- **Slot highlight image** — white rectangle replaced with `slot_highlight.png`; falls back gracefully if file is absent
+- **PC store item images** — Watering Can, Grafter, Expand Slot, Sneakers entries in buy_scene now show PNG previews instead of colored rectangles; Expand Slot and Sneakers fall back to a grey box until `expand_slot.png` / `sneakers.png` are created
+- **Remove image fallbacks** — `slot_highlight`, `store_bg_*`, and `speech_bubble*` converted from `try_img` to `img()`; nil-checks removed from slot.lua and customer.lua draw sites; redundant `.color = {1,1,1,1}` assignments removed from player, watering_can, grafter, pc_store, and garbage_bin
+- **Slot highlight image** — white rectangle replaced with `slot_highlight.png`
 - **Plant images instead of tinting** — plant sprites now render their stage PNGs as-is; tint removed from `plant.lua`; customer request bubble replaced with a 9-slice speech bubble showing the stage-3 plant image; store preview shows stage-3 image; `colors` field no longer used for rendering
 - **Customer dismiss** — E dismisses a waiting customer without selling; scripted characters go on a 3-sale cooldown and return (chapter stays unseen until served); `seen_scripts` now written on sale, not on spawn
 - **Typewriter dialogue** — customer dialog lines reveal character-by-character at 40 chars/s inside a 9-slice `speech_bubble.png` box; F skips to the full line, a second F advances; HUD label switches between F: SKIP and F: NEXT; graceful fallback to text-only if the bubble asset is missing
