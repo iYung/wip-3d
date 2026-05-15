@@ -33,6 +33,7 @@ luagame/
         │   ├── pc_store.lua
         │   └── plant.lua
         ├── scenes/
+        │   ├── start_scene.lua
         │   ├── store_scene.lua
         │   └── buy_scene.lua
         └── data/

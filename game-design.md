@@ -190,6 +190,7 @@ Purchasable in the shop. Three tiers, each permanently increasing player movemen
 
 | Scene      | Description                                         |
 |------------|-----------------------------------------------------|
+| StartScene | Title screen with New Game / Continue / Exit buttons; up/down to navigate, Enter/Space/F to confirm |
 | StoreScene | Main gameplay — player moves in store and cashier zone |
 | BuyScene   | Full scene swap; browse and buy items (Plant, Expand, Watering Can, Grafter) |
 

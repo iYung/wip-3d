@@ -1,7 +1,7 @@
 love.graphics.setDefaultFilter("nearest", "nearest")
 
 local SceneManager = require("lua/core/scene_manager")
-local StoreScene   = require("lua/game/scenes/store_scene")
+local StartScene   = require("lua/game/scenes/start_scene")
 local GameState    = require("lua/game/game_state")
 local input        = require("lua/game/input")
 
@@ -15,8 +15,7 @@ function love.load()
     canvas:setFilter("nearest", "nearest")
     local gs     = GameState.new()
     scene_manager = SceneManager.new()
-    local store_scene = StoreScene.new(gs, input, scene_manager)
-    scene_manager:switch(store_scene)
+    scene_manager:switch(StartScene.new(gs, input, scene_manager))
 end
 
 function love.update(dt)

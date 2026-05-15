@@ -357,6 +357,35 @@ NPC that appears in the cashier zone and requests a specific plant.
 
 ---
 
+## Scenes
+
+### StartScene
+
+The first scene shown on launch. Pure screen-space UI — overrides `draw()` entirely, no camera transform.
+
+**Location:** `lua/game/scenes/start_scene.lua`
+
+**Properties**
+- `selected` — index of the highlighted menu item (1 = New Game, 2 = Continue, 3 = Exit)
+- `_font_title`, `_font_btn` — Love2D fonts created in `on_enter()`; stored on the scene so they are not recreated every frame
+- `_prev_up`, `_prev_down`, `_prev_confirm` — previous-frame key states for edge detection
+
+**Menu items**
+- **New Game** — constructs and switches to `StoreScene` (same as Continue for now)
+- **Continue** — constructs and switches to `StoreScene`
+- **Exit** — calls `love.event.quit()`
+
+**Navigation keys** (handled with raw `love.keyboard.isDown` + edge detection, not via the `Input` module)
+- Up / W — move selection up
+- Down / S — move selection down
+- Enter / Space / F — confirm
+
+**Notes**
+- Fonts are saved and restored around `draw()` so the global Love2D font state is unchanged when `StoreScene` draws next frame
+- `StoreScene` is `require`d lazily inside `_confirm()`, not at module load time, to avoid a circular load order
+
+---
+
 ## Layer Priorities (Drawer)
 
 | Priority | Content |

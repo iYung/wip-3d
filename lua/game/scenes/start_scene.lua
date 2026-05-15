@@ -1,0 +1,90 @@
+local Scene = require("lua/core/scene")
+
+local ITEMS = { "New Game", "Continue", "Exit" }
+
+local W         = 1280
+local BTN_W     = 300
+local BTN_H     = 54
+local BTN_X     = (W - BTN_W) / 2
+local BTN_Y0    = 290
+local BTN_GAP   = 74
+
+local StartScene = setmetatable({}, { __index = Scene })
+StartScene.__index = StartScene
+
+function StartScene.new(game_state, input, scene_manager)
+    local self          = Scene.new()
+    setmetatable(self, StartScene)
+    self.game_state     = game_state
+    self.input          = input
+    self.scene_manager  = scene_manager
+    self.selected       = 1
+    self._prev_up       = false
+    self._prev_down     = false
+    self._prev_confirm  = false
+    return self
+end
+
+function StartScene:on_enter()
+    self._font_title  = love.graphics.newFont(64)
+    self._font_btn    = love.graphics.newFont(22)
+end
+
+function StartScene:update(dt)
+    local up      = love.keyboard.isDown("up")    or love.keyboard.isDown("w")
+    local down    = love.keyboard.isDown("down")  or love.keyboard.isDown("s")
+    local confirm = love.keyboard.isDown("return") or love.keyboard.isDown("space") or love.keyboard.isDown("f")
+
+    if up and not self._prev_up then
+        self.selected = ((self.selected - 2) % #ITEMS) + 1
+    end
+    if down and not self._prev_down then
+        self.selected = (self.selected % #ITEMS) + 1
+    end
+    if confirm and not self._prev_confirm then
+        self:_confirm()
+    end
+
+    self._prev_up      = up
+    self._prev_down    = down
+    self._prev_confirm = confirm
+end
+
+function StartScene:_confirm()
+    if self.selected == 3 then
+        love.event.quit()
+        return
+    end
+    -- New Game (1) and Continue (2) both just start the store for now
+    local StoreScene = require("lua/game/scenes/store_scene")
+    self.scene_manager:switch(StoreScene.new(self.game_state, self.input, self.scene_manager))
+end
+
+function StartScene:draw()
+    local prev_font = love.graphics.getFont()
+
+    -- title
+    love.graphics.setFont(self._font_title)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf("PLANT STORE", 0, 140, W, "center")
+
+    -- buttons
+    love.graphics.setFont(self._font_btn)
+    for i, label in ipairs(ITEMS) do
+        local y = BTN_Y0 + (i - 1) * BTN_GAP
+        if i == self.selected then
+            love.graphics.setColor(0.35, 0.75, 0.45, 1)
+        else
+            love.graphics.setColor(0.18, 0.18, 0.24, 1)
+        end
+        love.graphics.rectangle("fill", BTN_X, y, BTN_W, BTN_H, 6, 6)
+        love.graphics.setColor(1, 1, 1, 1)
+        local th = self._font_btn:getHeight()
+        love.graphics.printf(label, BTN_X, y + (BTN_H - th) / 2, BTN_W, "center")
+    end
+
+    love.graphics.setFont(prev_font)
+    love.graphics.setColor(1, 1, 1, 1)
+end
+
+return StartScene

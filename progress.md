@@ -49,6 +49,7 @@ Completed step files are moved to [`archive/`](archive/).
 
 | File | What it does |
 |------|-------------|
+| `start_scene.lua` | Title screen with New Game / Continue / Exit buttons; up/down/W/S navigate, Enter/Space/F confirms; New Game and Continue both enter StoreScene; fonts saved and restored each draw so global font state is unaffected |
 | `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds (left = -400+640, right = store width−640), pick up/interact handled here; cashier zone logic (F skips reveal → advances → sells, E dismisses); context HUD bottom-left shows F: SKIP while typing, F: NEXT when done, E: DISMISS when customer waiting; `_active_script_key` tracks the current scripted customer (seen_scripts written on sale, not on spawn); `_script_cooldowns` counts down per completed sale — dismissed scripted customers return after 3 sales; unified parallax tiles `store_bg_*` across full world width pre-drawer; `Store:draw_bg` then stamps walls/windows on top; layered draw order for wall/bubbles |
 | `buy_scene.lua` | Carousel UI — 10 items (6 plants + Watering Can + Grafter + Expand Slot + Heat Lamps); A/D cycle, F buy, E cancel; per-type price and preview color |
 
@@ -130,6 +131,8 @@ PNG files for all sprites — player variants, plants (18 total: 6 types × 3 st
 See open questions in `game-design.md`.
 
 ### Recently completed
+
+- **Start screen** — `StartScene` with New Game / Continue / Exit buttons; keyboard navigation (up/down/W/S + Enter/Space/F); `main.lua` now opens `StartScene` first; `StoreScene` constructed lazily on confirm; font state saved/restored so store rendering is unaffected
 
 - **Growth upgrade (Heat Lamps)** — purchasable 3-tier upgrade in the PC Store; tiers cost $20/$50/$100 and scale all plant timers by 1.25×/1.60×/2.00× via `gs.growth_mult` multiplied into `dt` in `StoreScene:update`; `SPEED_TIERS` moved from `config.lua` to `data/speed_tiers.lua` alongside new `data/growth_tiers.lua`
 
