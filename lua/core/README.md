@@ -59,7 +59,6 @@ Controls what part of the world is visible. Logical resolution: **1280 × 720**.
 - `Camera.new(x, y)`
 - `attach()` / `detach()` — push/pop the camera transform around a draw call
 - `follow(target, lerp)` — smooth-track `target.x/y`; `lerp` 0 = instant, 1 = no movement
-- `to_world(sx, sy)` / `to_screen(wx, wy)` — coordinate conversion
 - `zoom` — scale factor (default `1.0`)
 
 ---
