@@ -1,4 +1,4 @@
-local Scene = require("lua/core/scene")
+local Scene = require("lua/core/scene_2d")
 
 local ITEMS = { "New Game", "Continue", "Exit" }
 

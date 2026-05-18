@@ -4,6 +4,80 @@ Engine-level classes with no game-specific knowledge. Safe to reuse across proje
 
 ---
 
+## Quick start — new 2D scene
+
+```lua
+local Scene2D = require("lua/core/scene_2d")
+
+local MyScene = setmetatable({}, { __index = Scene2D })
+MyScene.__index = MyScene
+
+function MyScene.new()
+    return setmetatable(Scene2D.new(), MyScene)
+end
+
+function MyScene:on_enter()
+    -- self.drawer and self.camera are ready to use
+    self.drawer:add(some_sprite, 0)
+end
+
+function MyScene:update(dt) end
+
+function MyScene:draw()
+    Scene2D.draw(self)   -- camera-wrapped drawer pass
+    -- HUD draws go here (outside the camera transform)
+end
+
+function MyScene:on_exit()
+    Scene2D.on_exit(self)  -- clears drawer
+end
+
+return MyScene
+```
+
+---
+
+## Quick start — new 3D scene
+
+```lua
+local Scene3D  = require("lua/core/scene_3d")
+local Map      = require("lua/core/map")
+local Player3D = require("lua/game/player_3d")   -- WASD move/turn
+
+local GRID = {
+    { 1,1,1,1,1 },
+    { 1,0,0,0,1 },
+    { 1,0,0,0,1 },
+    { 1,1,1,1,1 },
+}
+
+local MyScene = setmetatable({}, { __index = Scene3D })
+MyScene.__index = MyScene
+
+function MyScene.new()
+    return setmetatable(Scene3D.new(), MyScene)
+end
+
+function MyScene:on_enter()
+    self.map    = Map.new(GRID)
+    self.player = Player3D.new(2.5, 2.5, 0)   -- grid x, grid y, angle (radians)
+end
+
+function MyScene:update(dt)
+    self.player:update(dt)
+end
+
+function MyScene:draw()
+    self.raycaster:draw(self.map, self.player.x, self.player.y, self.player.angle)
+end
+
+return MyScene
+```
+
+**Coordinate system:** positions are grid units (float). `(1.5, 1.5)` is the centre of cell `(1,1)`. Angle `0` faces right (+x); `π/2` faces down (+y), matching Love2D's screen axes.
+
+---
+
 ## Sprite
 
 A drawable unit at a world position.
@@ -65,14 +139,31 @@ Controls what part of the world is visible. Logical resolution: **1280 × 720**.
 
 ## Scene
 
-A self-contained game state. Owns a Drawer and a Camera.
+Pure lifecycle base class. No rendering state — subclass `Scene2D` or `Scene3D` instead of this directly.
 
-- `Scene.new()` — creates `self.drawer` and `self.camera`
-- `update(dt)` / `draw()` — override in subclasses
-- `on_enter()` — called when this scene becomes active
-- `on_exit()` — calls `drawer:clear()` by default
+- `Scene.new()`
+- `update(dt)` / `draw()` / `on_enter()` / `on_exit()` — no-op stubs, override in subclasses
 
-`draw()` wraps `drawer:draw()` inside `camera:attach()`/`camera:detach()`.
+---
+
+## Scene2D
+
+Inherits `Scene`. Owns a `Drawer` and a `Camera` for 2D rendering. All existing game scenes (StartScene, StoreScene, BuyScene) extend this.
+
+- `Scene2D.new()` — creates `self.drawer` and `self.camera`
+- `draw()` — wraps `drawer:draw()` inside `camera:attach()`/`camera:detach()`
+- `on_exit()` — calls `drawer:clear()`
+
+Call `Scene2D.draw(self)` and `Scene2D.on_exit(self)` from subclass overrides to keep the default behaviour.
+
+---
+
+## Scene3D
+
+Inherits `Scene`. Owns a `Raycaster` for first-person 3D rendering.
+
+- `Scene3D.new()` — creates `self.raycaster`
+- Subclass provides a `Map` and player state; call `self.raycaster:draw(map, px, py, angle)` in `draw()`
 
 ---
 
@@ -83,6 +174,28 @@ Holds the active scene and drives the game loop.
 - `SceneManager.new()`
 - `switch(scene)` — calls `on_exit()` on the old scene, `on_enter()` on the new one
 - `update(dt)` / `draw()` — delegate to `current`
+
+---
+
+## Map
+
+A 2D grid of integer cells used for raycaster levels.
+
+- `Map.new(grid)` — `grid` is a 1-indexed table of rows, each a table of integers (`0` = empty, non-zero = wall)
+- `is_wall(x, y)` — true if cell at column `x`, row `y` is non-zero
+- `cell(x, y)` — raw cell value (0 if out of bounds)
+- `width()` / `height()` — grid dimensions
+
+---
+
+## Raycaster
+
+DDA-based first-person column renderer. Draws ceiling, floor, and walls directly to the screen each frame.
+
+- `Raycaster.new()`
+- `draw(map, px, py, angle)` — `px`/`py` are the player's position in grid units (float), `angle` is facing direction in radians
+
+Renders at 1280 × 720. X-facing walls are drawn brighter than Y-facing walls for depth contrast. Resets `love.graphics` colour to white after drawing.
 
 ---
 

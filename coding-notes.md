@@ -15,14 +15,21 @@ luagame/
     │   ├── spriteset.lua
     │   ├── drawer.lua
     │   ├── camera.lua
-    │   ├── scene.lua
-    │   └── scene_manager.lua
+    │   ├── scene.lua          ← pure lifecycle base (no rendering state)
+    │   ├── scene_2d.lua       ← extends Scene; owns Drawer + Camera
+    │   ├── scene_3d.lua       ← extends Scene; owns Raycaster
+    │   ├── raycaster.lua      ← DDA first-person column renderer
+    │   ├── map.lua            ← 2D wall grid used by raycaster
+    │   ├── scene_manager.lua
+    │   ├── timer.lua
+    │   └── input.lua
     └── game/
-        ├── assets.lua       ← loads all PNGs once; require-cached
+        ├── assets.lua         ← loads all PNGs once; require-cached
         ├── config.lua
-        ├── input.lua
+        ├── input.lua          ← shared Input instance for 2D game actions
         ├── game_state.lua
-        ├── player.lua
+        ├── player.lua         ← 2D side-scrolling player
+        ├── player_3d.lua      ← first-person WASD player for 3D scenes
         ├── store.lua
         ├── slot.lua
         ├── customer.lua

@@ -1,4 +1,4 @@
-local Scene        = require("lua/core/scene")
+local Scene        = require("lua/core/scene_2d")
 local Timer        = require("lua/core/timer")
 local WateringCan  = require("lua/game/items/watering_can")
 local PCStore      = require("lua/game/items/pc_store")

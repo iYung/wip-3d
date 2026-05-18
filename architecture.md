@@ -98,18 +98,68 @@ Controls the viewport — what portion of the world is visible.
 
 ### Scene
 
-A self-contained game state. Owns its Drawer and Camera.
+Pure lifecycle base class. No rendering state.
+
+**Methods**
+- `new()` — constructor
+- `update(dt)` / `draw()` / `on_enter()` / `on_exit()` — no-op stubs, override in subclasses
+
+Subclass `Scene2D` or `Scene3D` rather than this directly.
+
+---
+
+### Scene2D
+
+Inherits `Scene`. Owns a `Drawer` and a `Camera`. All current game scenes extend this.
 
 **Properties**
 - `drawer` — Drawer instance for this scene
 - `camera` — Camera instance for this scene
 
 **Methods**
-- `new()` — constructor
-- `update(dt)` — per-frame logic (override in subclasses)
+- `new()` — constructor; creates `self.drawer` and `self.camera`
 - `draw()` — wraps `drawer:draw()` inside `camera:attach()`/`camera:detach()`
-- `on_enter()` — called when this scene becomes active
-- `on_exit()` — calls `drawer:clear()` by default
+- `on_exit()` — calls `drawer:clear()`
+
+Call `Scene2D.draw(self)` and `Scene2D.on_exit(self)` from overrides to keep default behaviour.
+
+---
+
+### Scene3D
+
+Inherits `Scene`. Owns a `Raycaster` for first-person 3D rendering.
+
+**Properties**
+- `raycaster` — Raycaster instance for this scene
+
+**Methods**
+- `new()` — constructor; creates `self.raycaster`
+
+Subclass provides a `Map` and player position; call `self.raycaster:draw(map, px, py, angle)` in `draw()`.
+
+---
+
+### Map
+
+A 2D grid of integer cells used by the raycaster.
+
+**Methods**
+- `Map.new(grid)` — `grid` is a 1-indexed table of rows; `0` = empty, non-zero = wall
+- `is_wall(x, y)` — true if the cell is non-zero
+- `cell(x, y)` — raw cell value (0 if out of bounds)
+- `width()` / `height()` — grid dimensions
+
+---
+
+### Raycaster
+
+DDA-based first-person column renderer. Draws ceiling, floor, and walls each frame.
+
+**Methods**
+- `Raycaster.new()`
+- `draw(map, px, py, angle)` — `px`/`py` in grid units (float), `angle` in radians
+
+X-facing walls are drawn brighter than Y-facing walls for depth contrast. Renders at 1280 × 720. Resets `love.graphics` colour to white after drawing.
 
 ---
 
