@@ -24,13 +24,14 @@ function Player3D:update(dt)
     self.input:update()
     if self.input:is_down("left")     then self.angle = self.angle - TURN_SPEED * dt end
     if self.input:is_down("right")    then self.angle = self.angle + TURN_SPEED * dt end
+    local spd = self.move_speed or MOVE_SPEED
     if self.input:is_down("forward")  then
-        self.x = self.x + math.cos(self.angle) * MOVE_SPEED * dt
-        self.y = self.y + math.sin(self.angle) * MOVE_SPEED * dt
+        self.x = self.x + math.cos(self.angle) * spd * dt
+        self.y = self.y + math.sin(self.angle) * spd * dt
     end
     if self.input:is_down("backward") then
-        self.x = self.x - math.cos(self.angle) * MOVE_SPEED * dt
-        self.y = self.y - math.sin(self.angle) * MOVE_SPEED * dt
+        self.x = self.x - math.cos(self.angle) * spd * dt
+        self.y = self.y - math.sin(self.angle) * spd * dt
     end
 end
 

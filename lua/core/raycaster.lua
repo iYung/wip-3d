@@ -6,7 +6,9 @@ local Raycaster = {}
 Raycaster.__index = Raycaster
 
 function Raycaster.new()
-    return setmetatable({}, Raycaster)
+    local self = setmetatable({}, Raycaster)
+    self.z_buffer = {}
+    return self
 end
 
 function Raycaster:draw(map, px, py, angle)
@@ -41,12 +43,100 @@ function Raycaster:draw(map, px, py, angle)
 
         if hit then
             local perp = side == 0 and (sdx - ddx) or (sdy - ddy)
+            self.z_buffer[col] = perp
             local h    = math.floor(SH / perp)
             local y1   = math.floor(SH / 2 - h / 2)
             local y2   = math.floor(SH / 2 + h / 2)
             local br   = side == 1 and 0.5 or 0.8
             love.graphics.setColor(br, br * 0.5, br * 0.3, 1)
             love.graphics.line(col, y1, col, y2)
+        else
+            self.z_buffer[col] = math.huge
+        end
+    end
+
+    love.graphics.setColor(1, 1, 1, 1)
+end
+
+-- sprites: array of { x, y, image, scale?, voffset?, setup?, teardown? }
+--   scale   : billboard size multiplier (default 1.0)
+--   voffset : world-unit height above floor (default 0, positive = up)
+--   setup   : called before drawing (e.g. apply shader)
+--   teardown: called after drawing (e.g. clear shader)
+function Raycaster:draw_sprites(sprites, px, py, angle)
+    local dir_x   = math.cos(angle)
+    local dir_y   = math.sin(angle)
+    -- left-perpendicular plane scaled by tan(FOV/2)
+    local half_tan = math.tan(FOV / 2)
+    local plane_x  = -dir_y * half_tan
+    local plane_y  =  dir_x * half_tan
+    local inv_det  = 1 / (plane_x * dir_y - dir_x * plane_y)
+
+    -- sort far-to-near
+    local sorted = {}
+    for _, spr in ipairs(sprites) do
+        local dx = spr.x - px
+        local dy = spr.y - py
+        sorted[#sorted + 1] = { spr = spr, dist2 = dx * dx + dy * dy }
+    end
+    table.sort(sorted, function(a, b) return a.dist2 > b.dist2 end)
+
+    for _, entry in ipairs(sorted) do
+        local spr = entry.spr
+        local dx  = spr.x - px
+        local dy  = spr.y - py
+
+        local tx = inv_det * ( dir_y * dx - dir_x * dy)
+        local tz = inv_det * (-plane_y * dx + plane_x * dy)
+
+        if tz > 0.05 and spr.image then
+            local img  = spr.image
+            local iw   = img:getWidth()
+            local ih   = img:getHeight()
+            local sc   = spr.scale or 1.0
+            local h    = math.min(SH * 2, math.floor(SH / tz * sc))
+            local w    = math.floor(h * iw / ih)
+            local sx   = math.floor(SW / 2 * (1 + tx / tz))
+            local x0   = sx - w / 2
+            local x1   = sx + w / 2
+
+            -- vertical offset for floating sprites (bubbles, etc.)
+            local voff      = spr.voffset or 0
+            local y_center  = SH / 2 - voff * (SH / tz)
+            local y0        = math.floor(y_center - h / 2)
+
+            local clip_y  = math.max(0, y0)
+            local clip_bot = math.min(SH, y0 + h)
+            local clip_h  = clip_bot - clip_y
+
+            local col_start = math.max(0, math.floor(x0))
+            local col_end   = math.min(SW - 1, math.floor(x1) - 1)
+
+            if clip_h > 0 and col_start <= col_end then
+                if spr.setup then spr.setup() end
+
+                local run_start = nil
+                for col = col_start, col_end do
+                    local visible = tz < (self.z_buffer[col] or math.huge)
+                    if visible and not run_start then
+                        run_start = col
+                    elseif not visible and run_start then
+                        love.graphics.setScissor(run_start, clip_y, col - run_start, clip_h)
+                        love.graphics.setColor(1, 1, 1, 1)
+                        love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                        run_start = nil
+                    end
+                end
+                if run_start then
+                    local rw = col_end - run_start + 1
+                    love.graphics.setScissor(run_start, clip_y, rw, clip_h)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                end
+                love.graphics.setScissor()
+
+                if spr.teardown then spr.teardown() end
+            end
         end
     end
 

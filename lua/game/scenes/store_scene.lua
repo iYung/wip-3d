@@ -1,15 +1,47 @@
-local Scene        = require("lua/core/scene_2d")
-local Timer        = require("lua/core/timer")
-local WateringCan  = require("lua/game/items/watering_can")
-local PCStore      = require("lua/game/items/pc_store")
-local GarbageBin   = require("lua/game/items/garbage_bin")
-local BuyScene     = require("lua/game/scenes/buy_scene")
-local PLANT_DATA        = require("lua/game/data/plant_data")
-local CUSTOMER_SCRIPTS  = require("lua/game/data/customer_scripts")
-local Customer          = require("lua/game/customer")
-local config       = require("lua/game/config")
-local ZONE_WIDTH   = config.ZONE_WIDTH
-local U            = config.U
+local Scene3D        = require("lua/core/scene_3d")
+local Map            = require("lua/core/map")
+local Player3D       = require("lua/game/player_3d")
+local Timer          = require("lua/core/timer")
+local WateringCan    = require("lua/game/items/watering_can")
+local PCStore        = require("lua/game/items/pc_store")
+local GarbageBin     = require("lua/game/items/garbage_bin")
+local BuyScene       = require("lua/game/scenes/buy_scene")
+local PLANT_DATA     = require("lua/game/data/plant_data")
+local CUSTOMER_SCRIPTS = require("lua/game/data/customer_scripts")
+local Customer       = require("lua/game/customer")
+local A              = require("lua/game/assets")
+local ColorReplace   = require("lua/game/shaders/color_replace")
+
+-- Two-room map: store (left) connected to cashier (right) via passage at rows 3-4
+local MAP_GRID = {
+    { 1,1,1,1,1,1,1,1,1,1,1,1 },
+    { 1,0,0,0,0,0,1,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,1,0,0,0,0,1 },
+    { 1,0,0,0,0,0,1,0,0,0,0,1 },
+    { 1,0,0,0,0,0,1,0,0,0,0,1 },
+    { 1,1,1,1,1,1,1,1,1,1,1,1 },
+}
+
+local CASHIER_THRESH  = 7.0   -- player.x >= this → cashier room
+local CASHIER_POS_X   = 9.5   -- customer billboard world position
+local CASHIER_POS_Y   = 3.5
+
+local PLAYER_START_X  = 3.5
+local PLAYER_START_Y  = 6.5
+local PLAYER_START_A  = -math.pi / 2  -- facing north
+
+local INTERACT_RANGE  = 1.3   -- grid units: active slot detection radius
+local COLLISION_M     = 0.25  -- grid units: wall collision margin
+
+local BASE_PX_SPEED   = 220   -- reference 2D speed (px/s)
+local BASE_3D_SPEED   = 3.0   -- matching 3D speed (grid units/s)
+
+local DISMISS_COOLDOWN_SALES = 3
+
+local SW = 1280
+local SH = 720
 
 local function plant_sell_value(plant)
     if plant.stage ~= 3 then return 1 end
@@ -17,21 +49,28 @@ local function plant_sell_value(plant)
     return pd and pd.sell or 5
 end
 
-local CAMERA_Y    = 440  -- fixed world y the camera locks to
-local CAMERA_LERP = 0.85 -- smoothing: 0=instant, 1=no movement; 0.85 = smooth lag
+-- Returns the current displayable image for an item (Sprite or SpriteSet)
+local function item_image(item)
+    local s = item.sprite
+    if not s then return nil end
+    if type(s._active) == "function" then
+        local active = s:_active()
+        return active and active.image
+    end
+    return s.image
+end
 
-local DISMISS_COOLDOWN_SALES = 3  -- scripted customer returns after this many other sales
-
-local StoreScene = setmetatable({}, { __index = Scene })
+local StoreScene = setmetatable({}, { __index = Scene3D })
 StoreScene.__index = StoreScene
 
 function StoreScene.new(game_state, input, scene_manager)
-    local self          = Scene.new()
+    local self              = Scene3D.new()
     setmetatable(self, StoreScene)
-    self.game_state     = game_state
-    self.input          = input
-    self.scene_manager  = scene_manager
-    self._initialized   = false
+    self.game_state         = game_state
+    self.input              = input
+    self.scene_manager      = scene_manager
+    self._initialized       = false
+    self._last_active_slot  = nil
     return self
 end
 
@@ -43,199 +82,106 @@ function StoreScene:on_enter()
         self:_setup_store()
     end
 
-    self.drawer:clear()
-    self.drawer:add(gs.store,              0)
-    self.drawer:add(self._customer,        1)
-    self.drawer:add(self._heat_lamps,      1.5)
-    self.drawer:add(self._wall,            2)
-    self.drawer:add(self._cashier_floor,   2.5)
-    self.drawer:add(self._plant_bubbles,   3)
-    self.drawer:add(gs.player,             4)
-    self.drawer:add(self._customer_bubble, 5)
+    -- Patch player.active_slot so item interact() calls use 3D proximity
+    local scene = self
+    gs.player.active_slot = function(_, _)
+        return scene._last_active_slot
+    end
 
-    self.camera.x = gs.player.x
-    self.camera.y = CAMERA_Y
+    -- Sync movement speed with game state
+    self.player3d.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
 end
+
+function StoreScene:on_exit() end
 
 function StoreScene:_setup_store()
     local gs      = self.game_state
-    local store   = gs.store
+    local slots   = gs.store:all_slots()
     local self_ref = self
 
-    store.slots[1].item = WateringCan.new()
-    store.slots[2].item = GarbageBin.new()
-
-    store.slots[3].item = PCStore.new(function()
-        local slot = gs.player:active_slot(store)
-        return BuyScene.new(gs, self_ref.input, self_ref.scene_manager, self_ref, slot)
+    slots[1].item = WateringCan.new()
+    slots[2].item = GarbageBin.new()
+    slots[3].item = PCStore.new(function()
+        return BuyScene.new(gs, self_ref.input, self_ref.scene_manager, self_ref)
     end)
 
-    local target_x   = -ZONE_WIDTH / 2
-    local exit_x     = -(ZONE_WIDTH + 200)
-    local customer_y = 500
-    self._customer          = Customer.new(target_x, exit_x, customer_y)
+    self.map      = Map.new(MAP_GRID)
+    self.player3d = Player3D.new(PLAYER_START_X, PLAYER_START_Y, PLAYER_START_A)
+
+    -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
+    self._customer          = Customer.new(0, -1, 0)
     self._spawn_timer       = Timer.new(math.random(3, 6))
     self._active_script_key = nil
     self._script_cooldowns  = {}
-
-    local A        = require("lua/game/assets")
-    local wall_img = A.cashier_wall
-    local slot_img = A.slot
-
-    self._wall = {
-        draw = function()
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(wall_img, -ZONE_WIDTH, 0)
-        end
-    }
-
-    local customer_ref = self._customer
-    self._customer_bubble = {
-        draw = function() customer_ref:draw_bubble() end
-    }
-
-    local store_ref = gs.store
-    self._plant_bubbles = {
-        draw = function() store_ref:draw_bubbles() end
-    }
-
-    self._parallax_layers = {
-        { img = A.store_bg_far,  p = 0.05 },
-        { img = A.store_bg_mid,  p = 0.20 },
-        { img = A.store_bg_near, p = 0.45 },
-    }
-
-    local floor_y  = 30 * U
-    local slot_w   = store_ref.slot_width
-    local sx = slot_w / slot_img:getWidth()
-    local sy = slot_w / slot_img:getHeight()
-    self._cashier_floor = {
-        draw = function()
-            love.graphics.setColor(1, 1, 1, 1)
-            local fx = -ZONE_WIDTH
-            while fx < 0 do
-                love.graphics.draw(slot_img, fx, floor_y, 0, sx, sy)
-                fx = fx + slot_w
-            end
-        end
-    }
-
-    local gs_ref = gs
-    self._heat_lamps = {
-        draw = function()
-            local lvl = gs_ref.growth_level
-            if lvl < 1 then return end
-            local lamp = A.heat_lamps and A.heat_lamps[lvl]
-            if not lamp then return end
-            love.graphics.setColor(1, 1, 1, 1)
-            local lamp_w = store_ref.slot_width * 2
-            local scale  = lamp_w / lamp:getWidth()
-            local slots  = store_ref.slots
-            local i = 1
-            while i + 1 <= #slots do
-                love.graphics.draw(lamp, slots[i].x, 80, 0, scale, scale)
-                i = i + 2
-            end
-        end
-    }
 end
 
-function StoreScene:_next_customer_cfg()
-    local gs = self.game_state
-
-    local qualified = {}
-    for _, script in ipairs(CUSTOMER_SCRIPTS) do
-        local key = script.id .. ":" .. script.chapter
-        if not gs.seen_scripts[key] and not self._script_cooldowns[key] then
-            local t = script.trigger
-            if (gs.stage3_counts[t.plant_type] or 0) >= t.count then
-                local prior_ok = true
-                for ch = 1, script.chapter - 1 do
-                    if not gs.seen_scripts[script.id .. ":" .. ch] then
-                        prior_ok = false
-                        break
-                    end
-                end
-                if prior_ok then
-                    qualified[#qualified + 1] = script
-                end
-            end
-        end
-    end
-
-    if #qualified > 0 then
-        local script = qualified[math.random(#qualified)]
-        self._active_script_key = script.id .. ":" .. script.chapter
-        return script
-    end
-
-    self._active_script_key = nil
-    local keys = {}
-    for pt in pairs(gs.unlocked_plants) do
-        keys[#keys + 1] = pt
-    end
-    if #keys == 0 then return nil end
-    local pt = keys[math.random(#keys)]
-    return {
-        plant_type     = pt,
-        primary_color   = { math.random(), math.random(), math.random(), 1 },
-        secondary_color = { math.random(), math.random(), math.random(), 1 },
-    }
-end
-
-function StoreScene:on_exit()
-    self.drawer:clear()
-end
+-- -------------------------------------------------------------------------
+-- Update
+-- -------------------------------------------------------------------------
 
 function StoreScene:update(dt)
-    local gs    = self.game_state
-    local input = self.input
+    local gs = self.game_state
+    local p  = self.player3d
 
-    gs.store:update(dt * gs.growth_mult)
-    gs.player:update(dt, input, gs.store)
+    -- Sync 3D move speed from game state
+    p.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
+
+    -- Movement + collision
+    local ox, oy = p.x, p.y
+    p:update(dt)
+    local m = COLLISION_M
+    if self.map:is_wall(math.floor(p.x + m), math.floor(oy)) or
+       self.map:is_wall(math.floor(p.x - m), math.floor(oy)) then
+        p.x = ox
+    end
+    if self.map:is_wall(math.floor(p.x), math.floor(p.y + m)) or
+       self.map:is_wall(math.floor(p.x), math.floor(p.y - m)) then
+        p.y = oy
+    end
+
+    -- Active slot (proximity, only relevant in store room)
+    if p.x < CASHIER_THRESH then
+        self._last_active_slot = gs.store:slot_near(p.x, p.y, INTERACT_RANGE)
+    else
+        self._last_active_slot = nil
+    end
+
+    -- Customer update (dialog typewriter)
     self._customer:update(dt)
-
-    for _, slot in ipairs(gs.store.slots) do
-        slot.highlighted = false
+    -- Skip walk animation in 3D: snap states immediately
+    if self._customer.state == "walking_in" then
+        self._customer.state        = "waiting"
+        self._customer.bubble.visible = true
     end
-    if gs.player.x >= 0 then
-        local active = gs.player:active_slot(gs.store)
-        if active then active.highlighted = true end
+    if self._customer.state == "walking_out" then
+        self._customer.state              = "idle"
+        self._customer.bubble.visible     = false
+        self._customer.heart_bubble.visible = false
     end
 
+    -- Spawn timer
     if not self._customer:active() then
         if self._spawn_timer:update(dt) then
             local cfg = self:_next_customer_cfg()
-            if cfg then
-                self._customer:show(cfg)
-            end
+            if cfg then self._customer:show(cfg) end
             self._spawn_timer:reset(math.random(3, 6))
         end
     end
 
-    self.camera:follow(gs.player, CAMERA_LERP)
-    self.camera.y = CAMERA_Y
+    -- Store (plant timers)
+    gs.store:update(dt * gs.growth_mult)
 
-    local half_w      = 640
-    local world_left  = -ZONE_WIDTH
-    local world_right = gs.store:width()
-    self.camera.x = math.max(world_left + half_w, math.min(world_right - half_w, self.camera.x))
-
-    if input:pressed("pick_up_down") then
-        self:_handle_pick_up_down()
-    end
-
-    if input:pressed("interact") then
-        self:_handle_interact()
-    end
+    -- Action input (E / F — updated globally by love.update before this)
+    if self.input:pressed("pick_up_down") then self:_handle_pick_up_down() end
+    if self.input:pressed("interact")     then self:_handle_interact()      end
 end
 
 function StoreScene:_handle_pick_up_down()
     local player = self.game_state.player
-    local store  = self.game_state.store
-    local slot   = player:active_slot(store)
+    local p      = self.player3d
+    local slot   = self._last_active_slot
 
-    if player.x < 0 then
+    if p.x >= CASHIER_THRESH then
         if self._customer:arrived() then
             self._customer:dismiss()
             if self._active_script_key then
@@ -246,7 +192,7 @@ function StoreScene:_handle_pick_up_down()
         return
     end
 
-    -- loaded grafter + empty slot → place clone, grafter stays in hand
+    -- Loaded grafter + empty slot → place clone
     if player.held_item and player.held_item.loaded_plant and slot and not slot.item then
         slot.item = player.held_item.loaded_plant
         player.held_item:unload()
@@ -267,29 +213,30 @@ function StoreScene:_handle_pick_up_down()
 end
 
 function StoreScene:_handle_interact()
-    local player = self.game_state.player
-    local store  = self.game_state.store
-    local slot   = player:active_slot(store)
+    local gs     = self.game_state
+    local player = gs.player
+    local store  = gs.store
+    local p      = self.player3d
+    local slot   = self._last_active_slot
 
-    -- cashier zone: dialog advance or sale
-    if player.x < 0 and self._customer:arrived() then
+    -- Cashier zone: dialog / sale
+    if p.x >= CASHIER_THRESH and self._customer:arrived() then
         local held = player.held_item
-        if self._customer:on_last_message() and held and held.plant_type == self._customer.plant_type and held.stage == 3 then
-            local value = plant_sell_value(held)
-            self.game_state.currency = self.game_state.currency + value
+        if self._customer:on_last_message()
+           and held
+           and held.plant_type == self._customer.plant_type
+           and held.stage == 3 then
+            gs.currency      = gs.currency + plant_sell_value(held)
             player.held_item = nil
             self._customer:serve()
             if self._active_script_key then
-                self.game_state.seen_scripts[self._active_script_key] = true
+                gs.seen_scripts[self._active_script_key] = true
                 self._active_script_key = nil
             end
             for key, count in pairs(self._script_cooldowns) do
-                local remaining = count - 1
-                if remaining <= 0 then
-                    self._script_cooldowns[key] = nil
-                else
-                    self._script_cooldowns[key] = remaining
-                end
+                local rem = count - 1
+                if rem <= 0 then self._script_cooldowns[key] = nil
+                else              self._script_cooldowns[key] = rem end
             end
         else
             if not self._customer:line_complete() then
@@ -301,14 +248,13 @@ function StoreScene:_handle_interact()
         return
     end
 
-    -- held item + garbage bin → discard
-    if player.held_item and player.held_item.sellable ~= false and slot and slot.item and slot.item.is_garbage_bin then
+    -- Garbage bin discard
+    if player.held_item
+       and player.held_item.sellable ~= false
+       and slot and slot.item and slot.item.is_garbage_bin then
         local held = player.held_item
-        if held.loaded_plant then
-            held:unload()
-        else
-            player.held_item = nil
-        end
+        if held.loaded_plant then held:unload()
+        else player.held_item = nil end
         return
     end
 
@@ -318,24 +264,191 @@ function StoreScene:_handle_interact()
         item:interact(player, store, self.scene_manager)
         if slot and slot.item and slot.item.stage == 3 and prev_stage == 2 then
             local pt = slot.item.plant_type
-            self.game_state.stage3_counts[pt] = (self.game_state.stage3_counts[pt] or 0) + 1
+            gs.stage3_counts[pt] = (gs.stage3_counts[pt] or 0) + 1
         end
     end
 end
 
+function StoreScene:_next_customer_cfg()
+    local gs = self.game_state
+
+    local qualified = {}
+    for _, script in ipairs(CUSTOMER_SCRIPTS) do
+        local key = script.id .. ":" .. script.chapter
+        if not gs.seen_scripts[key] and not self._script_cooldowns[key] then
+            local t = script.trigger
+            if (gs.stage3_counts[t.plant_type] or 0) >= t.count then
+                local prior_ok = true
+                for ch = 1, script.chapter - 1 do
+                    if not gs.seen_scripts[script.id .. ":" .. ch] then
+                        prior_ok = false; break
+                    end
+                end
+                if prior_ok then qualified[#qualified + 1] = script end
+            end
+        end
+    end
+
+    if #qualified > 0 then
+        local script            = qualified[math.random(#qualified)]
+        self._active_script_key = script.id .. ":" .. script.chapter
+        return script
+    end
+
+    self._active_script_key = nil
+    local keys = {}
+    for pt in pairs(gs.unlocked_plants) do keys[#keys + 1] = pt end
+    if #keys == 0 then return nil end
+    local pt = keys[math.random(#keys)]
+    return {
+        plant_type      = pt,
+        primary_color   = { math.random(), math.random(), math.random(), 1 },
+        secondary_color = { math.random(), math.random(), math.random(), 1 },
+    }
+end
+
+-- -------------------------------------------------------------------------
+-- Draw
+-- -------------------------------------------------------------------------
+
+function StoreScene:draw()
+    local gs  = self.game_state
+    local p   = self.player3d
+
+    -- Build billboard sprite list
+    local sprites = {}
+    for _, slot in ipairs(gs.store:all_slots()) do
+        if slot.item then
+            local img = item_image(slot.item)
+            if img then
+                sprites[#sprites + 1] = { x = slot.px, y = slot.py, image = img }
+            end
+            -- Plant ready bubble floats above the item
+            if slot.item.bubble and slot.item.bubble.visible and slot.item.bubble.image then
+                sprites[#sprites + 1] = {
+                    x       = slot.px,
+                    y       = slot.py,
+                    image   = slot.item.bubble.image,
+                    scale   = 0.45,
+                    voffset = 0.65,
+                }
+            end
+        end
+    end
+
+    -- Customer billboard
+    if self._customer:active() then
+        local cust = self._customer
+        sprites[#sprites + 1] = {
+            x       = CASHIER_POS_X,
+            y       = CASHIER_POS_Y,
+            image   = A.customer,
+            setup   = function() ColorReplace.apply(cust._primary, cust._secondary) end,
+            teardown = function() ColorReplace.clear() end,
+        }
+    end
+
+    -- 3D world
+    self.raycaster:draw(self.map, p.x, p.y, p.angle)
+    self.raycaster:draw_sprites(sprites, p.x, p.y, p.angle)
+
+    -- Screen-space HUD
+    self:_draw_hud()
+end
+
+function StoreScene:_draw_hud()
+    local gs     = self.game_state
+    local player = gs.player
+    local p      = self.player3d
+    local hud    = self:_hud_labels()
+
+    -- Currency: top-left
+    love.graphics.setColor(1, 1, 1, 0.9)
+    love.graphics.print("$" .. gs.currency, 10, 10)
+
+    -- Held item: bottom-right corner (FPS-style)
+    if player.held_item then
+        local img = item_image(player.held_item)
+        if img then
+            local size = 180
+            local hx   = SW - size - 20
+            local hy   = SH - size - 20
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(img, hx, hy, 0, size / img:getWidth(), size / img:getHeight())
+            -- Bubble indicator above held item
+            if player.held_item.bubble and player.held_item.bubble.visible
+               and player.held_item.bubble.image then
+                local b = player.held_item.bubble.image
+                love.graphics.draw(b, hx + size / 2 - 25, hy - 55, 0,
+                    50 / b:getWidth(), 50 / b:getHeight())
+            end
+        end
+    end
+
+    -- Context labels: bottom-left, stacked upward
+    local labels = {}
+    if hud.slot then labels[#labels + 1] = hud.slot end
+    if hud.f    then labels[#labels + 1] = hud.f    end
+    if hud.e    then labels[#labels + 1] = hud.e    end
+
+    local ly = 700
+    love.graphics.setColor(1, 1, 1, 0.9)
+    for _, label in ipairs(labels) do
+        love.graphics.print(label, 10, ly)
+        ly = ly - 20
+    end
+
+    -- Customer dialog: shown when player is in cashier room
+    if p.x >= CASHIER_THRESH then
+        self:_draw_customer_dialog()
+    end
+
+    love.graphics.setColor(1, 1, 1, 1)
+end
+
+function StoreScene:_draw_customer_dialog()
+    local cust = self._customer
+    if not cust:active() or not cust.bubble.visible then return end
+
+    if cust.done_talking then
+        -- Plant request box at bottom-center
+        local bw, bh = 104, 104
+        local bx = SW / 2 - bw / 2
+        local by = SH - bh - 80
+        love.graphics.setColor(0.93, 0.93, 0.93, 1)
+        love.graphics.rectangle("fill", bx, by, bw, bh)
+        love.graphics.setColor(0.25, 0.25, 0.25, 1)
+        love.graphics.rectangle("line", bx, by, bw, bh)
+        local img = A["plant_" .. cust.plant_type][3]
+        local iw, ih = img:getDimensions()
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(img, bx + 12, by + 12, 0, 80 / iw, 80 / ih)
+    else
+        -- Dialog text bar
+        local revealed = string.sub(cust._full_text, 1, cust.reveal_index)
+        love.graphics.setColor(0.08, 0.08, 0.12, 0.92)
+        love.graphics.rectangle("fill", 0, SH - 90, SW, 90)
+        love.graphics.setColor(0.88, 0.88, 0.88, 1)
+        love.graphics.print(cust.name .. ": " .. revealed, 20, SH - 68)
+    end
+end
+
 function StoreScene:_hud_labels()
-    local player    = self.game_state.player
-    local store     = self.game_state.store
-    local slot      = player:active_slot(store)
+    local gs        = self.game_state
+    local player    = gs.player
+    local p         = self.player3d
+    local slot      = self._last_active_slot
     local held      = player.held_item
     local slot_item = slot and slot.item
+    local in_cash   = p.x >= CASHIER_THRESH
 
-    local slot_label = player.x >= 0 and slot_item and slot_item.name and ("HOVER: " .. slot_item.name:upper())
+    local slot_label = not in_cash and slot_item and slot_item.name
+                       and ("HOVER: " .. slot_item.name:upper())
 
     local e_label
-    if player.x < 0 and self._customer and self._customer:arrived() then
+    if in_cash and self._customer:arrived() then
         e_label = "E: DISMISS"
-    elseif player.x >= 0 then
+    elseif not in_cash then
         if held and held.loaded_plant and slot and not slot_item then
             e_label = "E: PLACE CLONE"
         elseif held and slot and not slot_item then
@@ -346,75 +459,30 @@ function StoreScene:_hud_labels()
     end
 
     local f_label
-    if player.x < 0 and self._customer and self._customer:arrived() then
+    if in_cash and self._customer:arrived() then
         if self._customer:on_last_message() then
             if held and held.plant_type == self._customer.plant_type and held.stage == 3 then
                 f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")"
             end
+        elseif not self._customer:line_complete() then
+            f_label = "F: SKIP"
         else
-            if not self._customer:line_complete() then
-                f_label = "F: SKIP"
-            else
-                f_label = "F: NEXT"
-            end
+            f_label = "F: NEXT"
         end
-    elseif not held and slot_item and slot_item.buy_scene_factory then
-        f_label = "F: OPEN SHOP"
-    elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then
-        f_label = "F: WATER"
-    elseif held and held.name == "Grafter" and not held.loaded_plant and slot_item and slot_item.stage == 3 then
-        f_label = "F: CLONE"
-    elseif held and held.sellable ~= false and slot_item and slot_item.is_garbage_bin then
-        f_label = "F: DISCARD"
+    elseif not in_cash then
+        if not held and slot_item and slot_item.buy_scene_factory then
+            f_label = "F: OPEN SHOP"
+        elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then
+            f_label = "F: WATER"
+        elseif held and held.name == "Grafter" and not held.loaded_plant
+               and slot_item and slot_item.stage == 3 then
+            f_label = "F: CLONE"
+        elseif held and held.sellable ~= false and slot_item and slot_item.is_garbage_bin then
+            f_label = "F: DISCARD"
+        end
     end
 
     return { slot = slot_label, e = e_label, f = f_label }
-end
-
-function StoreScene:draw()
-    local gs = self.game_state
-    self.camera:attach()
-
-    local cx      = self.camera.x
-    local start_x = -ZONE_WIDTH
-    local end_x   = gs.store:width()
-    love.graphics.setColor(1, 1, 1, 1)
-    for _, layer in ipairs(self._parallax_layers) do
-        if layer.img then
-            local iw     = layer.img:getWidth()
-            local offset = -cx * (1 - layer.p)
-            local x      = math.floor((start_x + offset) / iw) * iw - offset
-            while x < end_x do
-                love.graphics.draw(layer.img, x, 0)
-                x = x + iw
-            end
-        end
-    end
-
-    local A = require("lua/game/assets")
-    gs.store:draw_bg(A)
-
-    self.drawer:draw()
-    self.camera:detach()
-
-    love.graphics.setColor(1, 1, 1, 0.8)
-    local cur_text = "Currency: " .. gs.currency
-    love.graphics.print(cur_text, 10, 10)
-
-    -- context HUD: bottom-left, stacked upward (hover at bottom, then f, then e)
-    local hud    = self:_hud_labels()
-    local labels = {}
-    if hud.slot then table.insert(labels, hud.slot) end
-    if hud.f    then table.insert(labels, hud.f) end
-    if hud.e    then table.insert(labels, hud.e) end
-
-    local y = 700
-    for _, label in ipairs(labels) do
-        love.graphics.print(label, 10, y)
-        y = y - 20
-    end
-
-    love.graphics.setColor(1, 1, 1, 1)
 end
 
 return StoreScene
