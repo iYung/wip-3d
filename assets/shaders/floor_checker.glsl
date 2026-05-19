@@ -4,12 +4,14 @@ extern float player_angle;
 extern float hover_x;
 extern float hover_y;
 
-const float SW       = 1280.0;
-const float SH       = 720.0;
-const float HALF_TAN = 0.57735026919; // tan(pi/6), matching FOV = pi/3
+const float SW          = 1280.0;
+const float SH          = 720.0;
+const float HALF_TAN    = 0.57735026919; // tan(pi/6), matching FOV = pi/3
+const float WALL_HEIGHT = 1.5;           // must match raycaster.lua
 
 vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc) {
-    float row_dist = (SH * 0.5) / (sc.y - SH * 0.5);
+    // posZ = SH * WALL_HEIGHT / 2 so floor depth aligns with wall bases
+    float row_dist = (SH * 0.5 * WALL_HEIGHT) / (sc.y - SH * 0.5);
 
     float dir_x   = cos(player_angle);
     float dir_y   = sin(player_angle);
