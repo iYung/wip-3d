@@ -1,3 +1,20 @@
+local function is_test_mode()
+    if arg then
+        for _, v in ipairs(arg) do
+            if v == "--test" then return true end
+        end
+    end
+    return false
+end
+
+if is_test_mode() then
+    require("lua/test/love_stubs")
+    love.run = function()
+        require("lua/test/runner").run()
+    end
+    return
+end
+
 love.graphics.setDefaultFilter("nearest", "nearest")
 
 local SceneManager = require("lua/core/scene_manager")

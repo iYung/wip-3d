@@ -482,3 +482,90 @@ The first scene shown on launch. Pure screen-space UI — overrides `draw()` ent
 | 3 | Plant ready bubbles (`Store:draw_bubbles()`) |
 | 4 | Player (+ held item) |
 | 5 | Customer speech / plant bubble |
+
+---
+
+## Test Harness
+
+Headless test infrastructure. Lives entirely in `lua/test/` and `tests/`; no game module imports anything from here.
+
+Invoked via:
+
+```
+love . --test
+```
+
+---
+
+### love_stubs
+
+Installs stub implementations of every Love2D API touched at require/construct time. Must be required before any game module is loaded in headless mode.
+
+**Location:** `lua/test/love_stubs.lua`
+
+**Stubs installed**
+- `love.graphics.newImage(path)` → `{getWidth→1, getHeight→1}`
+- `love.graphics.newShader(src)` → `{send→no-op, hasUniform→false}`
+- `love.graphics.newFont(...)` → `{getHeight→12, getWidth→8}`
+- `love.graphics.newCanvas(...)` → `{setFilter→no-op}`
+- `love.graphics.setColor/rectangle/draw/…` → no-ops (prevents crashes if draw is accidentally called)
+- `love.filesystem.getInfo(path)` → `nil`
+- `love.keyboard.isDown(key)` → `false`
+
+**Notes**
+- Writes directly into the live `love` global table; returns nothing
+- Both `lua/game/assets.lua` and `lua/game/shaders/color_replace.lua` touch `love.graphics` at load time; the stubs make them safe to require without a GPU
+
+---
+
+### HeadlessInput
+
+Drop-in replacement for `lua/game/input.lua` for use in integration tests. Implements the same public interface but is driven programmatically instead of polling `love.keyboard`.
+
+**Location:** `lua/test/headless_input.lua`
+
+**Methods**
+- `new()` — constructor
+- `update()` — promotes queued single-frame presses into `_pressed`; clears the queue
+- `is_down(action)` → bool — returns true while the action is held via `set_down`
+- `pressed(action)` → bool — returns true for one frame after `press(action)`
+- `set_down(action, bool)` — hold or release an action across frames
+- `press(action)` — queue a single-frame press; cleared by the next `update()`
+
+---
+
+### T (assertion library)
+
+Minimal assertion helpers. All failures raise a string error so the runner can catch them with `pcall`.
+
+**Location:** `lua/test/t.lua`
+
+**Methods**
+- `T.assert(cond, msg)` — raises if `cond` is falsy
+- `T.eq(a, b, msg)` — raises if `a ~= b`; includes both values in the message
+- `T.approx(a, b, eps, msg)` — raises if `math.abs(a-b) > eps`
+- `T.err(fn, msg)` — raises if calling `fn()` does NOT throw
+
+---
+
+### Runner
+
+Discovers and runs all test files, reports results, and exits Love2D.
+
+**Location:** `lua/test/runner.lua`
+
+**Methods**
+- `runner.run()` — iterates `TEST_PATHS`; for each path calls `pcall(require, path)`; prints `PASS <name>` or `FAIL <name>: <error>`; prints a summary line; calls `love.event.quit(0)` if all passed, `love.event.quit(1)` if any failed
+
+**Notes**
+- Test paths are listed explicitly in `TEST_PATHS`; add new test files there when created
+- A test file that raises at the top level (including via `T.eq` etc.) counts as failed
+
+---
+
+### Test files
+
+| Path | Type | What it tests |
+|------|------|---------------|
+| `tests/unit/plant_test.lua` | unit | `Plant.new`, `plant:update`, `plant:water`, `plant.stage`, `plant.ready` |
+| `tests/integration/currency_test.lua` | integration | `StoreScene` bootstrap, initial currency, slot count, plant growth via `scene:update` |
