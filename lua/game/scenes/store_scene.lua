@@ -32,7 +32,8 @@ local PLAYER_START_X  = 3.5
 local PLAYER_START_Y  = 6.5
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
-local INTERACT_RANGE  = 1.3   -- grid units: active slot detection radius
+local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
+local HOVER_MIN_T     = 0.5  -- ignore tiles the ray enters closer than this (player is on the edge)
 local COLLISION_M     = 0.25  -- grid units: wall collision margin
 
 local BASE_PX_SPEED   = 220   -- reference 2D speed (px/s)
@@ -60,6 +61,25 @@ local function item_image(item)
     return s.image
 end
 
+-- Returns distance along ray (px,py)+(dx,dy)*t to the slot's 1x1 floor tile, or nil.
+local function ray_slot_dist(px, py, dx, dy, slot)
+    local tx, ty = math.floor(slot.px), math.floor(slot.py)
+    local function slab(p, d, lo, hi)
+        if math.abs(d) < 1e-10 then
+            return (p >= lo and p <= hi) and 0 or math.huge, math.huge
+        end
+        local t1, t2 = (lo - p) / d, (hi - p) / d
+        if t1 > t2 then t1, t2 = t2, t1 end
+        return t1, t2
+    end
+    local x1, x2 = slab(px, dx, tx, tx + 1)
+    local y1, y2 = slab(py, dy, ty, ty + 1)
+    local tmin = math.max(x1, y1)
+    local tmax = math.min(x2, y2)
+    if tmax < 0 or tmin > tmax then return nil end
+    return math.max(0, tmin)
+end
+
 local StoreScene = setmetatable({}, { __index = Scene3D })
 StoreScene.__index = StoreScene
 
@@ -71,6 +91,7 @@ function StoreScene.new(game_state, input, scene_manager)
     self.scene_manager      = scene_manager
     self._initialized       = false
     self._last_active_slot  = nil
+    self._hover_tile        = nil
     return self
 end
 
@@ -139,11 +160,20 @@ function StoreScene:update(dt)
         p.y = oy
     end
 
-    -- Active slot (proximity, only relevant in store room)
+    -- Active slot: look-ray hits the slot's tile and it's within INTERACT_RANGE
     if p.x < CASHIER_THRESH then
-        self._last_active_slot = gs.store:slot_near(p.x, p.y, INTERACT_RANGE)
+        local dx, dy = math.cos(p.angle), math.sin(p.angle)
+        local best_slot, best_t = nil, INTERACT_RANGE
+        for _, slot in ipairs(gs.store:all_slots()) do
+            local t = ray_slot_dist(p.x, p.y, dx, dy, slot)
+            if t and t >= HOVER_MIN_T and t < best_t then best_t = t; best_slot = slot end
+        end
+        self._last_active_slot = best_slot
+        self._hover_tile = best_slot and
+            { x = math.floor(best_slot.px), y = math.floor(best_slot.py) } or nil
     else
         self._last_active_slot = nil
+        self._hover_tile       = nil
     end
 
     -- Customer update (dialog typewriter)
@@ -349,7 +379,7 @@ function StoreScene:draw()
     end
 
     -- 3D world
-    self.raycaster:draw(self.map, p.x, p.y, p.angle)
+    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile)
     self.raycaster:draw_sprites(sprites, p.x, p.y, p.angle)
 
     -- Screen-space HUD

@@ -1,3 +1,5 @@
+local Shader = require("lua/core/shader")
+
 local SW  = 1280
 local SH  = 720
 local FOV = math.pi / 3  -- 60 degrees
@@ -7,15 +9,24 @@ Raycaster.__index = Raycaster
 
 function Raycaster.new()
     local self = setmetatable({}, Raycaster)
-    self.z_buffer = {}
+    self.z_buffer     = {}
+    self._floor_shader = Shader.load("assets/shaders/floor_checker.glsl")
     return self
 end
 
-function Raycaster:draw(map, px, py, angle)
+function Raycaster:draw(map, px, py, angle, hover_tile)
     love.graphics.setColor(0.15, 0.15, 0.25, 1)
     love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
-    love.graphics.setColor(0.35, 0.3, 0.25, 1)
+    local fs = self._floor_shader
+    fs:send("player_x",    px)
+    fs:send("player_y",    py)
+    fs:send("player_angle", angle)
+    fs:send("hover_x", hover_tile and hover_tile.x or -9999.0)
+    fs:send("hover_y", hover_tile and hover_tile.y or -9999.0)
+    love.graphics.setShader(fs)
+    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.rectangle("fill", 0, SH / 2, SW, SH / 2)
+    love.graphics.setShader()
 
     for col = 0, SW - 1 do
         local ray_angle = angle + (col / SW - 0.5) * FOV

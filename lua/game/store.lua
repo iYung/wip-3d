@@ -1,10 +1,10 @@
 local Slot = require("lua/game/slot")
 
--- Grid layout constants (world units)
-local GRID_ORIGIN_X  =  2.00
-local GRID_SPACING_X =  0.80
-local GRID_ORIGIN_Y  =  4.50
-local GRID_SPACING_Y = -1.30  -- negative = rows go northward (decreasing y)
+-- Grid layout constants (world units) — 1x1 to match raycaster map cells
+local GRID_ORIGIN_X  =  2.5
+local GRID_SPACING_X =  1.0
+local GRID_ORIGIN_Y  =  4.5
+local GRID_SPACING_Y = -1.0   -- negative = rows go northward (decreasing y)
 local MAX_ROWS       =  3
 
 local Store = {}
