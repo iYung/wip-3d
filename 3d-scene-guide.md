@@ -154,8 +154,28 @@ There is no Camera transform active during 3D rendering, so all post-raycaster d
 
 | Feature | Where to add it |
 |---------|----------------|
-| Wall textures | `Raycaster:draw()` — map `cell()` value to a texture, sample the column |
+| Wall textures | **Implemented.** Pass a `wall_textures` table as the sixth argument to `draw()` — see below |
 | Floor / ceiling textures | Replace the solid-rect background with a per-pixel floor-cast loop |
 | Sprite billboards | Post-process pass after the wall loop; sort by distance, clip against depth buffer |
 | Collision | `Player3D:update()` or your scene's `update()` — check `map:is_wall()` at the new position before applying movement |
 | Mouse-look | Replace the A/D turn logic with `love.mousemoved` delta in your scene |
+
+### Wall textures
+
+Pass a table mapping map cell integer values to Love2D image objects as the sixth argument to `raycaster:draw()`. Each wall column samples the correct pixel column of the texture and scales it to the computed wall height; brightness shading (`0.8` for X-facing, `0.5` for Y-facing) is applied as a color tint. Quads are cached internally on first use — no per-frame allocations.
+
+```lua
+local A = require("lua/game/assets")
+
+function My3DScene:draw()
+    -- wall_textures: cell value 1 → store_wall image; add more entries for other cell values
+    self.raycaster:draw(
+        self.map, self.player.x, self.player.y, self.player.angle,
+        nil,                    -- hover_tile (optional)
+        { [1] = A.store_wall }  -- wall_textures (optional)
+    )
+end
+```
+
+- Any cell value without an entry in `wall_textures` falls back to the solid-color shaded line.
+- The argument is nil-safe; omitting it entirely preserves the solid-color behavior for all walls.
