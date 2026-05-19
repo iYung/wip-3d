@@ -25,7 +25,9 @@ function runner.setup(scene_factory)
         scene.player3d.input = move_input
     end
 
-    return { gs = gs, input = scene_input, move_input = move_input, sm = sm, scene = scene }
+    local ctx = { gs = gs, input = scene_input, move_input = move_input, sm = sm, scene = scene }
+    runner._visual_ctx = ctx
+    return ctx
 end
 
 function runner.tick(ctx, n, dt)
@@ -34,6 +36,7 @@ function runner.tick(ctx, n, dt)
     for _ = 1, n do
         ctx.input:update()
         ctx.sm:update(dt)
+        if coroutine.running() then coroutine.yield() end
     end
 end
 
