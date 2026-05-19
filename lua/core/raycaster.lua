@@ -2,19 +2,33 @@ local Shader = require("lua/core/shader")
 
 local SW  = 1280
 local SH  = 720
-local FOV = math.pi / 3  -- 60 degrees
+local FOV         = math.pi / 3  -- 60 degrees
+local WALL_HEIGHT = 1.5
 
 local Raycaster = {}
 Raycaster.__index = Raycaster
 
 function Raycaster.new()
     local self = setmetatable({}, Raycaster)
-    self.z_buffer     = {}
+    self.z_buffer      = {}
     self._floor_shader = Shader.load("assets/shaders/floor_checker.glsl")
+    self._quad_cache   = {}
     return self
 end
 
-function Raycaster:draw(map, px, py, angle, hover_tile)
+function Raycaster:_get_tex_quads(tex)
+    if self._quad_cache[tex] then return self._quad_cache[tex] end
+    local quads  = {}
+    local tex_w  = tex:getWidth()
+    local tex_h  = tex:getHeight()
+    for tx = 0, tex_w - 1 do
+        quads[tx] = love.graphics.newQuad(tx, 0, 1, tex_h, tex_w, tex_h)
+    end
+    self._quad_cache[tex] = quads
+    return quads
+end
+
+function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures)
     love.graphics.setColor(0.15, 0.15, 0.25, 1)
     love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
     local fs = self._floor_shader
@@ -55,12 +69,28 @@ function Raycaster:draw(map, px, py, angle, hover_tile)
         if hit then
             local perp = side == 0 and (sdx - ddx) or (sdy - ddy)
             self.z_buffer[col] = perp
-            local h    = math.floor(SH / perp)
+            local h    = math.floor(SH * WALL_HEIGHT / perp)
             local y1   = math.floor(SH / 2 - h / 2)
             local y2   = math.floor(SH / 2 + h / 2)
             local br   = side == 1 and 0.5 or 0.8
-            love.graphics.setColor(br, br * 0.5, br * 0.3, 1)
-            love.graphics.line(col, y1, col, y2)
+            local tex = wall_textures and wall_textures[map:cell(mx, my)]
+            if tex then
+                local hit_x
+                if side == 0 then
+                    hit_x = py + perp * rdy
+                else
+                    hit_x = px + perp * rdx
+                end
+                hit_x = hit_x - math.floor(hit_x)
+                local tex_w = tex:getWidth()
+                local tx = math.max(0, math.min(tex_w - 1, math.floor(hit_x * tex_w)))
+                local quads = self:_get_tex_quads(tex)
+                love.graphics.setColor(br, br, br, 1)
+                love.graphics.draw(tex, quads[tx], col, y1, 0, 1, h / tex:getHeight())
+            else
+                love.graphics.setColor(br, br * 0.5, br * 0.3, 1)
+                love.graphics.line(col, y1, col, y2)
+            end
         else
             self.z_buffer[col] = math.huge
         end

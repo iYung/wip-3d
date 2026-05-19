@@ -155,11 +155,17 @@ A 2D grid of integer cells used by the raycaster.
 
 DDA-based first-person column renderer. Draws ceiling, floor, and walls each frame.
 
+**Constants**
+- `WALL_HEIGHT = 1.5` — multiplier applied to the projected wall height (`h = SH * WALL_HEIGHT / perp`); increase to make walls taller relative to the viewport
+
+**Internal state**
+- `_quad_cache` — table keyed by Love2D image object; each entry is an array of pre-built `newQuad` objects (one per pixel column of the texture), populated on first use and reused every subsequent frame to avoid per-frame allocations in the column loop
+
 **Methods**
 - `Raycaster.new()`
-- `draw(map, px, py, angle)` — `px`/`py` in grid units (float), `angle` in radians
+- `draw(map, px, py, angle [, hover_tile [, wall_textures]])` — `px`/`py` in grid units (float), `angle` in radians. `hover_tile` (optional) is a `{x, y}` grid cell passed to the floor shader for checkerboard highlighting. `wall_textures` (optional) is a table mapping map cell integer values to Love2D image objects (e.g. `{[1] = A.store_wall}`); when a ray hits a wall cell whose value has an entry, a textured vertical strip is drawn (brightness-tinted by face side) instead of the solid-color fallback line.
 
-X-facing walls are drawn brighter than Y-facing walls for depth contrast. Renders at 1280 × 720. Resets `love.graphics` colour to white after drawing.
+X-facing walls are drawn brighter (`br = 0.8`) than Y-facing walls (`br = 0.5`) for depth contrast. Renders at 1280 × 720. Resets `love.graphics` colour to white after drawing.
 
 ---
 

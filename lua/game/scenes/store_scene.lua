@@ -379,7 +379,7 @@ function StoreScene:draw()
     end
 
     -- 3D world
-    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile)
+    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile, {[1] = A.store_wall})
     self.raycaster:draw_sprites(sprites, p.x, p.y, p.angle)
 
     -- Screen-space HUD
