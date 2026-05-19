@@ -9,6 +9,7 @@ local runner = {}
 local TEST_PATHS = {
     "tests/unit/plant_test",
     "tests/integration/currency_test",
+    "tests/integration/golden_lotus_sim_test",
 }
 
 function runner.run()
