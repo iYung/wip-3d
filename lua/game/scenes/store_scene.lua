@@ -360,7 +360,7 @@ function StoreScene:draw()
                     y       = slot.py,
                     image   = slot.item.bubble.image,
                     scale   = 0.45,
-                    voffset = 0.65,
+                    voffset = 1.3,
                 }
             end
         end

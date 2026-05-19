@@ -143,7 +143,7 @@ function Raycaster:draw_sprites(sprites, px, py, angle)
 
             -- vertical offset for floating sprites (bubbles, etc.)
             local voff      = spr.voffset or 0
-            local y_center  = SH / 2 - voff * (SH / tz)
+            local y_center  = SH / 2 + (WALL_HEIGHT / 2 - sc / 2 - voff) * (SH / tz)
             local y0        = math.floor(y_center - h / 2)
 
             local clip_y  = math.max(0, y0)
