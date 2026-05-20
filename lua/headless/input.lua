@@ -8,6 +8,7 @@ HeadlessInput.__index = HeadlessInput
 -- Creates a new instance with empty state and no queued actions.
 function HeadlessInput.new()
     return setmetatable({
+        _held    = {},   -- actions held indefinitely via hold()
         _down    = {},   -- actions currently held down
         _pressed = {},   -- actions that triggered a rising edge this frame
         _queued  = {},   -- actions queued by press() for the next update()
@@ -24,11 +25,13 @@ end
 -- Mark action as held down indefinitely (no pressed edge after the first
 -- frame it transitions in).  Stays down until release() is called.
 function HeadlessInput:hold(action)
+    self._held[action] = true
     self._down[action] = true
 end
 
 -- Clear action from down state entirely.
 function HeadlessInput:release(action)
+    self._held[action]   = nil
     self._down[action]   = nil
     self._queued[action] = nil
 end
@@ -41,17 +44,15 @@ function HeadlessInput:update()
     local new_pressed = {}
     local new_down    = {}
 
-    -- Keep actions that are held via hold().
-    for action, flag in pairs(self._down) do
-        if flag then
-            new_down[action] = true
-        end
+    -- Carry over only explicitly held actions (not press()-originated ones).
+    for action in pairs(self._held) do
+        new_down[action] = true
     end
 
     -- Apply queued single-frame presses.
     for action in pairs(self._queued) do
         if not new_down[action] then
-            -- Rising edge: was not already down, so mark pressed.
+            -- Rising edge: was not already held, so mark pressed.
             new_pressed[action] = true
         end
         new_down[action] = true
