@@ -52,4 +52,18 @@ function runner.run(test_file)
     end
 end
 
+function runner.fast_forward_until(ctx, condition_fn, elapsed, cap)
+    cap = cap or 600
+    local iters = 0
+    while not condition_fn() do
+        if iters >= cap then
+            error("fast_forward_until: condition not met after " .. cap .. " simulated seconds")
+        end
+        runner.tick(ctx, 1, 1.0)
+        elapsed = elapsed + 1.0
+        iters   = iters + 1
+    end
+    return elapsed
+end
+
 return runner
