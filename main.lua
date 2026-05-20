@@ -37,7 +37,9 @@ do
             runner = require("lua/headless/runner")
             _G.runner = runner
             test_co = coroutine.create(function()
-                dofile(test_file)
+                local chunk, err = loadfile(test_file)
+                if not chunk then error(err) end
+                chunk()
             end)
         end
 
