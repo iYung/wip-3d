@@ -24,7 +24,7 @@ Last audited: 2026-05-22.
 
 ### 1. Grafter Auto-Spawn
 
-**Status:** Diverged — wip-3d uses old `loaded_plant` system.
+**Status:** Done — ported to wip-3d.
 
 In `wip`, the grafter was redesigned (grafter-auto-spawn feature) to automatically place the clone into the nearest empty slot when `F` is pressed. If no slot is empty it shows a "no space" bubble for 1.5 seconds. The player never needs to manually carry and place the clone.
 
@@ -42,7 +42,7 @@ In `wip`, the grafter was redesigned (grafter-auto-spawn feature) to automatical
 
 ### 2. Held Item Ticks While Carried
 
-**Status:** Missing — wip-3d `player.lua` does not call `held_item:update(dt)`.
+**Status:** Done — `Player:update` now calls `held_item:update(dt)`.
 
 `wip` added this at the bottom of `Player:update(dt, input, store)`:
 
@@ -174,10 +174,10 @@ Both repos' `buy_scene.lua` use `A.expand_slot` as the image for the "expand slo
 
 ### Behavior
 
-- [ ] **Grafter auto-spawn** — rewrite `lua/game/items/grafter.lua`: remove `loaded_plant`/`unload()`, add auto-place-to-nearest-slot logic, add `self.bubble` + `_bubble_timer`, add `Grafter:update(dt)`, add `Grafter:draw_bubble()`
-- [ ] **Grafter auto-spawn** — add `A.grafter_no_space_bubble` to `lua/game/assets.lua`, add asset file `assets/grafter_no_space_bubble.png`
-- [ ] **Grafter auto-spawn** — update `lua/game/scenes/store_scene.lua`: remove `"E: PLACE CLONE"` HUD branch from `_hud_labels`, remove loaded-grafter branch from `_handle_pick_up_down`, simplify garbage-bin discard in `_handle_interact`
-- [ ] **Held item ticks** — add `held_item:update(dt)` call at end of `Player:update` in `lua/game/player.lua`
+- [x] **Grafter auto-spawn** — rewrite `lua/game/items/grafter.lua`: remove `loaded_plant`/`unload()`, add auto-place-to-nearest-slot logic, add `self.bubble` + `_bubble_timer`, add `Grafter:update(dt)`, add `Grafter:draw_bubble()`
+- [x] **Grafter auto-spawn** — add `A.grafter_no_space_bubble` to `lua/game/assets.lua`, add asset file `assets/grafter_no_space_bubble.png`
+- [x] **Grafter auto-spawn** — update `lua/game/scenes/store_scene.lua`: remove `"E: PLACE CLONE"` HUD branch from `_hud_labels`, remove loaded-grafter branch from `_handle_pick_up_down`, simplify garbage-bin discard in `_handle_interact`
+- [x] **Held item ticks** — add `held_item:update(dt)` call at end of `Player:update` in `lua/game/player.lua`
 - [ ] **UTF-8 typewriter** — replace raw `string.sub` with UTF-8 safe version in `lua/game/customer.lua`
 
 ### Visual / Shaders
