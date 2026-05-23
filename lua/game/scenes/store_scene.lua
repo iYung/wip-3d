@@ -201,6 +201,10 @@ function StoreScene:update(dt)
     -- Store (plant timers)
     gs.store:update(dt * gs.growth_mult)
 
+    -- Held item timers (e.g. grafter no-space bubble)
+    local held = gs.player.held_item
+    if held and held.update then held:update(dt) end
+
     -- Action input (E / F — updated globally by love.update before this)
     if self.input:pressed("pick_up_down") then self:_handle_pick_up_down() end
     if self.input:pressed("interact")     then self:_handle_interact()      end
