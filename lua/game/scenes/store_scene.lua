@@ -201,6 +201,10 @@ function StoreScene:update(dt)
     -- Store (plant timers)
     gs.store:update(dt * gs.growth_mult)
 
+    -- Held item timers (e.g. grafter no-space bubble)
+    local held = gs.player.held_item
+    if held and held.update then held:update(dt) end
+
     -- Action input (E / F — updated globally by love.update before this)
     if self.input:pressed("pick_up_down") then self:_handle_pick_up_down() end
     if self.input:pressed("interact")     then self:_handle_interact()      end
@@ -219,13 +223,6 @@ function StoreScene:_handle_pick_up_down()
                 self._active_script_key = nil
             end
         end
-        return
-    end
-
-    -- Loaded grafter + empty slot → place clone
-    if player.held_item and player.held_item.loaded_plant and slot and not slot.item then
-        slot.item = player.held_item.loaded_plant
-        player.held_item:unload()
         return
     end
 
@@ -282,9 +279,7 @@ function StoreScene:_handle_interact()
     if player.held_item
        and player.held_item.sellable ~= false
        and slot and slot.item and slot.item.is_garbage_bin then
-        local held = player.held_item
-        if held.loaded_plant then held:unload()
-        else player.held_item = nil end
+        player.held_item = nil
         return
     end
 
@@ -479,9 +474,7 @@ function StoreScene:_hud_labels()
     if in_cash and self._customer:arrived() then
         e_label = "E: DISMISS"
     elseif not in_cash then
-        if held and held.loaded_plant and slot and not slot_item then
-            e_label = "E: PLACE CLONE"
-        elseif held and slot and not slot_item then
+        if held and slot and not slot_item then
             e_label = "E: PUT DOWN"
         elseif not held and slot_item and slot_item.carriable then
             e_label = "E: PICK UP"
@@ -504,7 +497,7 @@ function StoreScene:_hud_labels()
             f_label = "F: OPEN SHOP"
         elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then
             f_label = "F: WATER"
-        elseif held and held.name == "Grafter" and not held.loaded_plant
+        elseif held and held.name == "Grafter"
                and slot_item and slot_item.stage == 3 then
             f_label = "F: CLONE"
         elseif held and held.sellable ~= false and slot_item and slot_item.is_garbage_bin then
