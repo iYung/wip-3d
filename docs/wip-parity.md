@@ -61,7 +61,7 @@ Without this, any carriable item with time-based state (e.g. the grafter's no-sp
 
 ### 3. UTF-8 Safe Typewriter
 
-**Status:** Bug — wip-3d uses raw byte index in `string.sub`.
+**Status:** Done — ported to wip-3d.
 
 `wip`'s `customer.lua` clamps `reveal_index` to a valid UTF-8 character boundary before passing it to `string.sub`, preventing corrupted output mid-reveal on any multi-byte character in dialog text.
 
@@ -178,7 +178,7 @@ Both repos' `buy_scene.lua` use `A.expand_slot` as the image for the "expand slo
 - [x] **Grafter auto-spawn** — add `A.grafter_no_space_bubble` to `lua/game/assets.lua`, add asset file `assets/grafter_no_space_bubble.png`
 - [x] **Grafter auto-spawn** — update `lua/game/scenes/store_scene.lua`: remove `"E: PLACE CLONE"` HUD branch from `_hud_labels`, remove loaded-grafter branch from `_handle_pick_up_down`, simplify garbage-bin discard in `_handle_interact`
 - [x] **Held item ticks** — add `held_item:update(dt)` call at end of `Player:update` in `lua/game/player.lua`
-- [ ] **UTF-8 typewriter** — replace raw `string.sub` with UTF-8 safe version in `lua/game/customer.lua`
+- [x] **UTF-8 typewriter** — replace raw `string.sub` with UTF-8 safe version in `lua/game/customer.lua`
 
 ### Visual / Shaders
 
