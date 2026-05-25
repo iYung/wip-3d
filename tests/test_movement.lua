@@ -1,7 +1,7 @@
 -- Test 1: North wall blocks the player
--- Player starts at y=6.5 facing north. 200 ticks of forward movement
--- (10 seconds) would travel ~10 grid units without collision, but the
--- north wall sits at y=1 so the player should stop around y≈1.3.
+-- Player starts at y=8.5 facing north. 200 ticks of forward movement
+-- would travel far without collision, but the north wall sits at y=1
+-- so the player stops around y≈2.25.
 do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
@@ -17,21 +17,22 @@ do
     print("PASS: north wall blocks player")
 end
 
--- Test 2: Player navigates through the passage into the cashier room
--- Route: walk north 60 ticks to y≈3.5 (passage row), turn right ~38 ticks
--- to face east, then walk east 90 ticks through the passage.
--- The divider wall has openings only at y=3–4, so the player must hit that
--- row first; walking east from the starting y=6.5 would be blocked.
+-- Test 2: Player navigates through the passage into the cashier room.
+-- Route: walk north 20 ticks from y=8.5 to reach the passage rows (y≈5.5),
+-- turn right ~38 ticks to face east, then walk east 90 ticks through the
+-- passage. The separator wall has openings only in the two southernmost slot
+-- rows (y=5..7 for the initial 5-row store), so the player must reach that
+-- band before moving east.
 do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
     ctx.move_input:hold("forward")   -- north (angle = -pi/2)
-    runner.tick(ctx, 60)
+    runner.tick(ctx, 20)
     ctx.move_input:release("forward")
 
-    assert(p.y < 4.5,
-        "expected player to reach passage row (y < 4.5), got y=" .. p.y)
+    assert(p.y < 7.0,
+        "expected player to reach passage row (y < 7.0), got y=" .. p.y)
 
     ctx.move_input:hold("right")     -- turn toward east
     runner.tick(ctx, 38)
@@ -41,8 +42,8 @@ do
     runner.tick(ctx, 90)
     ctx.move_input:release("forward")
 
-    assert(p.x >= 7.0,
-        "expected player to reach cashier room (x >= 7.0), got x=" .. p.x)
+    assert(p.x >= 9.0,
+        "expected player to reach cashier room (x >= 9.0), got x=" .. p.x)
     assert(ctx.scene._last_active_slot == nil,
         "expected no active slot in cashier room")
     print("PASS: player navigates to cashier room via passage")

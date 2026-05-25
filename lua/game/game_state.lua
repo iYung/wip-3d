@@ -1,8 +1,8 @@
 local Store  = require("lua/game/store")
 local Player = require("lua/game/player")
 
-local INIT_COLS = 5
-local INIT_ROWS = 2
+local INIT_COLS = 7
+local INIT_ROWS = 5
 
 local GameState = {}
 GameState.__index = GameState

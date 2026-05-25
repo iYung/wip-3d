@@ -18,13 +18,16 @@ The main gameplay scene.
 
 ### Layout
 
-The store is a **1D array of slots**. Each slot is one column wide. The store's total width = `slot_count × slot_width`.
+The store is a **2D grid of slots** — 7 columns wide, growing in depth. The player navigates the 3D store room in first-person.
 
 ```
-[ slot 0 ][ slot 1 ][ slot 2 ][ slot 3 ] ...
+[ row 1, col 1 ] [ row 1, col 2 ] ... [ row 1, col 7 ]   ← back (north)
+[ row 2, col 1 ] [ row 2, col 2 ] ... [ row 2, col 7 ]
+...
+[ row N, col 1 ] [ row N, col 2 ] ... [ row N, col 7 ]   ← front (south)
 ```
 
-The player moves freely left and right as a separate visual layer rendered on top of the store. The **active slot** is whichever slot the player is currently standing over, derived from the player's x position.
+The **active slot** is whichever slot the player's look-ray intersects within interaction range.
 
 ### Controls
 
@@ -61,7 +64,7 @@ Bottom-left overlay showing context-sensitive labels. Each line only appears whe
 
 ### Store Growth
 
-The player can increase the number of slots. Adding a slot expands the store width by one `slot_width`. New slots are added at the **right end**.
+The player can expand the store by purchasing the **Expand** upgrade in the PC Store shop. Each purchase adds one full row of 7 slots to the south (front) end of the store. The 3D map walls grow to surround the new row. There is no row cap.
 
 ---
 
