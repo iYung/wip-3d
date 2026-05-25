@@ -1,5 +1,5 @@
 -- Test 1: North wall blocks the player
--- Player starts at y=8.5 facing north. 200 ticks of forward movement
+-- Player starts at y=6.5 facing north. 200 ticks of forward movement
 -- would travel far without collision, but the north wall sits at y=1
 -- so the player stops around y≈2.25.
 do
@@ -18,23 +18,14 @@ do
 end
 
 -- Test 2: Player navigates through the passage into the cashier room.
--- Route: walk north 20 ticks from y=8.5 to reach the passage rows (y≈5.5),
--- turn right ~38 ticks to face east, then walk east 90 ticks through the
--- passage. The separator wall has openings only in the two southernmost slot
--- rows (y=5..7 for the initial 5-row store), so the player must reach that
--- band before moving east.
+-- Player starts at (5.0, 6.5), which is already in the passage row
+-- (the southernmost slot row is a passage for n=5). Turn east, then walk east
+-- through the separator wall opening.
 do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
-    ctx.move_input:hold("forward")   -- north (angle = -pi/2)
-    runner.tick(ctx, 20)
-    ctx.move_input:release("forward")
-
-    assert(p.y < 7.0,
-        "expected player to reach passage row (y < 7.0), got y=" .. p.y)
-
-    ctx.move_input:hold("right")     -- turn toward east
+    ctx.move_input:hold("right")     -- turn toward east (angle = -pi/2 → 0)
     runner.tick(ctx, 38)
     ctx.move_input:release("right")
 
