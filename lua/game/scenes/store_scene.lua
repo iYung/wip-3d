@@ -40,16 +40,14 @@ local function build_map_grid(n)
         rows[map_row] = r
     end
 
-    rows[n + 2] = { 1,0,0,0,0,0,0,0,1,0,0,0,0,1 }  -- aisle row 1 (separator wall)
-    rows[n + 3] = { 1,0,0,0,0,0,0,0,1,0,0,0,0,1 }  -- aisle row 2
-    rows[n + 4] = all_walls()  -- south wall
+    rows[n + 2] = all_walls()  -- south wall
 
     return rows
 end
 
 local function store_geometry(n)
     local front_y   = 2.5 + (n - 1)  -- southernmost slot row y
-    local player_y  = front_y + 2.0
+    local player_y  = front_y
     local cashier_y = front_y
     return { front_y = front_y, player_y = player_y, cashier_y = cashier_y }
 end
@@ -57,7 +55,7 @@ end
 local CASHIER_THRESH  = 9.0   -- player.x >= this → cashier room
 local CASHIER_POS_X   = 11.5  -- customer billboard world position
 
-local PLAYER_START_X  = 5.5
+local PLAYER_START_X  = 5.0
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
 local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
