@@ -87,7 +87,7 @@ local revealed = string.sub(self._full_text, 1, idx)
 
 ### 4. CRT Shader on Buy Scene
 
-**Status:** Missing — wip-3d buy scene has no canvas render path or CRT effect.
+**Status:** Done — ported to wip-3d.
 
 `wip` renders the entire buy scene to a `love.graphics.Canvas`, then draws that canvas through `lua/game/shaders/crt.lua` which applies:
 - Barrel distortion
@@ -182,8 +182,8 @@ Both repos' `buy_scene.lua` use `A.expand_slot` as the image for the "expand slo
 
 ### Visual / Shaders
 
-- [ ] **CRT shader** — copy `lua/game/shaders/crt.lua` and `assets/shaders/crt.glsl` from wip
-- [ ] **CRT shader** — add canvas init + CRT apply/clear to `lua/game/scenes/buy_scene.lua`
+- [x] **CRT shader** — copy `lua/game/shaders/crt.lua` and `assets/shaders/crt.glsl` from wip
+- [x] **CRT shader** — add canvas init + CRT apply/clear to `lua/game/scenes/buy_scene.lua`
 - [ ] **Sway shader** — copy `lua/game/shaders/sway.lua` and `assets/shaders/sway.glsl` from wip (prerequisite for billboard sway if desired)
 
 ### Assets
