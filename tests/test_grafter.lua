@@ -5,13 +5,14 @@ local StoreScene = require("lua/game/scenes/store_scene")
 local Plant      = require("lua/game/items/plant")
 local Grafter    = require("lua/game/items/grafter")
 
--- Store: 5 cols x 2 rows = 10 slots (row-major). Setup fills slots 1-3 with tools.
--- World layout (GRID_ORIGIN_X=2.5, GRID_SPACING_X=1.0, GRID_ORIGIN_Y=4.5, row spacing=-1.0):
---   row 1: slot 1 (px=2.5), slot 2 (px=3.5), slot 3 (px=4.5), slot 4 (px=5.5), slot 5 (px=6.5)
---   row 2: slot 6 (px=2.5), …
+-- Store: 7 cols x 5 rows = 35 slots (row-major). Setup fills slots 1-3 with tools.
+-- World layout (GRID_ORIGIN_X=2.5, GRID_SPACING_X=1.0, GRID_ORIGIN_Y=2.5, row spacing=+1.0):
+--   row 1 (py=2.5): slot 1 (px=2.5) … slot 7 (px=8.5)
+--   row 2 (py=3.5): slot 8 (px=2.5) …
 --
--- Positioning player3d at (slot.px, 5.5) facing north (angle=-pi/2) aims the look-ray
--- directly at the row-1 tile above, putting that slot in _last_active_slot.
+-- Positioning player3d at (slot.px, slot.py+1.5) facing north aims the look-ray
+-- at the row-1 tile (t≈1.0), while the immediately-south row-2 tile is at t=0
+-- and is excluded by HOVER_MIN_T.
 
 local function slots(ctx)
     return ctx.gs.store:all_slots()
@@ -22,7 +23,7 @@ end
 local function face_and_interact(ctx, slot_index)
     local slot = slots(ctx)[slot_index]
     ctx.scene.player3d.x     = slot.px
-    ctx.scene.player3d.y     = 5.5
+    ctx.scene.player3d.y     = slot.py + 1.5
     ctx.scene.player3d.angle = -math.pi / 2
     ctx.input:press("interact")
     runner.tick(ctx, 1)
