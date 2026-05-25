@@ -184,9 +184,9 @@ Both repos' `buy_scene.lua` use `A.expand_slot` as the image for the "expand slo
 
 - [x] **CRT shader** — copy `lua/game/shaders/crt.lua` and `assets/shaders/crt.glsl` from wip
 - [x] **CRT shader** — add canvas init + CRT apply/clear to `lua/game/scenes/buy_scene.lua`
-- [ ] **Sway shader** — copy `lua/game/shaders/sway.lua` and `assets/shaders/sway.glsl` from wip (prerequisite for billboard sway if desired)
+- [x] **Sway shader** — copy `lua/game/shaders/sway.lua` and `assets/shaders/sway.glsl` from wip (prerequisite for billboard sway if desired)
 
 ### Assets
 
-- [ ] **Accessories** — copy `chain_of_office.png`, `flower_pin.png`, `hair_bow.png`, `straw_hat.png`, `wide_brim_hat.png` into `wip-3d/assets/accessories/`
-- [ ] **expand_slot.png** — copy `assets/expand_slot.png` from wip
+- [x] **Accessories** — copied `hair_bow.png` into `wip-3d/assets/accessories/`; `chain_of_office.png`, `flower_pin.png`, `straw_hat.png`, `wide_brim_hat.png` do not exist in wip and are not referenced in customer_scripts — nothing to copy
+- [x] **expand_slot.png** — copy `assets/expand_slot.png` from wip
