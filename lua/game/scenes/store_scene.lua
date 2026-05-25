@@ -144,7 +144,6 @@ function StoreScene:on_enter()
     if n ~= self._last_active_rows then
         self.map = Map.new(build_map_grid(n))
         local geom = store_geometry(n)
-        self.player3d.y  = geom.player_y
         self._cashier_y  = geom.cashier_y
         self._last_active_rows = n
     end
