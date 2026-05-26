@@ -362,20 +362,20 @@ One cell in the store. Holds at most one item.
 
 ### Store
 
-The 1D array of slots. Handles layout and growth.
+The 2D grid of slots (cols × rows). Handles layout and growth.
 
 **Properties**
-- `slots` — ordered array of Slot
-- `slot_width` — width of each slot in pixels (120)
+- `_slots` — flat ordered array of all Slot objects (row-major)
+- `_grid` — `_grid[row][col]` table for direct cell access
+- `_cols` — fixed number of columns (7)
 
 **Methods**
-- `new(initial_count, slot_width)` — constructor
-- `grow()` — append one new slot at the right end
-- `slot_at(x)` — return the Slot at world x position
+- `new(init_cols, init_rows)` — constructor; populates `init_cols × init_rows` slots
+- `grow()` — add one full row of `_cols` new slots to the south end
+- `active_rows()` — returns the current row count (`math.ceil(#slots / _cols)`)
+- `all_slots()` — returns the flat slot array
+- `slot_near(px, py, max_dist)` — returns the nearest slot within `max_dist`, or nil
 - `update(dt)` — delegates to all slots/items
-- `draw()` — delegates to all slots; no background (background drawn by `draw_bg` before the drawer)
-- `draw_bg(A)` — draws store wall tiles and window frames using a group-of-4 rule: slots 1–2 of each group get `store_wall`, slots 3–4 get `store_window` (if both exist and neither is the last slot); fallback to wall tiles otherwise; called manually in `StoreScene:draw()` before `drawer:draw()`
-- `draw_bubbles()` — draws only plant ready bubbles; called at a higher drawer priority so bubbles appear above the player
 
 ---
 

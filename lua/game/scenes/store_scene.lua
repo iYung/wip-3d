@@ -12,24 +12,50 @@ local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
 
--- Two-room map: store (left) connected to cashier (right) via passage at rows 3-4
-local MAP_GRID = {
-    { 1,1,1,1,1,1,1,1,1,1,1,1 },
-    { 1,0,0,0,0,0,1,0,0,0,0,1 },
-    { 1,0,0,0,0,0,0,0,0,0,0,1 },
-    { 1,0,0,0,0,0,0,0,0,0,0,1 },
-    { 1,0,0,0,0,0,1,0,0,0,0,1 },
-    { 1,0,0,0,0,0,1,0,0,0,0,1 },
-    { 1,0,0,0,0,0,1,0,0,0,0,1 },
-    { 1,1,1,1,1,1,1,1,1,1,1,1 },
-}
+local function build_map_grid(n)
+    local W = 14  -- 1 left wall + 7 store + 1 sep + 4 cashier + 1 right wall
+    local SEP = 9  -- Lua col index of separator
 
-local CASHIER_THRESH  = 7.0   -- player.x >= this → cashier room
-local CASHIER_POS_X   = 9.5   -- customer billboard world position
-local CASHIER_POS_Y   = 3.5
+    local function all_walls()
+        local r = {}; for c = 1, W do r[c] = 1 end; return r
+    end
 
-local PLAYER_START_X  = 3.5
-local PLAYER_START_Y  = 6.5
+    local rows = {}
+    rows[1] = all_walls()  -- top wall
+
+    for map_row = 2, n + 1 do
+        local slot_row = map_row - 1  -- 1 = northernmost
+        -- passage: open separator in the two southernmost slot rows (slot_row n and n-1)
+        local is_passage = (slot_row == n or slot_row == n - 1)
+        local r = {}
+        for c = 1, W do
+            if c == 1 or c == W then
+                r[c] = 1          -- outer walls
+            elseif c == SEP then
+                r[c] = is_passage and 0 or 1
+            else
+                r[c] = 0          -- store cols (2-8) and cashier cols (10-13) always open
+            end
+        end
+        rows[map_row] = r
+    end
+
+    rows[n + 2] = all_walls()  -- south wall
+
+    return rows
+end
+
+local function store_geometry(n)
+    local front_y   = 2.5 + (n - 1)  -- southernmost slot row y
+    local player_y  = front_y
+    local cashier_y = front_y
+    return { front_y = front_y, player_y = player_y, cashier_y = cashier_y }
+end
+
+local CASHIER_THRESH  = 9.0   -- player.x >= this → cashier room
+local CASHIER_POS_X   = 11.5  -- customer billboard world position
+
+local PLAYER_START_X  = 5.0
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
 local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
@@ -92,6 +118,8 @@ function StoreScene.new(game_state, input, scene_manager)
     self._initialized       = false
     self._last_active_slot  = nil
     self._hover_tile        = nil
+    self._last_active_rows  = nil
+    self._cashier_y         = 0
     return self
 end
 
@@ -111,6 +139,14 @@ function StoreScene:on_enter()
 
     -- Sync movement speed with game state
     self.player3d.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
+
+    local n = gs.store:active_rows()
+    if n ~= self._last_active_rows then
+        self.map = Map.new(build_map_grid(n))
+        local geom = store_geometry(n)
+        self._cashier_y  = geom.cashier_y
+        self._last_active_rows = n
+    end
 end
 
 function StoreScene:on_exit() end
@@ -126,8 +162,8 @@ function StoreScene:_setup_store()
         return BuyScene.new(gs, self_ref.input, self_ref.scene_manager, self_ref)
     end)
 
-    self.map      = Map.new(MAP_GRID)
-    self.player3d = Player3D.new(PLAYER_START_X, PLAYER_START_Y, PLAYER_START_A)
+    local geom = store_geometry(gs.store:active_rows())
+    self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A)
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(0, -1, 0)
@@ -366,7 +402,7 @@ function StoreScene:draw()
         local cust = self._customer
         sprites[#sprites + 1] = {
             x       = CASHIER_POS_X,
-            y       = CASHIER_POS_Y,
+            y       = self._cashier_y,
             image   = A.customer,
             setup   = function() ColorReplace.apply(cust._primary, cust._secondary) end,
             teardown = function() ColorReplace.clear() end,

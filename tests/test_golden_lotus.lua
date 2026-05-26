@@ -24,15 +24,15 @@ local function nav_to(ctx, tx, ty, elapsed)
 end
 
 local function face_slot(ctx, slot_px, elapsed)
-    elapsed = nav_to(ctx, slot_px, 5.5, elapsed)
+    elapsed = nav_to(ctx, slot_px, 4.0, elapsed)
     local p = ctx.scene.player3d
-    if p.y < 5.5 then p.y = 5.5 end
+    if p.y < 4.0 then p.y = 4.0 end
     p.angle = -math.pi / 2
     return elapsed
 end
 
 local function nav_to_cashier(ctx, elapsed)
-    return nav_to(ctx, 8.5, 3.5, elapsed)
+    return nav_to(ctx, 10.5, 6.5, elapsed)
 end
 
 local function sell_plant(ctx, plant_type, elapsed)

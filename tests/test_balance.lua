@@ -4,14 +4,24 @@ local runner     = require("lua/headless/runner")
 local StoreScene = require("lua/game/scenes/store_scene")
 local Plant      = require("lua/game/items/plant")
 
+local NAV_CAP = 18000  -- 300 simulated seconds
+
 local function nav_to(ctx, tx, ty, elapsed)
-    local p = ctx.scene.player3d
+    local p     = ctx.scene.player3d
+    local ticks = 0
     p.angle = math.atan2(ty - p.y, tx - p.x)
     ctx.move_input:hold("forward")
     while true do
         local dx = tx - p.x
         local dy = ty - p.y
         if math.sqrt(dx * dx + dy * dy) < 0.3 then break end
+        ticks = ticks + 1
+        if ticks > NAV_CAP then
+            ctx.move_input:release("forward")
+            error(string.format(
+                "nav_to: stuck after %gs; target=(%.1f,%.1f) player=(%.2f,%.2f)",
+                NAV_CAP / 60, tx, ty, p.x, p.y))
+        end
         runner.tick(ctx, 1, 1/60)
         elapsed = elapsed + 1/60
         -- Re-aim each tick so collision doesn't push us off course
@@ -22,15 +32,15 @@ local function nav_to(ctx, tx, ty, elapsed)
 end
 
 local function face_slot(ctx, slot_px, elapsed)
-    elapsed = nav_to(ctx, slot_px, 5.5, elapsed)
+    elapsed = nav_to(ctx, slot_px, 3.5, elapsed)
     local p = ctx.scene.player3d
-    if p.y < 5.5 then p.y = 5.5 end
+    if p.y < 3.5 then p.y = 3.5 end
     p.angle = -math.pi / 2
     return elapsed
 end
 
 local function nav_to_cashier(ctx, elapsed)
-    return nav_to(ctx, 8.5, 3.5, elapsed)
+    return nav_to(ctx, 10.5, 5.5, elapsed)
 end
 
 local function sell_plant(ctx, plant_type, elapsed)
@@ -78,7 +88,7 @@ local elapsed = 0
 -- slot 2: x=3.5  (garbage bin)
 -- slot 3: x=4.5  (PC store)
 -- slot 4: x=5.5  (our grass plant)
--- Cashier room: x=8.5, y=3.5
+-- Cashier room: x=10.5, y=5.5 (passage row, past separator at col 9)
 
 -- Target costs in order (plant unlock cost → when player can first afford it)
 local targets = {

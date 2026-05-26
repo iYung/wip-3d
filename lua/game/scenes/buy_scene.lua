@@ -39,7 +39,7 @@ CATALOGUE[#CATALOGUE + 1] = {
 }
 CATALOGUE[#CATALOGUE + 1] = {
     label       = "Expand Slot",
-    description = "Adds one new slot to the\nright end of the store.",
+    description = "Adds a new row of 7 slots\nto the front of the store.",
     cost        = config.SLOT_COST,
     kind        = "expand",
     image       = A.expand_slot,
