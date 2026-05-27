@@ -32,7 +32,8 @@ local function face_slot(ctx, slot_px, elapsed)
 end
 
 local function nav_to_cashier(ctx, elapsed)
-    return nav_to(ctx, 3.5, 5.0, elapsed)
+    -- passage is fixed at north rows (y<4), so target a point reachable through it
+    return nav_to(ctx, 3.5, 2.5, elapsed)
 end
 
 local function sell_plant(ctx, plant_type, elapsed)

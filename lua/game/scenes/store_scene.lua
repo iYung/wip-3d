@@ -25,9 +25,9 @@ local function build_map_grid(n)
 
     for map_row = 2, n + 1 do
         local slot_row = map_row - 1  -- 1 = northernmost
-        -- passage: open separator at the two center slot rows
-        local mid = math.floor((n + 1) / 2)
-        local is_passage = (slot_row == mid or slot_row == mid + 1)
+        -- passage: fixed at the two northernmost slot rows so the store
+        -- expands southward (away from the cashier zone entrance)
+        local is_passage = (slot_row == 1 or slot_row == 2)
         local r = {}
         for c = 1, W do
             if c == 1 or c == W then
