@@ -18,15 +18,15 @@ do
 end
 
 -- Test 2: Player navigates through the passage into the cashier room.
--- Player starts at (10.0, 6.5) facing north. Walk north to y≈3.5 (passage
--- fixed at slot rows 1-2 for any n), turn left to face west, walk west through
+-- Player starts at (10.0, 6.5) facing north. Walk north to y≈5.0 (centered
+-- passage at slot rows 3-4 for n=5), turn left to face west, walk west through
 -- the separator opening into the cashier (x <= 6.0).
 do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
-    ctx.move_input:hold("forward")   -- north toward passage (rows 1-2, y≈2.5-3.5)
-    runner.tick(ctx, 60)
+    ctx.move_input:hold("forward")   -- north toward passage center
+    runner.tick(ctx, 30)
     ctx.move_input:release("forward")
 
     ctx.move_input:hold("left")      -- turn toward west (angle = -pi/2 → -pi)
