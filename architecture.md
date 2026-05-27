@@ -469,6 +469,57 @@ The first scene shown on launch. Pure screen-space UI — overrides `draw()` ent
 
 ---
 
+### StoreScene
+
+The main gameplay scene. First-person 3D (raycaster) with a 14-column map.
+
+**Location:** `lua/game/scenes/store_scene.lua`
+
+**Map layout** (`build_map_grid(n)` where `n` = active store row count)
+
+```
+col:  1    2-5       6     7-13      14
+     [W] [cashier] [SEP] [store]   [W]
+```
+
+- Col 1 / 14 — outer walls (always `1`)
+- Cols 2–5 — cashier room (always open, `0`)
+- Col 6 — separator wall (`SEP = 6`); open only in the two center slot rows
+- Cols 7–13 — store room (always open, `0`)
+- Rows: row 1 = north wall, rows 2…n+1 = slot rows, row n+2 = south wall
+
+**Key constants**
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `SEP` | `6` | Lua column index of the separator wall |
+| `CASHIER_THRESH` | `6.0` | `player.x <= this` → player is in the cashier room |
+| `CASHIER_POS_X` | `3.5` | Customer billboard world x |
+| `PLAYER_START_X` | `10.0` | Player spawn x (store side) |
+| `GRID_ORIGIN_X` | `7.5` | World x of slot (1, 1) — store columns start here |
+
+**Passage (separator opening)**
+
+Opens at the two center slot rows: `mid = floor((n+1)/2)` and `mid+1`. At `n=5` this is rows 3 and 4.
+
+**Properties**
+- `player3d` — `Player3D` instance; x/y in grid units
+- `map` — `Map` instance; rebuilt in `on_enter()` whenever `active_rows()` changes
+- `_customer` — `Customer` NPC for cashier interactions
+- `_last_active_slot` — slot currently targeted by the look-ray (nil when in cashier room)
+- `_active_script_key` — key of the current scripted customer visit (nil if anonymous)
+- `_script_cooldowns` — table of per-script sale countdown timers for dismissed customers
+
+**Cashier interaction** (triggered when `player.x <= CASHIER_THRESH`)
+- E — dismiss customer without sale
+- F on last message + holding matching plant → `customer:serve()` + sell
+
+**Slot interaction** (triggered when `player.x > CASHIER_THRESH` and look-ray hits a slot tile)
+- E — pick up / put down item in the active slot
+- F — interact with active slot's item (water plant, open BuyScene, etc.)
+
+---
+
 ## Layer Priorities (Drawer)
 
 | Priority | Content |

@@ -18,23 +18,27 @@ do
 end
 
 -- Test 2: Player navigates through the passage into the cashier room.
--- Player starts at (5.0, 6.5), which is already in the passage row
--- (the southernmost slot row is a passage for n=5). Turn east, then walk east
--- through the separator wall opening.
+-- Player starts at (10.0, 6.5) facing north. Walk north to y≈5.0 (centered
+-- passage at slot rows 3-4 for n=5), turn left to face west, walk west through
+-- the separator opening into the cashier (x <= 6.0).
 do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
-    ctx.move_input:hold("right")     -- turn toward east (angle = -pi/2 → 0)
-    runner.tick(ctx, 38)
-    ctx.move_input:release("right")
-
-    ctx.move_input:hold("forward")   -- east
-    runner.tick(ctx, 90)
+    ctx.move_input:hold("forward")   -- north toward passage center
+    runner.tick(ctx, 30)
     ctx.move_input:release("forward")
 
-    assert(p.x >= 9.0,
-        "expected player to reach cashier room (x >= 9.0), got x=" .. p.x)
+    ctx.move_input:hold("left")      -- turn toward west (angle = -pi/2 → -pi)
+    runner.tick(ctx, 38)
+    ctx.move_input:release("left")
+
+    ctx.move_input:hold("forward")   -- west through separator
+    runner.tick(ctx, 100)
+    ctx.move_input:release("forward")
+
+    assert(p.x <= 6.0,
+        "expected player to reach cashier room (x <= 6.0), got x=" .. p.x)
     assert(ctx.scene._last_active_slot == nil,
         "expected no active slot in cashier room")
     print("PASS: player navigates to cashier room via passage")

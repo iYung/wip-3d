@@ -1,7 +1,7 @@
 local Slot = require("lua/game/slot")
 
 -- Grid layout constants (world units) — 1x1 to match raycaster map cells
-local GRID_ORIGIN_X  =  2.5
+local GRID_ORIGIN_X  =  7.5
 local GRID_SPACING_X =  1.0
 local GRID_ORIGIN_Y  =  2.5
 local GRID_SPACING_Y =  1.0   -- positive = rows grow southward (increasing y)

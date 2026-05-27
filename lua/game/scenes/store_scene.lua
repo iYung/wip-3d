@@ -13,8 +13,8 @@ local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
 
 local function build_map_grid(n)
-    local W = 14  -- 1 left wall + 7 store + 1 sep + 4 cashier + 1 right wall
-    local SEP = 9  -- Lua col index of separator
+    local W = 14  -- 1 left wall + 4 cashier + 1 sep + 7 store + 1 right wall
+    local SEP = 6  -- Lua col index of separator
 
     local function all_walls()
         local r = {}; for c = 1, W do r[c] = 1 end; return r
@@ -25,8 +25,9 @@ local function build_map_grid(n)
 
     for map_row = 2, n + 1 do
         local slot_row = map_row - 1  -- 1 = northernmost
-        -- passage: open separator in the two southernmost slot rows (slot_row n and n-1)
-        local is_passage = (slot_row == n or slot_row == n - 1)
+        -- passage: open separator at the two center slot rows
+        local mid = math.floor((n + 1) / 2)
+        local is_passage = (slot_row == mid or slot_row == mid + 1)
         local r = {}
         for c = 1, W do
             if c == 1 or c == W then
@@ -34,7 +35,7 @@ local function build_map_grid(n)
             elseif c == SEP then
                 r[c] = is_passage and 0 or 1
             else
-                r[c] = 0          -- store cols (2-8) and cashier cols (10-13) always open
+                r[c] = 0          -- cashier cols (2-5) and store cols (7-13) always open
             end
         end
         rows[map_row] = r
@@ -52,10 +53,10 @@ local function store_geometry(n)
     return { front_y = front_y, player_y = player_y, cashier_y = cashier_y }
 end
 
-local CASHIER_THRESH  = 9.0   -- player.x >= this → cashier room
-local CASHIER_POS_X   = 11.5  -- customer billboard world position
+local CASHIER_THRESH  = 6.0   -- player.x <= this → cashier room
+local CASHIER_POS_X   = 3.5   -- customer billboard world position
 
-local PLAYER_START_X  = 5.0
+local PLAYER_START_X  = 10.0
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
 local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
@@ -197,7 +198,7 @@ function StoreScene:update(dt)
     end
 
     -- Active slot: look-ray hits the slot's tile and it's within INTERACT_RANGE
-    if p.x < CASHIER_THRESH then
+    if p.x > CASHIER_THRESH then
         local dx, dy = math.cos(p.angle), math.sin(p.angle)
         local best_slot, best_t = nil, INTERACT_RANGE
         for _, slot in ipairs(gs.store:all_slots()) do
@@ -251,7 +252,7 @@ function StoreScene:_handle_pick_up_down()
     local p      = self.player3d
     local slot   = self._last_active_slot
 
-    if p.x >= CASHIER_THRESH then
+    if p.x <= CASHIER_THRESH then
         if self._customer:arrived() then
             self._customer:dismiss()
             if self._active_script_key then
@@ -283,7 +284,7 @@ function StoreScene:_handle_interact()
     local slot   = self._last_active_slot
 
     -- Cashier zone: dialog / sale
-    if p.x >= CASHIER_THRESH and self._customer:arrived() then
+    if p.x <= CASHIER_THRESH and self._customer:arrived() then
         local held = player.held_item
         if self._customer:on_last_message()
            and held
@@ -460,7 +461,7 @@ function StoreScene:_draw_hud()
     end
 
     -- Customer dialog: shown when player is in cashier room
-    if p.x >= CASHIER_THRESH then
+    if p.x <= CASHIER_THRESH then
         self:_draw_customer_dialog()
     end
 
@@ -501,7 +502,7 @@ function StoreScene:_hud_labels()
     local slot      = self._last_active_slot
     local held      = player.held_item
     local slot_item = slot and slot.item
-    local in_cash   = p.x >= CASHIER_THRESH
+    local in_cash   = p.x <= CASHIER_THRESH
 
     local slot_label = not in_cash and slot_item and slot_item.name
                        and ("HOVER: " .. slot_item.name:upper())
