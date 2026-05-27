@@ -484,7 +484,7 @@ col:  1    2-5       6     7-13      14
 
 - Col 1 / 14 — outer walls (always `1`)
 - Cols 2–5 — cashier room (always open, `0`)
-- Col 6 — separator wall (`SEP = 6`); open only in the two center slot rows
+- Col 6 — separator wall (`SEP = 6`); open only in the two northernmost slot rows (rows 1 and 2)
 - Cols 7–13 — store room (always open, `0`)
 - Rows: row 1 = north wall, rows 2…n+1 = slot rows, row n+2 = south wall
 
@@ -500,7 +500,7 @@ col:  1    2-5       6     7-13      14
 
 **Passage (separator opening)**
 
-Opens at the two center slot rows: `mid = floor((n+1)/2)` and `mid+1`. At `n=5` this is rows 3 and 4.
+Fixed at slot rows 1 and 2 (northernmost), regardless of store size. The cashier entrance stays put as the store grows southward.
 
 **Properties**
 - `player3d` — `Player3D` instance; x/y in grid units

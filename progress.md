@@ -132,7 +132,9 @@ See open questions in `game-design.md`.
 
 ### Recently completed
 
-- **Cashier flipped to left side** — store map reorganised so the cashier room occupies the left four columns (cols 2–5) and the store room the right seven columns (cols 7–13), with the separator at col 6; passage opens at the two center slot rows (not the southernmost); `GRID_ORIGIN_X` shifted from 2.5 → 7.5, `CASHIER_THRESH` 9.0 → 6.0 (comparison flipped to `<=`), `CASHIER_POS_X` 11.5 → 3.5, `PLAYER_START_X` 5.0 → 10.0
+- **Passage fixed at north** — separator opening pinned to slot rows 1 and 2 so the cashier entrance never moves as the store grows southward
+
+- **Cashier flipped to left side** — store map reorganised so the cashier room occupies the left four columns (cols 2–5) and the store room the right seven columns (cols 7–13), with the separator at col 6; `GRID_ORIGIN_X` shifted from 2.5 → 7.5, `CASHIER_THRESH` 9.0 → 6.0 (comparison flipped to `<=`), `CASHIER_POS_X` 11.5 → 3.5, `PLAYER_START_X` 5.0 → 10.0
 
 - **Player speed sprites** — speed upgrades now apply a GLSL color-replace shader at draw time instead of swapping sprite sets; pure-red pixels in the player PNG are replaced with the tier's color (`speed_tiers.lua` now carries a `color` field per tier); `Player:set_speed_level(level, color)` stores the active color; no extra PNG assets needed
 
