@@ -64,6 +64,9 @@ end
 local CASHIER_THRESH  = 4.0   -- player.y <= this → cashier/separator zone
 local CASHIER_POS_X   = 6.0   -- customer billboard x (passage centre)
 local CASHIER_POS_Y   = 2.5   -- customer billboard y (cashier room centre)
+local CASHIER_ENTRY_X  = 1.5  -- customer walk-in start x
+local CUST_WALK_SPEED  = 2.5  -- grid units/s during walk animation
+local CUST_WALK_FRAME_T = 0.15 -- seconds per walk frame toggle
 
 local PLAYER_START_X  = 6.0   -- passage centre x; aligned so walking north goes straight through
 local PLAYER_START_A  = -math.pi / 2  -- facing north
@@ -173,10 +176,14 @@ function StoreScene:_setup_store()
     self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A)
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
-    self._customer          = Customer.new(0, -1, 0)
+    self._customer          = Customer.new(100, -1000, 0)
     self._spawn_timer       = Timer.new(math.random(3, 6))
     self._active_script_key = nil
     self._script_cooldowns  = {}
+    self._cust_3d_x        = CASHIER_POS_X
+    self._cust_anim        = nil
+    self._cust_walk_timer  = 0
+    self._cust_walk_frame  = false
 end
 
 -- -------------------------------------------------------------------------
@@ -219,24 +226,55 @@ function StoreScene:update(dt)
         self._hover_tile       = nil
     end
 
+    -- Detect walking_out (set by serve/dismiss at end of previous frame's input handling)
+    if self._customer.state == "walking_out" and self._cust_anim ~= "out" then
+        self._cust_anim = "out"
+    end
+
     -- Customer update (dialog typewriter)
     self._customer:update(dt)
-    -- Skip walk animation in 3D: snap states immediately
-    if self._customer.state == "walking_in" then
-        self._customer.state        = "waiting"
-        self._customer.bubble.visible = true
-    end
-    if self._customer.state == "walking_out" then
-        self._customer.state              = "idle"
-        self._customer.bubble.visible     = false
-        self._customer.heart_bubble.visible = false
+
+    -- 3D walk animation
+    if self._cust_anim then
+        self._cust_walk_timer = self._cust_walk_timer + dt
+        if self._cust_walk_timer >= CUST_WALK_FRAME_T then
+            self._cust_walk_timer  = self._cust_walk_timer - CUST_WALK_FRAME_T
+            self._cust_walk_frame  = not self._cust_walk_frame
+        end
+        if self._cust_anim == "in" then
+            self._cust_3d_x = math.min(CASHIER_POS_X, self._cust_3d_x + CUST_WALK_SPEED * dt)
+            if self._cust_3d_x >= CASHIER_POS_X then
+                self._customer.state          = "waiting"
+                self._customer.bubble.visible = true
+                self._cust_anim               = nil
+                self._cust_walk_timer         = 0
+                self._cust_walk_frame         = false
+            end
+        elseif self._cust_anim == "out" then
+            self._cust_3d_x = math.max(CASHIER_ENTRY_X, self._cust_3d_x - CUST_WALK_SPEED * dt)
+            if self._cust_3d_x <= CASHIER_ENTRY_X then
+                self._customer.state                    = "idle"
+                self._customer.sprite.visible           = false
+                self._customer.bubble.visible           = false
+                self._customer.heart_bubble.visible     = false
+                self._cust_anim                         = nil
+                self._cust_walk_timer                   = 0
+                self._cust_walk_frame                   = false
+            end
+        end
     end
 
     -- Spawn timer
-    if not self._customer:active() then
+    if not self._customer:active() and not self._cust_anim then
         if self._spawn_timer:update(dt) then
             local cfg = self:_next_customer_cfg()
-            if cfg then self._customer:show(cfg) end
+            if cfg then
+                self._customer:show(cfg)
+                self._cust_3d_x       = CASHIER_ENTRY_X
+                self._cust_anim       = "in"
+                self._cust_walk_timer = 0
+                self._cust_walk_frame = false
+            end
             self._spawn_timer:reset(math.random(3, 6))
         end
     end
@@ -259,7 +297,7 @@ function StoreScene:_handle_pick_up_down()
     local slot   = self._last_active_slot
 
     if p.y <= CASHIER_THRESH then
-        if self._customer:arrived() then
+        if self._customer:arrived() and not self._cust_anim then
             self._customer:dismiss()
             if self._active_script_key then
                 self._script_cooldowns[self._active_script_key] = DISMISS_COOLDOWN_SALES
@@ -290,7 +328,7 @@ function StoreScene:_handle_interact()
     local slot   = self._last_active_slot
 
     -- Cashier zone: dialog / sale
-    if p.y <= CASHIER_THRESH and self._customer:arrived() then
+    if p.y <= CASHIER_THRESH and self._customer:arrived() and not self._cust_anim then
         local held = player.held_item
         if self._customer:on_last_message()
            and held
@@ -405,13 +443,14 @@ function StoreScene:draw()
     end
 
     -- Customer billboard
-    if self._customer:active() then
+    if self._customer:active() or self._cust_anim ~= nil then
         local cust = self._customer
+        local cust_img = (self._cust_anim and self._cust_walk_frame) and A.customer_walk or A.customer
         sprites[#sprites + 1] = {
-            x       = CASHIER_POS_X,
-            y       = CASHIER_POS_Y,
-            image   = A.customer,
-            setup   = function() ColorReplace.apply(cust._primary, cust._secondary) end,
+            x        = self._cust_3d_x,
+            y        = CASHIER_POS_Y,
+            image    = cust_img,
+            setup    = function() ColorReplace.apply(cust._primary, cust._secondary) end,
             teardown = function() ColorReplace.clear() end,
         }
     end
@@ -508,7 +547,7 @@ function StoreScene:_hud_labels()
     local slot      = self._last_active_slot
     local held      = player.held_item
     local slot_item = slot and slot.item
-    local in_cash   = p.y <= CASHIER_THRESH
+    local in_cash   = p.y <= CASHIER_THRESH and not self._cust_anim
 
     local slot_label = not in_cash and slot_item and slot_item.name
                        and ("HOVER: " .. slot_item.name:upper())

@@ -501,8 +501,11 @@ Cols 5 and 6 of the separator row are always open. The map is 10 cols wide with 
 |---|---|---|
 | `SEP` | `3` | Lua row index of the horizontal separator wall |
 | `CASHIER_THRESH` | `4.0` | `player.y <= this` → player is in the cashier room (north of separator) |
-| `CASHIER_POS_X` | `6.0` | Customer billboard world x (passage centre) |
+| `CASHIER_ENTRY_X` | `1.5` | Customer billboard world x at walk-in/out entry (left wall edge) |
+| `CASHIER_POS_X` | `6.0` | Customer billboard world x at stand position (passage centre) |
 | `CASHIER_POS_Y` | `2.5` | Customer billboard world y (cashier room centre) |
+| `CUST_WALK_SPEED` | `2.5` | Customer walk speed in grid units/s (entry→stand in ~1.8 s) |
+| `CUST_WALK_FRAME_T` | `0.15` | Seconds per walk animation frame toggle |
 | `PLAYER_START_X` | `6.0` | Player spawn x (passage centre) |
 | `GRID_ORIGIN_X` | `2.5` | World x of slot (1, 1) — first store column |
 | `GRID_ORIGIN_Y` | `4.5` | World y of slot row 1 — first store row (south of separator) |
@@ -511,11 +514,18 @@ Cols 5 and 6 of the separator row are always open. The map is 10 cols wide with 
 - `player3d` — `Player3D` instance; x/y in grid units
 - `map` — `Map` instance; rebuilt in `on_enter()` whenever `active_rows()` changes
 - `_customer` — `Customer` NPC for cashier interactions
+- `_cust_3d_x` — animated billboard x position; moves from `CASHIER_ENTRY_X` to `CASHIER_POS_X` on walk-in and back on walk-out
+- `_cust_anim` — `"in"` / `"out"` / `nil`; non-nil while the customer is walking; gates cashier interactions and HUD labels
+- `_cust_walk_timer` / `_cust_walk_frame` — drive the idle↔walk image toggle during animation
 - `_last_active_slot` — slot currently targeted by the look-ray (nil when in cashier room)
 - `_active_script_key` — key of the current scripted customer visit (nil if anonymous)
 - `_script_cooldowns` — table of per-script sale countdown timers for dismissed customers
 
-**Cashier interaction** (triggered when `player.y <= CASHIER_THRESH`)
+**Customer walk animation**
+
+Customers walk in from the left wall (`CASHIER_ENTRY_X`) to the stand position (`CASHIER_POS_X`) at `CUST_WALK_SPEED` grid units/s, then walk back out the same way on serve or dismiss. While `_cust_anim ~= nil`, cashier interactions and HUD key hints are suppressed. The billboard image alternates between `A.customer` and `A.customer_walk` every `CUST_WALK_FRAME_T` seconds. `customer.lua`'s state machine drives dialog and bubble logic; `store_scene` manually sets `state="waiting"` / `state="idle"` at animation completion instead of relying on `customer.lua`'s x-movement transitions.
+
+**Cashier interaction** (triggered when `player.y <= CASHIER_THRESH` and `_cust_anim == nil`)
 - E — dismiss customer without sale
 - F on last message + holding matching plant → `customer:serve()` + sell
 
