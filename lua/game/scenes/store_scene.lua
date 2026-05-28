@@ -12,50 +12,60 @@ local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
 
+-- Map layout: cashier room (north) / separator row / store room (grows south).
+-- The separator runs east-west, so passage cols are fixed regardless of store depth.
+--
+--   row 1      : north outer wall
+--   row 2      : cashier room
+--   row 3 (SEP): separator — all wall except cols 5 & 6 (passage, centred in 8 inner cols)
+--   rows 4..3+n: store room (n rows, grows south)
+--   row 4+n    : south outer wall
+--
+-- Inner cols 2-9 (8 cols): 3 wall | 2 passage | 3 wall → equal, never changes.
 local function build_map_grid(n)
-    local W = 14  -- 1 left wall + 7 store + 1 sep + 4 cashier + 1 right wall
-    local SEP = 9  -- Lua col index of separator
+    local W     = 10   -- 1 outer-left + 8 inner + 1 outer-right
+    local SEP   = 3    -- map row index of the separator
+    local PASS_L = 5   -- left passage col  (cols 2-4 = wall, 5-6 = open, 7-9 = wall)
+    local PASS_R = 6   -- right passage col
 
     local function all_walls()
         local r = {}; for c = 1, W do r[c] = 1 end; return r
     end
-
-    local rows = {}
-    rows[1] = all_walls()  -- top wall
-
-    for map_row = 2, n + 1 do
-        local slot_row = map_row - 1  -- 1 = northernmost
-        -- passage: open separator in the two southernmost slot rows (slot_row n and n-1)
-        local is_passage = (slot_row == n or slot_row == n - 1)
+    local function open_row()
         local r = {}
-        for c = 1, W do
-            if c == 1 or c == W then
-                r[c] = 1          -- outer walls
-            elseif c == SEP then
-                r[c] = is_passage and 0 or 1
-            else
-                r[c] = 0          -- store cols (2-8) and cashier cols (10-13) always open
-            end
-        end
-        rows[map_row] = r
+        for c = 1, W do r[c] = (c == 1 or c == W) and 1 or 0 end
+        return r
     end
 
-    rows[n + 2] = all_walls()  -- south wall
+    local rows = {}
+    rows[1]   = all_walls()   -- north outer wall
+    rows[2]   = open_row()    -- cashier room
+
+    local sep_row = {}        -- separator: wall everywhere except passage cols
+    for c = 1, W do
+        sep_row[c] = (c >= PASS_L and c <= PASS_R) and 0 or 1
+    end
+    rows[SEP] = sep_row
+
+    for map_row = SEP + 1, SEP + n do
+        rows[map_row] = open_row()   -- store room rows
+    end
+    rows[SEP + n + 1] = all_walls()  -- south outer wall
 
     return rows
 end
 
+-- Player spawns at the southernmost store row.
+-- Store row r has center y = 4.5 + (r-1), matching GRID_ORIGIN_Y in store.lua.
 local function store_geometry(n)
-    local front_y   = 2.5 + (n - 1)  -- southernmost slot row y
-    local player_y  = front_y
-    local cashier_y = front_y
-    return { front_y = front_y, player_y = player_y, cashier_y = cashier_y }
+    return { player_y = 4.5 + (n - 1) }
 end
 
-local CASHIER_THRESH  = 9.0   -- player.x >= this → cashier room
-local CASHIER_POS_X   = 11.5  -- customer billboard world position
+local CASHIER_THRESH  = 4.0   -- player.y <= this → cashier/separator zone
+local CASHIER_POS_X   = 6.0   -- customer billboard x (passage centre)
+local CASHIER_POS_Y   = 2.5   -- customer billboard y (cashier room centre)
 
-local PLAYER_START_X  = 5.0
+local PLAYER_START_X  = 6.0   -- passage centre x; aligned so walking north goes straight through
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
 local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
@@ -119,7 +129,6 @@ function StoreScene.new(game_state, input, scene_manager)
     self._last_active_slot  = nil
     self._hover_tile        = nil
     self._last_active_rows  = nil
-    self._cashier_y         = 0
     return self
 end
 
@@ -143,8 +152,6 @@ function StoreScene:on_enter()
     local n = gs.store:active_rows()
     if n ~= self._last_active_rows then
         self.map = Map.new(build_map_grid(n))
-        local geom = store_geometry(n)
-        self._cashier_y  = geom.cashier_y
         self._last_active_rows = n
     end
 end
@@ -197,7 +204,7 @@ function StoreScene:update(dt)
     end
 
     -- Active slot: look-ray hits the slot's tile and it's within INTERACT_RANGE
-    if p.x < CASHIER_THRESH then
+    if p.y > CASHIER_THRESH then
         local dx, dy = math.cos(p.angle), math.sin(p.angle)
         local best_slot, best_t = nil, INTERACT_RANGE
         for _, slot in ipairs(gs.store:all_slots()) do
@@ -251,7 +258,7 @@ function StoreScene:_handle_pick_up_down()
     local p      = self.player3d
     local slot   = self._last_active_slot
 
-    if p.x >= CASHIER_THRESH then
+    if p.y <= CASHIER_THRESH then
         if self._customer:arrived() then
             self._customer:dismiss()
             if self._active_script_key then
@@ -283,7 +290,7 @@ function StoreScene:_handle_interact()
     local slot   = self._last_active_slot
 
     -- Cashier zone: dialog / sale
-    if p.x >= CASHIER_THRESH and self._customer:arrived() then
+    if p.y <= CASHIER_THRESH and self._customer:arrived() then
         local held = player.held_item
         if self._customer:on_last_message()
            and held
@@ -402,7 +409,7 @@ function StoreScene:draw()
         local cust = self._customer
         sprites[#sprites + 1] = {
             x       = CASHIER_POS_X,
-            y       = self._cashier_y,
+            y       = CASHIER_POS_Y,
             image   = A.customer,
             setup   = function() ColorReplace.apply(cust._primary, cust._secondary) end,
             teardown = function() ColorReplace.clear() end,
@@ -460,7 +467,7 @@ function StoreScene:_draw_hud()
     end
 
     -- Customer dialog: shown when player is in cashier room
-    if p.x >= CASHIER_THRESH then
+    if p.y <= CASHIER_THRESH then
         self:_draw_customer_dialog()
     end
 
@@ -501,7 +508,7 @@ function StoreScene:_hud_labels()
     local slot      = self._last_active_slot
     local held      = player.held_item
     local slot_item = slot and slot.item
-    local in_cash   = p.x >= CASHIER_THRESH
+    local in_cash   = p.y <= CASHIER_THRESH
 
     local slot_label = not in_cash and slot_item and slot_item.name
                        and ("HOVER: " .. slot_item.name:upper())

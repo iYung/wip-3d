@@ -132,6 +132,10 @@ See open questions in `game-design.md`.
 
 ### Recently completed
 
+- **Horizontal separator with centered, immovable passage** — separator redesigned as an east-west row (row 3) rather than a north-south column; cashier room occupies row 2 (north), store rows begin at row 4 (south); passage is cols 5&6, splitting 8 inner cols as 3 wall + 2 open + 3 wall — permanently centered by construction; store grows by appending rows to the south, which is perpendicular to the separator, so the passage position is structurally immutable and never recalculated; cashier zone check changed from `player.x <= CASHIER_THRESH` to `player.y <= CASHIER_THRESH` (4.0); constants updated: `CASHIER_POS_X=6.0`, `CASHIER_POS_Y=2.5`, `PLAYER_START_X=6.0`, `GRID_ORIGIN_X=2.5`, `GRID_ORIGIN_Y=4.5`
+
+- **Cashier flipped to left side** — store map reorganised so the cashier room occupies the left four columns (cols 2–5) and the store room the right seven columns (cols 7–13), with the separator at col 6; `GRID_ORIGIN_X` shifted from 2.5 → 7.5, `CASHIER_THRESH` 9.0 → 6.0 (comparison flipped to `<=`), `CASHIER_POS_X` 11.5 → 3.5, `PLAYER_START_X` 5.0 → 10.0
+
 - **Player speed sprites** — speed upgrades now apply a GLSL color-replace shader at draw time instead of swapping sprite sets; pure-red pixels in the player PNG are replaced with the tier's color (`speed_tiers.lua` now carries a `color` field per tier); `Player:set_speed_level(level, color)` stores the active color; no extra PNG assets needed
 
 - **Start screen** — `StartScene` with New Game / Continue / Exit buttons; keyboard navigation (up/down/W/S + Enter/Space/F); `main.lua` now opens `StartScene` first; `StoreScene` constructed lazily on confirm; font state saved/restored so store rendering is unaffected

@@ -6,9 +6,9 @@ local Plant      = require("lua/game/items/plant")
 local Grafter    = require("lua/game/items/grafter")
 
 -- Store: 7 cols x 5 rows = 35 slots (row-major). Setup fills slots 1-3 with tools.
--- World layout (GRID_ORIGIN_X=2.5, GRID_SPACING_X=1.0, GRID_ORIGIN_Y=2.5, row spacing=+1.0):
---   row 1 (py=2.5): slot 1 (px=2.5) … slot 7 (px=8.5)
---   row 2 (py=3.5): slot 8 (px=2.5) …
+-- World layout (GRID_ORIGIN_X=2.5, GRID_SPACING_X=1.0, GRID_ORIGIN_Y=4.5, row spacing=+1.0):
+--   row 1 (py=4.5): slot 1 (px=2.5) … slot 7 (px=8.5)
+--   row 2 (py=5.5): slot 8 (px=2.5) …
 --
 -- Positioning player3d at (slot.px, slot.py+1.5) facing north aims the look-ray
 -- at the row-1 tile (t≈1.0), while the immediately-south row-2 tile is at t=0
