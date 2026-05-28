@@ -471,36 +471,41 @@ The first scene shown on launch. Pure screen-space UI — overrides `draw()` ent
 
 ### StoreScene
 
-The main gameplay scene. First-person 3D (raycaster) with a 14-column map.
+The main gameplay scene. First-person 3D (raycaster) with a 10-column, variable-row map.
 
 **Location:** `lua/game/scenes/store_scene.lua`
 
 **Map layout** (`build_map_grid(n)` where `n` = active store row count)
 
 ```
-col:  1    2-5       6     7-13      14
-     [W] [cashier] [SEP] [store]   [W]
+row:   1        2      3 (SEP)    4 … 3+n    4+n
+      [W]   [cashier]  [─W────────────W──]  [W]
+                        cols 5&6 open (passage)
+      store rows 4…3+n are all open (cols 2–9)
 ```
 
-- Col 1 / 14 — outer walls (always `1`)
-- Cols 2–5 — cashier room (always open, `0`)
-- Col 6 — separator wall (`SEP = 6`); open only in the two northernmost slot rows (rows 1 and 2)
-- Cols 7–13 — store room (always open, `0`)
-- Rows: row 1 = north wall, rows 2…n+1 = slot rows, row n+2 = south wall
+- Row 1 — north outer wall (always `1`)
+- Row 2 — cashier room (all cols open, `0`)
+- Row 3 — **horizontal separator** (`SEP = 3`): cols 5 and 6 are open (passage), all other cols are wall
+- Rows 4…3+n — store room (all 8 inner cols open, `0`)
+- Row 4+n — south outer wall (always `1`; grows south as `n` increases)
+- Map width: 10 cols total (`W = 10`); col 1 and 10 are always outer walls
+
+**Passage (separator opening)**
+
+Cols 5 and 6 of the separator row are always open. The map is 10 cols wide with 8 inner cols (2–9); the passage splits them as 3 wall + 2 open + 3 wall — permanently centered. The store grows by appending rows to the **south** (perpendicular to the separator), so the passage position is structurally immutable and never recalculated.
 
 **Key constants**
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `SEP` | `6` | Lua column index of the separator wall |
-| `CASHIER_THRESH` | `6.0` | `player.x <= this` → player is in the cashier room |
-| `CASHIER_POS_X` | `3.5` | Customer billboard world x |
-| `PLAYER_START_X` | `10.0` | Player spawn x (store side) |
-| `GRID_ORIGIN_X` | `7.5` | World x of slot (1, 1) — store columns start here |
-
-**Passage (separator opening)**
-
-Fixed at slot rows 1 and 2 (northernmost), regardless of store size. The cashier entrance stays put as the store grows southward.
+| `SEP` | `3` | Lua row index of the horizontal separator wall |
+| `CASHIER_THRESH` | `4.0` | `player.y <= this` → player is in the cashier room (north of separator) |
+| `CASHIER_POS_X` | `6.0` | Customer billboard world x (passage centre) |
+| `CASHIER_POS_Y` | `2.5` | Customer billboard world y (cashier room centre) |
+| `PLAYER_START_X` | `6.0` | Player spawn x (passage centre) |
+| `GRID_ORIGIN_X` | `2.5` | World x of slot (1, 1) — first store column |
+| `GRID_ORIGIN_Y` | `4.5` | World y of slot row 1 — first store row (south of separator) |
 
 **Properties**
 - `player3d` — `Player3D` instance; x/y in grid units
@@ -510,11 +515,11 @@ Fixed at slot rows 1 and 2 (northernmost), regardless of store size. The cashier
 - `_active_script_key` — key of the current scripted customer visit (nil if anonymous)
 - `_script_cooldowns` — table of per-script sale countdown timers for dismissed customers
 
-**Cashier interaction** (triggered when `player.x <= CASHIER_THRESH`)
+**Cashier interaction** (triggered when `player.y <= CASHIER_THRESH`)
 - E — dismiss customer without sale
 - F on last message + holding matching plant → `customer:serve()` + sell
 
-**Slot interaction** (triggered when `player.x > CASHIER_THRESH` and look-ray hits a slot tile)
+**Slot interaction** (triggered when `player.y > CASHIER_THRESH` and look-ray hits a slot tile)
 - E — pick up / put down item in the active slot
 - F — interact with active slot's item (water plant, open BuyScene, etc.)
 

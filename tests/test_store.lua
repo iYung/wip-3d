@@ -43,7 +43,7 @@ do
 end
 
 -- Test 4: New row slots have correct world positions
--- Row 6 (first expanded row) should be at y = 2.5 + 5*1.0 = 7.5
+-- Row 6 (first expanded row) should be at y = 4.5 + 5*1.0 = 9.5
 do
     local ctx   = runner.setup()
     local store = ctx.gs.store
@@ -58,10 +58,10 @@ do
 
     assert(#new_slots == 7, "expected 7 new slots")
     for _, slot in ipairs(new_slots) do
-        assert(math.abs(slot.py - 7.5) < 0.001,
-            "expected new slot py=7.5, got " .. slot.py)
+        assert(math.abs(slot.py - 9.5) < 0.001,
+            "expected new slot py=9.5, got " .. slot.py)
     end
-    print("PASS: grown row has correct y position (7.5)")
+    print("PASS: grown row has correct y position (9.5)")
 end
 
 print("ALL TESTS PASSED")

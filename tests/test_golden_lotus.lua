@@ -24,15 +24,23 @@ local function nav_to(ctx, tx, ty, elapsed)
 end
 
 local function face_slot(ctx, slot_px, elapsed)
-    elapsed = nav_to(ctx, slot_px, 4.0, elapsed)
+    -- If in the cashier room (y < 4.0), walk straight south through the
+    -- passage at x=6.0 first.  A direct diagonal from the cashier would
+    -- cross the separator at a wall column and get stuck.
     local p = ctx.scene.player3d
-    if p.y < 4.0 then p.y = 4.0 end
+    if p.y < 4.0 then
+        elapsed = nav_to(ctx, 6.0, 5.5, elapsed)
+    end
+    -- Stand one row south of slot row 1 (y=5.5) so the look-ray hits at t≈0.5.
+    elapsed = nav_to(ctx, slot_px, 5.5, elapsed)
+    if p.y < 5.5 then p.y = 5.5 end
     p.angle = -math.pi / 2
     return elapsed
 end
 
 local function nav_to_cashier(ctx, elapsed)
-    return nav_to(ctx, 3.5, 2.5, elapsed)
+    -- Passage at cols 5-6 (x=5..7), cashier room at y<4.
+    return nav_to(ctx, 6.0, 2.5, elapsed)
 end
 
 local function sell_plant(ctx, plant_type, elapsed)
@@ -83,14 +91,14 @@ local elapsed = 0
 -- ---------------------------------------------------------------------------
 
 for _ = 1, 3 do
-    -- Pick up watering can from slot 1 (world x=7.5)
-    elapsed = face_slot(ctx, 7.5, elapsed)
+    -- Pick up watering can from slot 1 (world x=2.5)
+    elapsed = face_slot(ctx, 2.5, elapsed)
     ctx.input:press("pick_up_down")
     runner.tick(ctx, 1, 1/60)
     elapsed = elapsed + 1/60
 
-    -- Walk to plant slot 4 (world x=10.5)
-    elapsed = face_slot(ctx, 10.5, elapsed)
+    -- Walk to plant slot 4 (world x=5.5)
+    elapsed = face_slot(ctx, 5.5, elapsed)
 
     -- Water: wait for ready (stage 1 → 2)
     elapsed = runner.fast_forward_until(ctx, function()
@@ -109,13 +117,13 @@ for _ = 1, 3 do
     elapsed = elapsed + 1/60
 
     -- Return watering can to slot 1
-    elapsed = face_slot(ctx, 7.5, elapsed)
+    elapsed = face_slot(ctx, 2.5, elapsed)
     ctx.input:press("pick_up_down")
     runner.tick(ctx, 1, 1/60)
     elapsed = elapsed + 1/60
 
     -- Pick up plant from slot 4
-    elapsed = face_slot(ctx, 10.5, elapsed)
+    elapsed = face_slot(ctx, 5.5, elapsed)
     ctx.input:press("pick_up_down")
     runner.tick(ctx, 1, 1/60)
     elapsed = elapsed + 1/60
@@ -135,8 +143,8 @@ assert(ctx.gs.currency >= 20,
 -- Golden Lotus purchase via PC Store (slot 3, world x=9.5)
 -- ---------------------------------------------------------------------------
 
--- Face the PC Store
-elapsed = face_slot(ctx, 9.5, elapsed)
+-- Face the PC Store (slot 3, world x=4.5)
+elapsed = face_slot(ctx, 4.5, elapsed)
 
 -- Open BuyScene
 ctx.input:press("interact")
@@ -161,19 +169,19 @@ elapsed = elapsed + 1/60
 
 -- Put Golden Lotus in slot 4 (clear the reseeded grass plant first)
 ctx.gs.store:all_slots()[4].item = nil
-elapsed = face_slot(ctx, 10.5, elapsed)
+elapsed = face_slot(ctx, 5.5, elapsed)
 ctx.input:press("pick_up_down")
 runner.tick(ctx, 1, 1/60)
 elapsed = elapsed + 1/60
 
 -- Pick up watering can from slot 1
-elapsed = face_slot(ctx, 7.5, elapsed)
+elapsed = face_slot(ctx, 2.5, elapsed)
 ctx.input:press("pick_up_down")
 runner.tick(ctx, 1, 1/60)
 elapsed = elapsed + 1/60
 
 -- Walk to plant slot 4
-elapsed = face_slot(ctx, 10.5, elapsed)
+elapsed = face_slot(ctx, 5.5, elapsed)
 
 -- Water: wait for ready (stage 1 → 2)
 elapsed = runner.fast_forward_until(ctx, function()
@@ -192,13 +200,13 @@ runner.tick(ctx, 1, 1/60)
 elapsed = elapsed + 1/60
 
 -- Return watering can to slot 1
-elapsed = face_slot(ctx, 7.5, elapsed)
+elapsed = face_slot(ctx, 2.5, elapsed)
 ctx.input:press("pick_up_down")
 runner.tick(ctx, 1, 1/60)
 elapsed = elapsed + 1/60
 
 -- Pick up Golden Lotus from slot 4
-elapsed = face_slot(ctx, 10.5, elapsed)
+elapsed = face_slot(ctx, 5.5, elapsed)
 ctx.input:press("pick_up_down")
 runner.tick(ctx, 1, 1/60)
 elapsed = elapsed + 1/60
