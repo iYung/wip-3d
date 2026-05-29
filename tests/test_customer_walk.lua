@@ -1,11 +1,11 @@
 -- Constants mirrored from store_scene.lua
 local CASHIER_ENTRY_X = 1.5
 local CASHIER_POS_X   = 6.0
-local CUST_WALK_SPEED = 2.5
+local CUST_WALK_SPEED = 1.0
 
--- Walk-in/out each take (6.0-1.5)/2.5 = 1.8 s = 108 frames at 60 fps.
--- Use 150-frame blocks so tests are not sensitive to off-by-one fractions.
-local WALK_FRAMES = 150
+-- Walk-in/out each take (6.0-1.5)/1.0 = 4.5 s = 270 frames at 60 fps.
+-- Use 300-frame blocks so tests are not sensitive to off-by-one fractions.
+local WALK_FRAMES = 300
 
 local function show_customer(scene)
     scene._customer:show({ plant_type = 1, messages = {} })
@@ -115,6 +115,25 @@ do
     assert(math.abs(scene._cust_3d_x - CASHIER_ENTRY_X) < 0.01,
         "customer should be back at entry position " .. CASHIER_ENTRY_X .. ", got " .. scene._cust_3d_x)
     print("PASS: walk-out completes at entry position")
+end
+
+-- Test 7: flip_x condition — _cust_anim is "out" mid-walk-out (so flip_x resolves true).
+do
+    local ctx   = runner.setup()
+    local scene = ctx.scene
+    show_customer(scene)
+
+    runner.tick(ctx, WALK_FRAMES)   -- complete walk-in
+    scene._customer:dismiss()
+    runner.tick(ctx, 30)            -- partway through walk-out
+
+    assert(scene._cust_anim == "out",
+        "expected _cust_anim='out' mid walk-out, got " .. tostring(scene._cust_anim))
+    assert(scene._cust_3d_x < CASHIER_POS_X,
+        "customer should have moved left from stand, got " .. scene._cust_3d_x)
+    assert(scene._cust_3d_x > CASHIER_ENTRY_X,
+        "customer should not have reached entry yet, got " .. scene._cust_3d_x)
+    print("PASS: flip_x condition (_cust_anim='out') holds mid walk-out")
 end
 
 print("ALL TESTS PASSED")

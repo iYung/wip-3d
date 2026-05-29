@@ -99,9 +99,10 @@ function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures)
     love.graphics.setColor(1, 1, 1, 1)
 end
 
--- sprites: array of { x, y, image, scale?, voffset?, setup?, teardown? }
+-- sprites: array of { x, y, image, scale?, voffset?, flip_x?, setup?, teardown? }
 --   scale   : billboard size multiplier (default 1.0)
 --   voffset : world-unit height above floor (default 0, positive = up)
+--   flip_x  : mirror the sprite horizontally (default false)
 --   setup   : called before drawing (e.g. apply shader)
 --   teardown: called after drawing (e.g. clear shader)
 function Raycaster:draw_sprites(sprites, px, py, angle)
@@ -164,7 +165,11 @@ function Raycaster:draw_sprites(sprites, px, py, angle)
                     elseif not visible and run_start then
                         love.graphics.setScissor(run_start, clip_y, col - run_start, clip_h)
                         love.graphics.setColor(1, 1, 1, 1)
-                        love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                        if spr.flip_x then
+                            love.graphics.draw(img, math.floor(x0) + w, y0, 0, -w / iw, h / ih)
+                        else
+                            love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                        end
                         run_start = nil
                     end
                 end
@@ -172,7 +177,11 @@ function Raycaster:draw_sprites(sprites, px, py, angle)
                     local rw = col_end - run_start + 1
                     love.graphics.setScissor(run_start, clip_y, rw, clip_h)
                     love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                    if spr.flip_x then
+                        love.graphics.draw(img, math.floor(x0) + w, y0, 0, -w / iw, h / ih)
+                    else
+                        love.graphics.draw(img, math.floor(x0), y0, 0, w / iw, h / ih)
+                    end
                 end
                 love.graphics.setScissor()
 
