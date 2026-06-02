@@ -171,4 +171,78 @@ return {
             "It's yours now. And I'll take one more, if that's alright.",
         },
     },
+
+    -- Sage (tutorial mentor, 4-chapter arc)
+    {
+        id             = "sage",
+        chapter        = 1,
+        accessory      = "monocle",
+        trigger        = { plant_type = 1, count = 0 },
+        name           = "Sir Moneyton",
+        primary_color     = {0.35, 0.58, 0.38, 1},
+        secondary_color = {0.55, 0.40, 0.25, 1},
+        plant_type     = 1,
+        messages       = {
+            "I've heard there's a new plant shop in town.",
+            "Word gets around fast when someone opens up. I had to see for myself.",
+            "I'll take a grass. Nothing fancy — just to see how you do.",
+        },
+        after_messages = {
+            "Not bad. I'll tell a few people.",
+        },
+    },
+    {
+        id             = "sage",
+        chapter        = 2,
+        accessory      = "monocle",
+        trigger        = { plant_type = 1, count = 3 },
+        name           = "Sir Moneyton",
+        primary_color     = {0.35, 0.58, 0.38, 1},
+        secondary_color = {0.55, 0.40, 0.25, 1},
+        plant_type     = 1,
+        messages       = {
+            "Grass is a good start. But customers want variety.",
+            "That computer over there — it's how you get new stock. Check it out.",
+            "The more kinds you grow, the more they come.",
+        },
+        after_messages = {
+            "Don't forget — the computer. It matters.",
+        },
+    },
+    {
+        id             = "sage",
+        chapter        = 3,
+        accessory      = "monocle",
+        trigger        = { plant_type = 2, count = 1 },
+        name           = "Sir Moneyton",
+        primary_color     = {0.35, 0.58, 0.38, 1},
+        secondary_color = {0.55, 0.40, 0.25, 1},
+        plant_type     = 2,
+        messages       = {
+            "A cactus. Good choice. Takes patience but it pays.",
+            "You know about the grafting tool? It copies a finished plant without starting over.",
+            "Once you understand that, everything moves faster.",
+        },
+        after_messages = {
+            "Grafting. Remember that word.",
+        },
+    },
+    {
+        id             = "sage",
+        chapter        = 4,
+        accessory      = "monocle",
+        trigger        = { plant_type = 3, count = 1 },
+        name           = "Sir Moneyton",
+        primary_color     = {0.35, 0.58, 0.38, 1},
+        secondary_color = {0.55, 0.40, 0.25, 1},
+        plant_type     = 3,
+        messages       = {
+            "A rose. That's real money.",
+            "At some point, how fast you move matters as much as what you grow.",
+            "Check the upgrades. Speed and heat lamps — they compound.",
+        },
+        after_messages = {
+            "You're further along than most. Keep it up.",
+        },
+    },
 }

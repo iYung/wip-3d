@@ -27,12 +27,13 @@ Completed step files are moved to [`archive/`](archive/).
 |------|-------------|
 | `assets.lua` | Loads all PNGs once at startup; require-cached so every file can `require` it cheaply; `sneakers` and `expand_slot` loaded conditionally via `try_img` (art not yet created); all other assets use `img()` and are required to exist |
 | `config.lua` | Shared constants — `U`, `SLOT_COST`, `ZONE_WIDTH` (400px cashier zone) |
-| `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact |
+| `input.lua` | Polls keyboard each frame; A/D or arrows = move, E = pick up/down, F = interact; W/S or up/down = `move_up`/`move_down` (menu nav); Enter/Space/F = `menu_confirm` |
 | `game_state.lua` | Holds store, player, currency, `unlocked_plants`, `stage3_counts`, `seen_scripts`, `speed_level`, `growth_level`, `growth_mult`; survives scene switches |
 | `player.lua` | Moves left/right into cashier zone; holds one item; 4-variant SpriteSet (idle/walk × no-held/held), each backed by a PNG; `speed` upgradeable via shop; uses `ColorReplace` shader to swap pure-red mask pixels to the current speed tier color on draw |
+| `settings_state.lua` | Holds `fullscreen` bool, `sfx_volume`/`music_volume` ints (0–100), and `keybinds` table (6 actions); owns `love.window.setFullscreen`; mutated exclusively by `SettingsMenu` |
 | `slot.lua` | One store cell; single `slot.png` background sprite; positions its item every frame |
 | `store.lua` | Array of slots; `slot_at(x)`, `grow()`, `draw_bubbles()` for high-priority bubble rendering; `draw_bg(A)` draws wall tiles and window frames using group-of-4 rule |
-| `customer.lua` | Cashier zone NPC; white PNG tinted per character via `body_color`; optional `accessory_sprite` (120×120) drawn over the top half, synced to body flip; dialog lines reveal character-by-character (40 chars/s) inside a 9-slice `speech_bubble.png` box; F skips to full line, second F advances; `line_complete()` / `skip_reveal()` methods; state machine: idle → walking_in → waiting → walking_out; `dismiss()` sends customer away without selling; when waiting, shows a 9-slice speech bubble containing the requested plant's stage-3 image (104×104 inside 12px padding). **`bubble.visible` is a shared gate** — it controls both the text dialog and the plant request bubble; setting it false suppresses both. Text dialog runs while `bubble.visible = true` and `done_talking = false`; plant image bubble draws when `bubble.visible = true` and `done_talking = true`. |
+| `customer.lua` | Cashier zone NPC; white PNG tinted per character via `body_color`; optional `accessory_sprite` (120×120) drawn over the top half, synced to body flip; dialog lines reveal character-by-character (40 chars/s) inside a 9-slice `speech_bubble.png` box; F skips to full line, second F advances; `line_complete()` / `skip_reveal()` methods; state machine: idle → walking_in → waiting → (sale) → talking_after → walking_out; `dismiss()` sends customer away without selling; `after_messages` (from script cfg) play in `talking_after` state after a sale via `advance_after()`, before the heart bubble; `done_after` flag skips directly to walking_out when no after_messages; when waiting, shows a 9-slice speech bubble containing the requested plant's stage-3 image (104×104 inside 12px padding). **`bubble.visible` is a shared gate** — it controls both the text dialog and the plant request bubble. |
 
 ### Items (`lua/game/items/`)
 
@@ -49,16 +50,17 @@ Completed step files are moved to [`archive/`](archive/).
 
 | File | What it does |
 |------|-------------|
-| `start_scene.lua` | Title screen with New Game / Continue / Exit buttons; up/down/W/S navigate, Enter/Space/F confirms; New Game and Continue both enter StoreScene; fonts saved and restored each draw so global font state is unaffected |
-| `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds (left = -400+640, right = store width−640), pick up/interact handled here; cashier zone logic (F skips reveal → advances → sells, E dismisses); context HUD bottom-left shows F: SKIP while typing, F: NEXT when done, E: DISMISS when customer waiting; `_active_script_key` tracks the current scripted customer (seen_scripts written on sale, not on spawn); `_script_cooldowns` counts down per completed sale — dismissed scripted customers return after 3 sales; unified parallax tiles `store_bg_*` across full world width pre-drawer; `Store:draw_bg` then stamps walls/windows on top; layered draw order for wall/bubbles |
-| `buy_scene.lua` | Carousel UI — 10 items (6 plants + Watering Can + Grafter + Expand Slot + Heat Lamps); A/D cycle, F buy, E cancel; per-type price and preview color |
+| `start_scene.lua` | Title screen with New Game / Continue / Settings / Exit buttons; uses `input:pressed("move_up"/"move_down"/"menu_confirm")` for navigation; accepts `open_settings` callback (4th constructor arg) called when Settings selected; New Game and Continue both enter StoreScene |
+| `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds, pick up/interact handled here; cashier zone logic (F skips reveal → advances → sells → talking_after → advances after_messages → walks out; E dismisses); `esc_opens_settings = true` so main.lua intercepts Escape for the settings menu; unified parallax tiles `store_bg_*` across full world width |
+| `buy_scene.lua` | Carousel UI — 10 items (6 plants + Watering Can + Grafter + Expand Slot + Heat Lamps); A/D cycle, F buy, E cancel; `esc_opens_settings = true` |
+| `settings_menu.lua` | Pause overlay — 6 buttons: Fullscreen/Window, SFX Volume, Music Volume, Keybinds, Exit Settings, Leave Game; keybinds sub-screen captures a single key press; loads assets directly (not via `A.`); delegates all mutations to `SettingsState` |
 
 ### Data (`lua/game/data/`)
 
 | File | What it does |
 |------|-------------|
 | `plant_data.lua` | Per-type name, buy cost, sell value, and cooldowns for all 6 plant types |
-| `customer_scripts.lua` | Array of scripted customer chapters; each has `id`, `chapter`, `trigger` (plant_type + stage-3 count), name, body color, optional `accessory`, requested plant, and dialog messages; same `id` = same character across visits; chapter N requires all prior chapters seen |
+| `customer_scripts.lua` | Array of scripted customer chapters; each has `id`, `chapter`, `trigger` (plant_type + stage-3 count), name, body color, optional `accessory`, requested plant, `messages`, and optional `after_messages` (post-sale dialog); same `id` = same character across visits; chapter N requires all prior chapters seen; includes Sage — 4-chapter tutorial arc (`id="sage"`, `accessory="monocle"`, `trigger.count=0` chapter 1 guarantees early appearance) |
 
 ### Assets (`assets/`)
 
@@ -95,7 +97,7 @@ PNG files for all sprites — player variants, plants (18 total: 6 types × 3 st
 | D / → | Move right |
 | E | Pick up / put down (in cashier zone: dismiss customer) |
 | F | Interact (water, open shop) |
-| Escape | Quit |
+| Escape | Open/close Settings menu (in-game); Quit (from start screen) |
 
 ---
 
@@ -131,6 +133,12 @@ PNG files for all sprites — player variants, plants (18 total: 6 types × 3 st
 See open questions in `game-design.md`.
 
 ### Recently completed
+
+- **Settings menu + SettingsState** — `SettingsState` holds fullscreen, SFX/music volume, and keybinds; `SettingsMenu` is a pause overlay with 6 buttons (Fullscreen, SFX Volume, Music Volume, Keybinds, Exit Settings, Leave Game) and a key-capture sub-screen; wired in `main.lua` — Escape toggles it in any scene with `esc_opens_settings = true`; start screen gains a Settings button (4th menu item) and switches from hardcoded `love.keyboard.isDown` to `input:pressed()` for navigation
+
+- **Post-sale dialogue (`talking_after`)** — customers can now deliver `after_messages` lines after a sale, before the heart bubble and walk-out; `Customer:serve()` transitions to `talking_after` when `after_messages` present; `advance_after()` cycles lines then exits to `walking_out`; F-key handling in `store_scene` routes to `advance_after()` in this state
+
+- **Sage tutorial character** — 4-chapter arc added to `customer_scripts`: chapter 1 (`trigger.count=0`) guaranteed early; teaches plant variety, the PC, grafting, and upgrades across 4 visits; uses `after_messages` for post-sale tips; `accessory = "monocle"`
 
 - **Horizontal separator with centered, immovable passage** — separator redesigned as an east-west row (row 3) rather than a north-south column; cashier room occupies row 2 (north), store rows begin at row 4 (south); passage is cols 5&6, splitting 8 inner cols as 3 wall + 2 open + 3 wall — permanently centered by construction; store grows by appending rows to the south, which is perpendicular to the separator, so the passage position is structurally immutable and never recalculated; cashier zone check changed from `player.x <= CASHIER_THRESH` to `player.y <= CASHIER_THRESH` (4.0); constants updated: `CASHIER_POS_X=6.0`, `CASHIER_POS_Y=2.5`, `PLAYER_START_X=6.0`, `GRID_ORIGIN_X=2.5`, `GRID_ORIGIN_Y=4.5`
 
