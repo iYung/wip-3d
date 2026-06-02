@@ -67,6 +67,15 @@ local function sell_plant(ctx, plant_type, elapsed)
             ctx.input:press("interact")
             runner.tick(ctx, 1, 1/60)
             elapsed = elapsed + 1/60
+            -- drain any post-sale after_messages before returning
+            while ctx.sm.current._customer.state == "talking_after" do
+                elapsed = runner.fast_forward_until(ctx, function()
+                    return ctx.sm.current._customer:line_complete()
+                end, elapsed)
+                ctx.input:press("interact")
+                runner.tick(ctx, 1, 1/60)
+                elapsed = elapsed + 1/60
+            end
             return elapsed
         end
     end
