@@ -289,8 +289,8 @@ function Customer:push_billboard_sprites(sprites, x, y, img, flip_x)
             y       = y,
             image   = self.accessory_sprite.image,
             flip_x  = flip_x,
-            scale   = 0.5,
-            voffset = 0.5,
+            scale   = 0.25,
+            voffset = 0.75,
         }
     end
 end
