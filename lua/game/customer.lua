@@ -87,6 +87,9 @@ function Customer.new(target_x, exit_x, y)
     self.msg_index       = 1
     self.done_talking    = false
     self.dismissed       = false
+    self.after_messages  = {}
+    self.after_msg_index = 1
+    self.done_after      = true
     self.accessory_sprite = nil
     self.reveal_index    = 0
     self.reveal_t        = 0
@@ -103,8 +106,11 @@ function Customer:show(cfg)
     self.name          = cfg.name or "Customer"
     self.messages      = cfg.messages or {}
     self.msg_index     = 1
-    self.done_talking  = #self.messages == 0
-    self.dismissed     = false
+    self.done_talking    = #self.messages == 0
+    self.dismissed       = false
+    self.after_messages  = cfg.after_messages or {}
+    self.after_msg_index = 1
+    self.done_after      = #(cfg.after_messages or {}) == 0
     self._full_text    = make_full_text(self)
     self.reveal_index  = 0
     self.reveal_t      = 0
@@ -143,6 +149,9 @@ function Customer:advance()
 end
 
 function Customer:line_complete()
+    if self.state == "talking_after" then
+        return self.reveal_index >= #self._full_text
+    end
     return self.done_talking or self.reveal_index >= #self._full_text
 end
 
@@ -156,9 +165,36 @@ function Customer:on_last_message()
 end
 
 function Customer:serve()
-    self.state              = "walking_out"
-    self.bubble.visible     = false
-    self.heart_bubble.visible = true
+    self.bubble.visible = false
+    if not self.done_after then
+        self.state        = "talking_after"
+        self._full_text   = self.after_messages[1]
+        self.reveal_index = 0
+        self.reveal_t     = 0
+        self.bubble.visible = true
+    else
+        self.state = "walking_out"
+        self.heart_bubble.visible = true
+    end
+end
+
+function Customer:advance_after()
+    if self.done_after then return end
+    if not self:line_complete() then
+        self:skip_reveal()
+        return
+    end
+    if self.after_msg_index < #self.after_messages then
+        self.after_msg_index = self.after_msg_index + 1
+        self._full_text      = self.after_messages[self.after_msg_index]
+        self.reveal_index    = 0
+        self.reveal_t        = 0
+    else
+        self.done_after             = true
+        self.state                  = "walking_out"
+        self.bubble.visible         = false
+        self.heart_bubble.visible   = true
+    end
 end
 
 function Customer:dismiss()
@@ -195,7 +231,7 @@ function Customer:update(dt)
         end
     end
 
-    if self.bubble.visible and not self.done_talking then
+    if self.bubble.visible and (not self.done_talking or self.state == "talking_after") then
         self.reveal_t     = self.reveal_t + dt
         self.reveal_index = math.min(
             #self._full_text,
@@ -249,10 +285,12 @@ function Customer:push_billboard_sprites(sprites, x, y, img, flip_x)
     }
     if self.accessory_sprite and self.accessory_sprite.image then
         sprites[#sprites + 1] = {
-            x      = x,
-            y      = y,
-            image  = self.accessory_sprite.image,
-            flip_x = flip_x,
+            x       = x,
+            y       = y,
+            image   = self.accessory_sprite.image,
+            flip_x  = flip_x,
+            scale   = 0.5,
+            voffset = 0.5,
         }
     end
 end
@@ -262,7 +300,7 @@ function Customer:draw_bubble()
         self.heart_bubble:draw()
     end
     if not self.bubble.visible then return end
-    if self.done_talking then
+    if self.done_talking and self.state ~= "talking_after" then
         local PD       = 12
         local IMG_SIZE = 80
         local BOX_W    = IMG_SIZE + PD * 2

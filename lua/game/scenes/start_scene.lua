@@ -1,7 +1,7 @@
 local Scene = require("lua/core/scene_2d")
 local Sound = require("lua/game/sound")
 
-local ITEMS = { "New Game", "Continue", "Exit" }
+local ITEMS = { "New Game", "Continue", "Settings", "Exit" }
 
 local W         = 1280
 local BTN_W     = 300
@@ -13,16 +13,14 @@ local BTN_GAP   = 74
 local StartScene = setmetatable({}, { __index = Scene })
 StartScene.__index = StartScene
 
-function StartScene.new(game_state, input, scene_manager)
+function StartScene.new(game_state, input, scene_manager, open_settings)
     local self          = Scene.new()
     setmetatable(self, StartScene)
     self.game_state     = game_state
     self.input          = input
     self.scene_manager  = scene_manager
+    self.open_settings  = open_settings
     self.selected       = 1
-    self._prev_up       = false
-    self._prev_down     = false
-    self._prev_confirm  = false
     return self
 end
 
@@ -30,35 +28,31 @@ function StartScene:on_enter()
     self._font_btn    = love.graphics.newFont(22)
     self._img_bg      = love.graphics.newImage("assets/start_bg.png")
     self._img_logo    = love.graphics.newImage("assets/start_logo.png")
-    self._img_btn     = love.graphics.newImage("assets/start_btn.png")
-    self._img_btn_sel = love.graphics.newImage("assets/start_btn_selected.png")
+    self._img_btn     = love.graphics.newImage("assets/menu_btn.png")
+    self._img_btn_sel = love.graphics.newImage("assets/menu_btn_selected.png")
 end
 
 function StartScene:update(dt)
-    local up      = love.keyboard.isDown("up")    or love.keyboard.isDown("w")
-    local down    = love.keyboard.isDown("down")  or love.keyboard.isDown("s")
-    local confirm = love.keyboard.isDown("return") or love.keyboard.isDown("space") or love.keyboard.isDown("f")
-
-    if up and not self._prev_up then
+    if self.input:pressed("move_up") then
         self.selected = ((self.selected - 2) % #ITEMS) + 1
         Sound.play("menu_navigate")
     end
-    if down and not self._prev_down then
+    if self.input:pressed("move_down") then
         self.selected = (self.selected % #ITEMS) + 1
         Sound.play("menu_navigate")
     end
-    if confirm and not self._prev_confirm then
+    if self.input:pressed("menu_confirm") then
         self:_confirm()
     end
-
-    self._prev_up      = up
-    self._prev_down    = down
-    self._prev_confirm = confirm
 end
 
 function StartScene:_confirm()
     Sound.play("menu_confirm")
     if self.selected == 3 then
+        if self.open_settings then self.open_settings() end
+        return
+    end
+    if self.selected == 4 then
         love.event.quit()
         return
     end

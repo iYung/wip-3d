@@ -133,6 +133,7 @@ function StoreScene.new(game_state, input, scene_manager)
     self._last_active_slot  = nil
     self._hover_tile        = nil
     self._last_active_rows  = nil
+    self.esc_opens_settings = true
     return self
 end
 
@@ -332,6 +333,17 @@ function StoreScene:_handle_interact()
     local slot   = self._last_active_slot
 
     -- Cashier zone: dialog / sale
+    if p.y <= CASHIER_THRESH and self._customer.state == "talking_after" and not self._cust_anim then
+        if not self._customer:line_complete() then
+            self._customer:skip_reveal()
+            Sound.play("dialogue_skip")
+        else
+            self._customer:advance_after()
+            Sound.play("dialogue_advance")
+        end
+        return
+    end
+
     if p.y <= CASHIER_THRESH and self._customer:arrived() and not self._cust_anim then
         local held = player.held_item
         if self._customer:on_last_message()
