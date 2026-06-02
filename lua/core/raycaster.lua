@@ -116,12 +116,15 @@ function Raycaster:draw_sprites(sprites, px, py, angle)
 
     -- sort far-to-near
     local sorted = {}
-    for _, spr in ipairs(sprites) do
+    for i, spr in ipairs(sprites) do
         local dx = spr.x - px
         local dy = spr.y - py
-        sorted[#sorted + 1] = { spr = spr, dist2 = dx * dx + dy * dy }
+        sorted[#sorted + 1] = { spr = spr, dist2 = dx * dx + dy * dy, idx = i }
     end
-    table.sort(sorted, function(a, b) return a.dist2 > b.dist2 end)
+    table.sort(sorted, function(a, b)
+        if a.dist2 ~= b.dist2 then return a.dist2 > b.dist2 end
+        return a.idx < b.idx
+    end)
 
     for _, entry in ipairs(sorted) do
         local spr = entry.spr
