@@ -237,6 +237,26 @@ function Customer:draw()
     ColorReplace.clear()
 end
 
+function Customer:push_billboard_sprites(sprites, x, y, img, flip_x)
+    local self_ref = self
+    sprites[#sprites + 1] = {
+        x        = x,
+        y        = y,
+        image    = img,
+        flip_x   = flip_x,
+        setup    = function() ColorReplace.apply(self_ref._primary, self_ref._secondary) end,
+        teardown = function() ColorReplace.clear() end,
+    }
+    if self.accessory_sprite and self.accessory_sprite.image then
+        sprites[#sprites + 1] = {
+            x      = x,
+            y      = y,
+            image  = self.accessory_sprite.image,
+            flip_x = flip_x,
+        }
+    end
+end
+
 function Customer:draw_bubble()
     if self.heart_bubble.visible then
         self.heart_bubble:draw()

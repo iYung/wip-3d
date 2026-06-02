@@ -453,16 +453,8 @@ function StoreScene:draw()
 
     -- Customer billboard
     if self._customer:active() or self._cust_anim ~= nil then
-        local cust = self._customer
         local cust_img = (self._cust_anim and self._cust_walk_frame) and A.customer_walk or A.customer
-        sprites[#sprites + 1] = {
-            x        = self._cust_3d_x,
-            y        = CASHIER_POS_Y,
-            image    = cust_img,
-            flip_x   = (self._cust_anim == "out"),
-            setup    = function() ColorReplace.apply(cust._primary, cust._secondary) end,
-            teardown = function() ColorReplace.clear() end,
-        }
+        self._customer:push_billboard_sprites(sprites, self._cust_3d_x, CASHIER_POS_Y, cust_img, (self._cust_anim == "out"))
     end
 
     -- 3D world
