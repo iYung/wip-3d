@@ -11,6 +11,7 @@ local CUSTOMER_SCRIPTS = require("lua/game/data/customer_scripts")
 local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
+local Sound          = require("lua/game/sound")
 
 -- Map layout: cashier room (north) / separator row / store room (grows south).
 -- The separator runs east-west, so passage cols are fixed regardless of store depth.
@@ -299,6 +300,7 @@ function StoreScene:_handle_pick_up_down()
     if p.y <= CASHIER_THRESH then
         if self._customer:arrived() and not self._cust_anim then
             self._customer:dismiss()
+            Sound.play("dismiss_customer")
             if self._active_script_key then
                 self._script_cooldowns[self._active_script_key] = DISMISS_COOLDOWN_SALES
                 self._active_script_key = nil
@@ -311,11 +313,13 @@ function StoreScene:_handle_pick_up_down()
         if slot and not slot.item then
             slot.item        = player.held_item
             player.held_item = nil
+            Sound.play("put_down")
         end
     else
         if slot and slot.item and slot.item.carriable then
             player.held_item = slot.item
             slot.item        = nil
+            Sound.play("pick_up")
         end
     end
 end
@@ -337,6 +341,7 @@ function StoreScene:_handle_interact()
             gs.currency      = gs.currency + plant_sell_value(held)
             player.held_item = nil
             self._customer:serve()
+            Sound.play("sell_plant")
             if self._active_script_key then
                 gs.seen_scripts[self._active_script_key] = true
                 self._active_script_key = nil
@@ -349,9 +354,11 @@ function StoreScene:_handle_interact()
         else
             if not self._customer:line_complete() then
                 self._customer:skip_reveal()
+                Sound.play("dialogue_skip")
                 return
             end
             self._customer:advance()
+            Sound.play("dialogue_advance")
         end
         return
     end
@@ -361,12 +368,14 @@ function StoreScene:_handle_interact()
        and player.held_item.sellable ~= false
        and slot and slot.item and slot.item.is_garbage_bin then
         player.held_item = nil
+        Sound.play("discard_plant")
         return
     end
 
     local item = player.held_item or (slot and slot.item)
     if item then
         local prev_stage = slot and slot.item and slot.item.stage
+        if item.buy_scene_factory then Sound.play("open_shop") end
         item:interact(player, store, self.scene_manager)
         if slot and slot.item and slot.item.stage == 3 and prev_stage == 2 then
             local pt = slot.item.plant_type
@@ -444,16 +453,8 @@ function StoreScene:draw()
 
     -- Customer billboard
     if self._customer:active() or self._cust_anim ~= nil then
-        local cust = self._customer
         local cust_img = (self._cust_anim and self._cust_walk_frame) and A.customer_walk or A.customer
-        sprites[#sprites + 1] = {
-            x        = self._cust_3d_x,
-            y        = CASHIER_POS_Y,
-            image    = cust_img,
-            flip_x   = (self._cust_anim == "out"),
-            setup    = function() ColorReplace.apply(cust._primary, cust._secondary) end,
-            teardown = function() ColorReplace.clear() end,
-        }
+        self._customer:push_billboard_sprites(sprites, self._cust_3d_x, CASHIER_POS_Y, cust_img, (self._cust_anim == "out"))
     end
 
     -- 3D world
