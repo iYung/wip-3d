@@ -50,6 +50,7 @@ return {
     {
         id             = "mayor_bloom",
         chapter        = 1,
+        accessory      = "secretary_glasses",
         trigger        = { plant_type = 3, count = 1 },
         name           = "Mayor Bloom",
         primary_color     = {0.75, 0.25, 0.40, 1},
@@ -63,6 +64,7 @@ return {
     {
         id             = "mayor_bloom",
         chapter        = 2,
+        accessory      = "secretary_glasses",
         trigger        = { plant_type = 3, count = 4 },
         name           = "Mayor Bloom",
         primary_color     = {0.75, 0.25, 0.40, 1},
@@ -79,6 +81,7 @@ return {
     {
         id             = "the_collector",
         chapter        = 1,
+        accessory      = "shades",
         trigger        = { plant_type = 6, count = 1 },
         name           = "The Collector",
         primary_color     = {0.85, 0.75, 0.10, 1},
@@ -93,6 +96,7 @@ return {
     {
         id             = "the_collector",
         chapter        = 2,
+        accessory      = "shades",
         trigger        = { plant_type = 6, count = 3 },
         name           = "The Collector",
         primary_color     = {0.85, 0.75, 0.10, 1},
@@ -109,6 +113,7 @@ return {
     {
         id             = "mira",
         chapter        = 1,
+        accessory      = "hair_bow",
         trigger        = { plant_type = 4, count = 1 },
         name           = "Mira",
         primary_color     = {0.95, 0.80, 0.30, 1},
@@ -124,6 +129,7 @@ return {
     {
         id             = "dottie",
         chapter        = 1,
+        accessory      = "clown",
         trigger        = { plant_type = 5, count = 1 },
         name           = "Dottie",
         primary_color     = {0.70, 0.50, 0.85, 1},
@@ -138,6 +144,7 @@ return {
     {
         id             = "dottie",
         chapter        = 2,
+        accessory      = "clown",
         trigger        = { plant_type = 5, count = 3 },
         name           = "Dottie",
         primary_color     = {0.70, 0.50, 0.85, 1},
@@ -152,6 +159,7 @@ return {
     {
         id             = "dottie",
         chapter        = 3,
+        accessory      = "clown",
         trigger        = { plant_type = 5, count = 6 },
         name           = "Dottie",
         primary_color     = {0.70, 0.50, 0.85, 1},

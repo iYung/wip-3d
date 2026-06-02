@@ -92,6 +92,7 @@ local SceneManager = require("lua/core/scene_manager")
 local StartScene   = require("lua/game/scenes/start_scene")
 local GameState    = require("lua/game/game_state")
 local input        = require("lua/game/input")
+local Sound        = require("lua/game/sound")
 
 local LOGICAL_W, LOGICAL_H = 1280, 720
 local canvas
@@ -102,6 +103,7 @@ function love.load()
     canvas       = love.graphics.newCanvas(LOGICAL_W, LOGICAL_H)
     canvas:setFilter("nearest", "nearest")
     local gs     = GameState.new()
+    Sound.load()
     scene_manager = SceneManager.new()
     scene_manager:switch(StartScene.new(gs, input, scene_manager))
 end
