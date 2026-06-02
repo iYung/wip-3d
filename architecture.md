@@ -166,6 +166,7 @@ DDA-based first-person column renderer. Draws ceiling, floor, and walls each fra
 - `draw(map, px, py, angle [, hover_tile [, wall_textures]])` — `px`/`py` in grid units (float), `angle` in radians. `hover_tile` (optional) is a `{x, y}` grid cell passed to the floor shader for checkerboard highlighting. `wall_textures` (optional) is a table mapping map cell integer values to Love2D image objects (e.g. `{[1] = A.store_wall}`); when a ray hits a wall cell whose value has an entry, a textured vertical strip is drawn (brightness-tinted by face side) instead of the solid-color fallback line.
 
 X-facing walls are drawn brighter (`br = 0.8`) than Y-facing walls (`br = 0.5`) for depth contrast. Renders at 1280 × 720. Resets `love.graphics` colour to white after drawing.
+- `draw_sprites(sprites, px, py, angle)` — draws billboard sprites depth-sorted far-to-near, clipped against the z-buffer. `sprites` is an array of tables with fields: `x`, `y` (world position), `image` (Love2D image), `scale` (size multiplier, default 1.0), `voffset` (world-unit height offset above floor, default 0), `flip_x` (bool, mirrors sprite horizontally, default false), `setup` / `teardown` (optional callbacks called around the draw, e.g. to apply and clear a shader).
 
 ---
 
@@ -504,7 +505,7 @@ Cols 5 and 6 of the separator row are always open. The map is 10 cols wide with 
 | `CASHIER_ENTRY_X` | `1.5` | Customer billboard world x at walk-in/out entry (left wall edge) |
 | `CASHIER_POS_X` | `6.0` | Customer billboard world x at stand position (passage centre) |
 | `CASHIER_POS_Y` | `2.5` | Customer billboard world y (cashier room centre) |
-| `CUST_WALK_SPEED` | `2.5` | Customer walk speed in grid units/s (entry→stand in ~1.8 s) |
+| `CUST_WALK_SPEED` | `1.0` | Customer walk speed in grid units/s (entry→stand in ~4.5 s) |
 | `CUST_WALK_FRAME_T` | `0.15` | Seconds per walk animation frame toggle |
 | `PLAYER_START_X` | `6.0` | Player spawn x (passage centre) |
 | `GRID_ORIGIN_X` | `2.5` | World x of slot (1, 1) — first store column |

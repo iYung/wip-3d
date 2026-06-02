@@ -65,7 +65,7 @@ local CASHIER_THRESH  = 4.0   -- player.y <= this → cashier/separator zone
 local CASHIER_POS_X   = 6.0   -- customer billboard x (passage centre)
 local CASHIER_POS_Y   = 2.5   -- customer billboard y (cashier room centre)
 local CASHIER_ENTRY_X  = 1.5  -- customer walk-in start x
-local CUST_WALK_SPEED  = 2.5  -- grid units/s during walk animation
+local CUST_WALK_SPEED  = 1.0  -- grid units/s during walk animation
 local CUST_WALK_FRAME_T = 0.15 -- seconds per walk frame toggle
 
 local PLAYER_START_X  = 6.0   -- passage centre x; aligned so walking north goes straight through
@@ -450,6 +450,7 @@ function StoreScene:draw()
             x        = self._cust_3d_x,
             y        = CASHIER_POS_Y,
             image    = cust_img,
+            flip_x   = (self._cust_anim == "out"),
             setup    = function() ColorReplace.apply(cust._primary, cust._secondary) end,
             teardown = function() ColorReplace.clear() end,
         }
