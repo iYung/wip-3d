@@ -162,6 +162,7 @@ end
 function BuyScene:draw()
     local prev_canvas = love.graphics.getCanvas()
     love.graphics.setCanvas(self.canvas)
+    love.graphics.clear(0, 0, 0, 1)
     local gs       = self.game_state
     local currency = gs.currency
     local ent      = CATALOGUE[self.selected]

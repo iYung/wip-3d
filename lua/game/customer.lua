@@ -40,7 +40,7 @@ local function draw9(img, x, y, w, h, m)
 end
 
 local function make_full_text(c)
-    return c.name .. ": " .. (c.messages[c.msg_index] or "")
+    return c.messages[c.msg_index] or ""
 end
 
 local Customer = {}
