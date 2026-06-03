@@ -559,7 +559,7 @@ function StoreScene:_draw_customer_dialog()
         love.graphics.setColor(0.08, 0.08, 0.12, 0.92)
         love.graphics.rectangle("fill", 0, SH - 90, SW, 90)
         love.graphics.setColor(0.88, 0.88, 0.88, 1)
-        love.graphics.print(cust.name .. ": " .. revealed, 20, SH - 68)
+        love.graphics.print(revealed, 20, SH - 68)
     end
 end
 
