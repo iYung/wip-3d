@@ -531,7 +531,7 @@ function StoreScene:_draw_customer_dialog()
     local cust = self._customer
     if not cust:active() or not cust.bubble.visible then return end
 
-    if cust.done_talking then
+    if cust.done_talking and cust.state ~= "talking_after" then
         -- Plant request box at bottom-center
         local bw, bh = 104, 104
         local bx = SW / 2 - bw / 2
@@ -545,8 +545,17 @@ function StoreScene:_draw_customer_dialog()
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(img, bx + 12, by + 12, 0, 80 / iw, 80 / ih)
     else
-        -- Dialog text bar
-        local revealed = string.sub(cust._full_text, 1, cust.reveal_index)
+        -- Dialog text bar (pre-sale dialogue and after-messages)
+        -- Walk back from reveal_index to a valid UTF-8 character boundary
+        local idx = cust.reveal_index
+        while idx > 0 and (string.byte(cust._full_text, idx) or 0) >= 0x80
+                      and (string.byte(cust._full_text, idx) or 0) <  0xC0 do
+            idx = idx - 1
+        end
+        if (string.byte(cust._full_text, idx) or 0) >= 0xC0 then
+            idx = idx - 1
+        end
+        local revealed = string.sub(cust._full_text, 1, idx)
         love.graphics.setColor(0.08, 0.08, 0.12, 0.92)
         love.graphics.rectangle("fill", 0, SH - 90, SW, 90)
         love.graphics.setColor(0.88, 0.88, 0.88, 1)
