@@ -59,6 +59,10 @@ for lvl = 1, 3 do
     A.heat_lamps[lvl] = try_img("assets/heat_lamp_" .. lvl .. ".png")
 end
 
+A.ads = {}
+for lvl = 1, 3 do
+    A.ads[lvl] = try_img("assets/ads_" .. lvl .. ".png")
+end
 
 A.accessories = {}
 function A.load_accessory(name)

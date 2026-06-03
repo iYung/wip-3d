@@ -8,6 +8,7 @@ local GarbageBin     = require("lua/game/items/garbage_bin")
 local BuyScene       = require("lua/game/scenes/buy_scene")
 local PLANT_DATA     = require("lua/game/data/plant_data")
 local CUSTOMER_SCRIPTS = require("lua/game/data/customer_scripts")
+local COOLDOWN_TIERS = require("lua/game/data/cooldown_tiers")
 local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
@@ -80,6 +81,11 @@ local BASE_PX_SPEED   = 220   -- reference 2D speed (px/s)
 local BASE_3D_SPEED   = 3.0   -- matching 3D speed (grid units/s)
 
 local DISMISS_COOLDOWN_SALES = 3
+
+local function spawn_cooldown(gs)
+    if gs.cooldown_level == 0 then return 4 end
+    return COOLDOWN_TIERS[gs.cooldown_level].cooldown
+end
 
 local SW = 1280
 local SH = 720
@@ -179,7 +185,7 @@ function StoreScene:_setup_store()
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(100, -1000, 0)
-    self._spawn_timer       = Timer.new(math.random(3, 6))
+    self._spawn_timer       = Timer.new(spawn_cooldown(gs))
     self._active_script_key = nil
     self._script_cooldowns  = {}
     self._cust_3d_x        = CASHIER_POS_X
@@ -268,7 +274,8 @@ function StoreScene:update(dt)
 
     -- Spawn timer
     if not self._customer:active() and not self._cust_anim then
-        if self._spawn_timer:update(dt) then
+        local cd = spawn_cooldown(self.game_state)
+        if cd == 0 then
             local cfg = self:_next_customer_cfg()
             if cfg then
                 self._customer:show(cfg)
@@ -277,7 +284,16 @@ function StoreScene:update(dt)
                 self._cust_walk_timer = 0
                 self._cust_walk_frame = false
             end
-            self._spawn_timer:reset(math.random(3, 6))
+        elseif self._spawn_timer:update(dt) then
+            local cfg = self:_next_customer_cfg()
+            if cfg then
+                self._customer:show(cfg)
+                self._cust_3d_x       = CASHIER_ENTRY_X
+                self._cust_anim       = "in"
+                self._cust_walk_timer = 0
+                self._cust_walk_frame = false
+            end
+            self._spawn_timer:reset(spawn_cooldown(self.game_state))
         end
     end
 
@@ -587,7 +603,13 @@ function StoreScene:_hud_labels()
     end
 
     local f_label
-    if in_cash and self._customer:arrived() then
+    if in_cash and self._customer and self._customer.state == "talking_after" then
+        if not self._customer:line_complete() then
+            f_label = "F: SKIP"
+        else
+            f_label = "F: CONTINUE"
+        end
+    elseif in_cash and self._customer:arrived() then
         if self._customer:on_last_message() then
             if held and held.plant_type == self._customer.plant_type and held.stage == 3 then
                 f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")"
