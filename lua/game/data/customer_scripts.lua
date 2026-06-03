@@ -14,6 +14,9 @@ return {
             "You grow plants here, yeah?",
             "I'll take a cactus if you've got one.",
         },
+        after_messages = {
+            "Right. I'll be back.",
+        },
     },
     {
         id             = "old_pete",
@@ -29,6 +32,9 @@ return {
             "That last cactus is doing great, believe it or not.",
             "Got another one for me?",
         },
+        after_messages = {
+            "Good. Two's better than one.",
+        },
     },
     {
         id             = "old_pete",
@@ -43,6 +49,10 @@ return {
             "Hey. It's me again.",
             "You've got a good place here. I mean that.",
             "One more cactus and I think I'm set for life.",
+        },
+        after_messages = {
+            "Take care of yourself.",
+            "And the plants.",
         },
     },
 
@@ -60,6 +70,9 @@ return {
             "The town council is watching this place.",
             "Only the finest rose will do.",
         },
+        after_messages = {
+            "You'll be hearing from us.",
+        },
     },
     {
         id             = "mayor_bloom",
@@ -74,6 +87,9 @@ return {
             "I'm not here on council business today.",
             "The last rose... it was for me. Just for me.",
             "Could I have another? Don't make it strange.",
+        },
+        after_messages = {
+            "This doesn't leave the shop.",
         },
     },
 
@@ -92,6 +108,10 @@ return {
             "They say you can grow the Golden Lotus.",
             "I'll pay handsomely. Do we have a deal?",
         },
+        after_messages = {
+            "Pleasure doing business.",
+            "I may return.",
+        },
     },
     {
         id             = "the_collector",
@@ -106,6 +126,9 @@ return {
             "The first one... I gave it away.",
             "To someone who needed it more than I did.",
             "I won't say who. I need another.",
+        },
+        after_messages = {
+            "This one I'm keeping.",
         },
     },
 
@@ -122,6 +145,9 @@ return {
         messages       = {
             "My dad gave me money for something important.",
             "I want a tulip.",
+        },
+        after_messages = {
+            "He's going to love it.",
         },
     },
 
@@ -140,6 +166,9 @@ return {
             "I've been looking everywhere for this.",
             "I'll take one, please. I'm so glad I found you.",
         },
+        after_messages = {
+            "Thank you! Really, thank you.",
+        },
     },
     {
         id             = "dottie",
@@ -155,6 +184,9 @@ return {
             "It's still there. Page forty-something.",
             "Could I have another? I have more books.",
         },
+        after_messages = {
+            "I know exactly which page this one gets.",
+        },
     },
     {
         id             = "dottie",
@@ -169,6 +201,9 @@ return {
             "I brought you something.",
             "From the first one you sold me. I pressed it.",
             "It's yours now. And I'll take one more, if that's alright.",
+        },
+        after_messages = {
+            "We've both got one now.",
         },
     },
 

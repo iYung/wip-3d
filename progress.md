@@ -134,6 +134,8 @@ See open questions in `game-design.md`.
 
 ### Recently completed
 
+- **wip-parity-3** — Six gaps closed to bring wip-3d to parity with wip: customer speech bubbles no longer prefix the customer name; `after_messages` added to all ten non-Sage character entries (Old Pete ×3, Mayor Bloom ×2, The Collector ×2, Mira ×1, Dottie ×3); `shades.png` and `clown.png` accessory assets added; settings menu background is now an animated two-frame pattern (alternates every 1 s); start screen wires the `menu_bg.glsl` shader with a scrolling tiled pattern; buy_scene canvas cleared before draw to prevent stale-pixel bleed
+
 - **Settings menu + SettingsState** — `SettingsState` holds fullscreen, SFX/music volume, and keybinds; `SettingsMenu` is a pause overlay with 6 buttons (Fullscreen, SFX Volume, Music Volume, Keybinds, Exit Settings, Leave Game) and a key-capture sub-screen; wired in `main.lua` — Escape toggles it in any scene with `esc_opens_settings = true`; start screen gains a Settings button (4th menu item) and switches from hardcoded `love.keyboard.isDown` to `input:pressed()` for navigation
 
 - **Post-sale dialogue (`talking_after`)** — customers can now deliver `after_messages` lines after a sale, before the heart bubble and walk-out; `Customer:serve()` transitions to `talking_after` when `after_messages` present; `advance_after()` cycles lines then exits to `walking_out`; F-key handling in `store_scene` routes to `advance_after()` in this state

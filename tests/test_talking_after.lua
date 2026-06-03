@@ -135,4 +135,36 @@ do
     print("PASS: Sage 4-chapter arc present in customer_scripts with correct structure")
 end
 
+-- Test 8: make_full_text returns raw message, no name prefix
+do
+    local c = make_customer()
+    c:show({ plant_type = 1, name = "Pete", messages = {"Hello there"} })
+
+    assert(c._full_text == "Hello there",
+        "expected _full_text='Hello there' (no name prefix), got " .. tostring(c._full_text))
+    assert(not c._full_text:find("Pete"),
+        "expected no name prefix in _full_text, got " .. tostring(c._full_text))
+    print("PASS: make_full_text returns raw message without name prefix")
+end
+
+-- Test 9: all non-Sage customer_scripts entries have after_messages
+do
+    local NON_SAGE_IDS = { "old_pete", "mayor_bloom", "the_collector", "mira", "dottie" }
+    local id_set = {}
+    for _, id in ipairs(NON_SAGE_IDS) do id_set[id] = true end
+
+    local missing = {}
+    for i, entry in ipairs(customer_scripts) do
+        if id_set[entry.id] then
+            if not (entry.after_messages and #entry.after_messages > 0) then
+                missing[#missing + 1] = entry.id .. "[" .. i .. "]"
+            end
+        end
+    end
+
+    assert(#missing == 0,
+        "entries missing after_messages: " .. table.concat(missing, ", "))
+    print("PASS: all non-Sage customer_scripts entries have after_messages")
+end
+
 print("ALL TESTS PASSED")
