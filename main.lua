@@ -114,6 +114,7 @@ function love.load()
 end
 
 function love.update(dt)
+    Sound.update(dt)
     if settings_menu and settings_menu.is_open then
         settings_menu:update(dt)
     else

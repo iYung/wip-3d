@@ -265,4 +265,53 @@ do
     print("PASS: shop: cannot buy marketing if insufficient currency")
 end
 
+-- Test: water drone purchase sets has_drone and deducts $10
+do
+    local ctx = runner.setup(function(gs, input, sm)
+        return StoreScene.new(gs, input, sm)
+    end)
+    local buy = make_buy(ctx)
+    ctx.gs.currency = 100
+    ctx.gs.has_drone = false
+    buy.selected = 14   -- Water Drone, costs $10
+    buy:_confirm()
+    assert(ctx.gs.has_drone == true,
+        "has_drone should be true after purchase, got " .. tostring(ctx.gs.has_drone))
+    assert(ctx.gs.currency == 90,
+        "currency should be 90 after Water Drone ($10), got " .. tostring(ctx.gs.currency))
+    print("PASS: shop: water drone purchase sets has_drone and deducts $10")
+end
+
+-- Test: water drone sold out when already owned
+do
+    local ctx = runner.setup(function(gs, input, sm)
+        return StoreScene.new(gs, input, sm)
+    end)
+    local buy = make_buy(ctx)
+    ctx.gs.currency = 100
+    ctx.gs.has_drone = true
+    buy.selected = 14
+    buy:_confirm()
+    assert(ctx.gs.currency == 100,
+        "currency should be unchanged when drone already owned, got " .. tostring(ctx.gs.currency))
+    print("PASS: shop: water drone sold out when already owned")
+end
+
+-- Test: cannot buy water drone with insufficient currency
+do
+    local ctx = runner.setup(function(gs, input, sm)
+        return StoreScene.new(gs, input, sm)
+    end)
+    local buy = make_buy(ctx)
+    ctx.gs.currency = 5
+    ctx.gs.has_drone = false
+    buy.selected = 14
+    buy:_confirm()
+    assert(ctx.gs.has_drone == false,
+        "has_drone should remain false when broke")
+    assert(ctx.gs.currency == 5,
+        "currency should be unchanged when broke")
+    print("PASS: shop: cannot buy water drone with insufficient currency")
+end
+
 print("ALL TESTS PASSED")

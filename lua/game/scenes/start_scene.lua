@@ -42,6 +42,8 @@ function StartScene:on_enter()
     self._img_sub_logo  = love.graphics.newImage("assets/sub_logo.png")
     self._img_btn       = love.graphics.newImage("assets/menu_btn.png")
     self._img_btn_sel   = love.graphics.newImage("assets/menu_btn_selected.png")
+    Sound.fade_music("bg", 0, 2.0)
+    Sound.fade_music("menu", 1, 2.0)
 end
 
 function StartScene:update(dt)
@@ -70,7 +72,11 @@ function StartScene:_confirm()
         return
     end
     local StoreScene = require("lua/game/scenes/store_scene")
-    self.scene_manager:switch(StoreScene.new(self.game_state, self.input, self.scene_manager))
+    if self.selected == 1 then
+        self.scene_manager:switch(StoreScene.new(self.game_state, self.input, self.scene_manager, true))
+    else
+        self.scene_manager:switch(StoreScene.new(self.game_state, self.input, self.scene_manager))
+    end
 end
 
 function StartScene:draw()

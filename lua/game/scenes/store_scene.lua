@@ -12,7 +12,9 @@ local COOLDOWN_TIERS = require("lua/game/data/cooldown_tiers")
 local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
+local WallPattern    = require("lua/game/shaders/wall_pattern")
 local Sound          = require("lua/game/sound")
+local WaterDrone     = require("lua/game/water_drone")
 
 -- Map layout: cashier room (north) / separator row / store room (grows south).
 -- The separator runs east-west, so passage cols are fixed regardless of store depth.
@@ -129,12 +131,13 @@ end
 local StoreScene = setmetatable({}, { __index = Scene3D })
 StoreScene.__index = StoreScene
 
-function StoreScene.new(game_state, input, scene_manager)
+function StoreScene.new(game_state, input, scene_manager, is_new_game)
     local self              = Scene3D.new()
     setmetatable(self, StoreScene)
     self.game_state         = game_state
     self.input              = input
     self.scene_manager      = scene_manager
+    self._is_new_game       = is_new_game
     self._initialized       = false
     self._last_active_slot  = nil
     self._hover_tile        = nil
@@ -155,6 +158,11 @@ function StoreScene:on_enter()
     local scene = self
     gs.player.active_slot = function(_, _)
         return scene._last_active_slot
+    end
+
+    -- Wire drone if purchased while the scene was already initialized
+    if gs.has_drone and not self._water_drone then
+        self._water_drone = WaterDrone.new(gs.store, gs)
     end
 
     -- Sync movement speed with game state
@@ -185,8 +193,10 @@ function StoreScene:_setup_store()
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(100, -1000, 0)
-    self._spawn_timer       = Timer.new(spawn_cooldown(gs))
+    self._spawn_timer       = Timer.new(self._is_new_game and 0.1 or spawn_cooldown(gs))
+    self._water_drone       = gs.has_drone and WaterDrone.new(gs.store, gs) or nil
     self._active_script_key = nil
+    self._active_script     = nil
     self._script_cooldowns  = {}
     self._cust_3d_x        = CASHIER_POS_X
     self._cust_anim        = nil
@@ -200,6 +210,7 @@ end
 
 function StoreScene:update(dt)
     local gs = self.game_state
+    if self._water_drone then self._water_drone:update(dt) end
     local p  = self.player3d
 
     -- Sync 3D move speed from game state
@@ -315,12 +326,14 @@ function StoreScene:_handle_pick_up_down()
     local slot   = self._last_active_slot
 
     if p.y <= CASHIER_THRESH then
-        if self._customer:arrived() and not self._cust_anim then
+        if self._customer:arrived() and not self._cust_anim
+           and not (self._active_script and self._active_script.no_dismiss) then
             self._customer:dismiss()
             Sound.play("dismiss_customer")
             if self._active_script_key then
                 self._script_cooldowns[self._active_script_key] = DISMISS_COOLDOWN_SALES
                 self._active_script_key = nil
+                self._active_script     = nil
             end
         end
         return
@@ -373,6 +386,7 @@ function StoreScene:_handle_interact()
             if self._active_script_key then
                 gs.seen_scripts[self._active_script_key] = true
                 self._active_script_key = nil
+                self._active_script     = nil
             end
             for key, count in pairs(self._script_cooldowns) do
                 local rem = count - 1
@@ -392,7 +406,8 @@ function StoreScene:_handle_interact()
     end
 
     -- Garbage bin discard
-    if player.held_item
+    if p.y > CASHIER_THRESH
+       and player.held_item
        and player.held_item.sellable ~= false
        and slot and slot.item and slot.item.is_garbage_bin then
         player.held_item = nil
@@ -435,10 +450,12 @@ function StoreScene:_next_customer_cfg()
     if #qualified > 0 then
         local script            = qualified[math.random(#qualified)]
         self._active_script_key = script.id .. ":" .. script.chapter
+        self._active_script     = script
         return script
     end
 
     self._active_script_key = nil
+    self._active_script     = nil
     local keys = {}
     for pt in pairs(gs.unlocked_plants) do keys[#keys + 1] = pt end
     if #keys == 0 then return nil end
@@ -466,8 +483,9 @@ function StoreScene:draw()
             if img then
                 sprites[#sprites + 1] = { x = slot.px, y = slot.py, image = img }
             end
-            -- Plant ready bubble floats above the item
-            if slot.item.bubble and slot.item.bubble.visible and slot.item.bubble.image then
+            -- Plant ready bubble floats above the item (not for intercom — it uses HUD box)
+            if slot.item.bubble and slot.item.bubble.visible and slot.item.bubble.image
+               and not slot.item.is_intercom then
                 sprites[#sprites + 1] = {
                     x       = slot.px,
                     y       = slot.py,
@@ -479,6 +497,20 @@ function StoreScene:draw()
         end
     end
 
+    -- Water drone billboard
+    if self._water_drone then
+        local drone_img = (self._water_drone.frame == 2 and A.water_drone2) or A.water_drone
+        if drone_img then
+            sprites[#sprites + 1] = {
+                x       = self._water_drone.x,
+                y       = self._water_drone.y,
+                image   = drone_img,
+                scale   = 0.5,
+                voffset = 1.4,
+            }
+        end
+    end
+
     -- Customer billboard
     if self._customer:active() or self._cust_anim ~= nil then
         local cust_img = (self._cust_anim and self._cust_walk_frame) and A.customer_walk or A.customer
@@ -486,7 +518,11 @@ function StoreScene:draw()
     end
 
     -- 3D world
-    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile, {[1] = A.store_wall})
+    local wall_shader = A.wall_pattern and {
+        apply = function() WallPattern.apply(A.wall_pattern, A.store_wall) end,
+        clear = WallPattern.clear,
+    } or nil
+    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile, {[1] = A.store_wall}, wall_shader)
     self.raycaster:draw_sprites(sprites, p.x, p.y, p.angle)
 
     -- Screen-space HUD
@@ -512,9 +548,10 @@ function StoreScene:_draw_hud()
             local hy   = SH - size - 20
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(img, hx, hy, 0, size / img:getWidth(), size / img:getHeight())
-            -- Bubble indicator above held item
+            -- Bubble indicator above held item (not for intercom — it uses HUD box)
             if player.held_item.bubble and player.held_item.bubble.visible
-               and player.held_item.bubble.image then
+               and player.held_item.bubble.image
+               and not player.held_item.is_intercom then
                 local b = player.held_item.bubble.image
                 love.graphics.draw(b, hx + size / 2 - 25, hy - 55, 0,
                     50 / b:getWidth(), 50 / b:getHeight())
@@ -538,6 +575,11 @@ function StoreScene:_draw_hud()
     -- Customer dialog: shown when player is in cashier room
     if p.y <= CASHIER_THRESH then
         self:_draw_customer_dialog()
+    end
+
+    -- Intercom plant request: shown when player is in store room
+    if p.y > CASHIER_THRESH then
+        self:_draw_intercom_request(gs)
     end
 
     love.graphics.setColor(1, 1, 1, 1)
@@ -577,6 +619,35 @@ function StoreScene:_draw_customer_dialog()
         love.graphics.setColor(0.88, 0.88, 0.88, 1)
         love.graphics.print(revealed, 20, SH - 68)
     end
+end
+
+function StoreScene:_draw_intercom_request(gs)
+    -- Find an intercom with a visible request that the player is near
+    local p = self.player3d
+    local req_img = nil
+    for _, slot in ipairs(gs.store:all_slots()) do
+        if slot.item and slot.item.is_intercom
+           and slot.item.bubble.visible and slot.item.bubble.image then
+            local dx = p.x - slot.px
+            local dy = p.y - slot.py
+            if dx * dx + dy * dy <= 4 then  -- 2 grid units
+                req_img = slot.item.bubble.image
+                break
+            end
+        end
+    end
+    if not req_img then return end
+
+    local bw, bh = 104, 104
+    local bx = SW / 2 - bw / 2
+    local by = SH - bh - 80
+    love.graphics.setColor(0.93, 0.93, 0.93, 1)
+    love.graphics.rectangle("fill", bx, by, bw, bh)
+    love.graphics.setColor(0.25, 0.25, 0.25, 1)
+    love.graphics.rectangle("line", bx, by, bw, bh)
+    local iw, ih = req_img:getDimensions()
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(req_img, bx + 12, by + 12, 0, 80 / iw, 80 / ih)
 end
 
 function StoreScene:_hud_labels()

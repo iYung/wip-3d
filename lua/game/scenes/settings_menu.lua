@@ -269,7 +269,7 @@ function SettingsMenu:draw()
             love.graphics.print("Music Volume", BTN_X + 10, ty)
             love.graphics.printf("< " .. tostring(self._state.music_volume) .. "% >", BTN_X, ty, BTN_W - 10, "right")
         else
-            love.graphics.printf(ITEMS[i], BTN_X, ty, BTN_W, "center")
+            love.graphics.printf((i == 6 and not self._opaque) and "Main Menu" or ITEMS[i], BTN_X, ty, BTN_W, "center")
         end
     end
 

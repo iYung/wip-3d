@@ -2,6 +2,7 @@ local Scene       = require("lua/core/scene_2d")
 local Plant       = require("lua/game/items/plant")
 local WateringCan = require("lua/game/items/watering_can")
 local Grafter     = require("lua/game/items/grafter")
+local Intercom    = require("lua/game/items/intercom")
 local config      = require("lua/game/config")
 local PLANT_DATA  = require("lua/game/data/plant_data")
 local A           = require("lua/game/assets")
@@ -63,6 +64,20 @@ CATALOGUE[#CATALOGUE + 1] = {
     description = "More customers, faster!",
     kind        = "customer_cooldown",
 }
+CATALOGUE[#CATALOGUE + 1] = {
+    label       = "Intercom",
+    description = "See the plant order\nfrom anywhere.",
+    cost        = 50,
+    kind        = "tool_intercom",
+    image       = A.intercom,
+}
+CATALOGUE[#CATALOGUE + 1] = {
+    label       = "Water Drone",
+    description = "Auto-waters ready plants.",
+    cost        = 10,
+    kind        = "drone",
+    image       = A.water_drone,
+}
 
 local PREVIEW_SIZE = 160
 local CENTER_X     = 640
@@ -121,11 +136,11 @@ function BuyScene:_confirm()
     if ent.kind == "speed_boost" then
         if gs.speed_level >= #SPEED_TIERS then return end
         local tier = SPEED_TIERS[gs.speed_level + 1]
-        if gs.currency < tier.cost then return end
+        if gs.currency < tier.cost then Sound.play("fail"); return end
         gs.currency     = gs.currency - tier.cost
         gs.speed_level  = gs.speed_level + 1
         gs.player.speed = tier.speed
-        gs.player:set_speed_level(gs.speed_level, tier.color)
+        gs.player:set_speed_color(tier.color, tier.secondary)
         Sound.play("shop_buy")
         return
     end
@@ -133,7 +148,7 @@ function BuyScene:_confirm()
     if ent.kind == "growth_boost" then
         if gs.growth_level >= #GROWTH_TIERS then return end
         local tier = GROWTH_TIERS[gs.growth_level + 1]
-        if gs.currency < tier.cost then return end
+        if gs.currency < tier.cost then Sound.play("fail"); return end
         gs.currency     = gs.currency - tier.cost
         gs.growth_level = gs.growth_level + 1
         gs.growth_mult  = tier.mult
@@ -144,14 +159,33 @@ function BuyScene:_confirm()
     if ent.kind == "customer_cooldown" then
         if gs.cooldown_level >= #COOLDOWN_TIERS then return end
         local tier = COOLDOWN_TIERS[gs.cooldown_level + 1]
-        if gs.currency < tier.cost then return end
+        if gs.currency < tier.cost then Sound.play("fail"); return end
         gs.currency       = gs.currency - tier.cost
         gs.cooldown_level = gs.cooldown_level + 1
         Sound.play("shop_buy")
         return
     end
 
-    if gs.currency < ent.cost then return end
+    if ent.kind == "drone" then
+        if gs.has_drone then return end
+        if gs.currency < ent.cost then Sound.play("fail"); return end
+        gs.currency  = gs.currency - ent.cost
+        gs.has_drone = true
+        Sound.play("shop_buy")
+        self.scene_manager:switch(self.store_scene)
+        return
+    end
+    if ent.kind == "tool_intercom" then
+        if gs.currency < ent.cost then Sound.play("fail"); return end
+        gs.currency = gs.currency - ent.cost
+        local scene = self.store_scene
+        gs.player.held_item = Intercom.new(function() return scene._customer end)
+        Sound.play("shop_buy")
+        self.scene_manager:switch(self.store_scene)
+        return
+    end
+
+    if gs.currency < ent.cost then Sound.play("fail"); return end
 
     gs.currency = gs.currency - ent.cost
 
@@ -216,6 +250,16 @@ function BuyScene:draw()
             display_cost = "$" .. tier.cost
             display_desc = ent.description .. "\n" .. tier.label
             can_buy      = currency >= tier.cost
+        end
+    elseif ent.kind == "drone" then
+        if gs.has_drone then
+            display_cost = "---"
+            display_desc = "Already installed."
+            can_buy      = false
+        else
+            display_cost = "$" .. ent.cost
+            display_desc = ent.description
+            can_buy      = currency >= ent.cost
         end
     else
         display_cost = "$" .. ent.cost
