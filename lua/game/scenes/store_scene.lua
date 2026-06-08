@@ -483,8 +483,9 @@ function StoreScene:draw()
             if img then
                 sprites[#sprites + 1] = { x = slot.px, y = slot.py, image = img }
             end
-            -- Plant ready bubble floats above the item
-            if slot.item.bubble and slot.item.bubble.visible and slot.item.bubble.image then
+            -- Plant ready bubble floats above the item (not for intercom — it uses HUD box)
+            if slot.item.bubble and slot.item.bubble.visible and slot.item.bubble.image
+               and not slot.item.is_intercom then
                 sprites[#sprites + 1] = {
                     x       = slot.px,
                     y       = slot.py,
@@ -547,9 +548,10 @@ function StoreScene:_draw_hud()
             local hy   = SH - size - 20
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(img, hx, hy, 0, size / img:getWidth(), size / img:getHeight())
-            -- Bubble indicator above held item
+            -- Bubble indicator above held item (not for intercom — it uses HUD box)
             if player.held_item.bubble and player.held_item.bubble.visible
-               and player.held_item.bubble.image then
+               and player.held_item.bubble.image
+               and not player.held_item.is_intercom then
                 local b = player.held_item.bubble.image
                 love.graphics.draw(b, hx + size / 2 - 25, hy - 55, 0,
                     50 / b:getWidth(), 50 / b:getHeight())
@@ -573,6 +575,11 @@ function StoreScene:_draw_hud()
     -- Customer dialog: shown when player is in cashier room
     if p.y <= CASHIER_THRESH then
         self:_draw_customer_dialog()
+    end
+
+    -- Intercom plant request: shown when player is in store room
+    if p.y > CASHIER_THRESH then
+        self:_draw_intercom_request(gs)
     end
 
     love.graphics.setColor(1, 1, 1, 1)
@@ -612,6 +619,36 @@ function StoreScene:_draw_customer_dialog()
         love.graphics.setColor(0.88, 0.88, 0.88, 1)
         love.graphics.print(revealed, 20, SH - 68)
     end
+end
+
+function StoreScene:_draw_intercom_request(gs)
+    -- Find the first intercom with a visible request (held or in a slot)
+    local req_img = nil
+    local held = gs.player.held_item
+    if held and held.is_intercom and held.bubble.visible and held.bubble.image then
+        req_img = held.bubble.image
+    end
+    if not req_img then
+        for _, slot in ipairs(gs.store:all_slots()) do
+            if slot.item and slot.item.is_intercom
+               and slot.item.bubble.visible and slot.item.bubble.image then
+                req_img = slot.item.bubble.image
+                break
+            end
+        end
+    end
+    if not req_img then return end
+
+    local bw, bh = 104, 104
+    local bx = SW / 2 - bw / 2
+    local by = SH - bh - 80
+    love.graphics.setColor(0.93, 0.93, 0.93, 1)
+    love.graphics.rectangle("fill", bx, by, bw, bh)
+    love.graphics.setColor(0.25, 0.25, 0.25, 1)
+    love.graphics.rectangle("line", bx, by, bw, bh)
+    local iw, ih = req_img:getDimensions()
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(req_img, bx + 12, by + 12, 0, 80 / iw, 80 / ih)
 end
 
 function StoreScene:_hud_labels()

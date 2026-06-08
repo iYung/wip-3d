@@ -9,6 +9,8 @@ function Intercom.new(customer_getter)
     setmetatable(self, Intercom)
     self.carriable        = true
     self.name             = "Intercom"
+    self.is_intercom      = true
+    self.sprite           = { image = A.intercom }
     self._customer_getter = customer_getter
     self.bubble           = { visible = false, image = nil }
     return self
