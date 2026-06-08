@@ -44,8 +44,8 @@ function Sound.load()
         }
         menu_src:play()
     end
-    if love.filesystem.getInfo("assets/music/background.ogg") then
-        local bg_src = love.audio.newSource("assets/music/background.ogg", "stream")
+    if love.filesystem.getInfo("assets/music/background.mp3") then
+        local bg_src = love.audio.newSource("assets/music/background.mp3", "stream")
         bg_src:setLooping(true)
         bg_src:setVolume(0)
         _music_tracks["bg"] = {
