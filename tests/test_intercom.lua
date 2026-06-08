@@ -59,46 +59,52 @@ do
     print("PASS: intercom: cannot buy with insufficient currency")
 end
 
--- Test: draw_bubble is a no-op when _customer_getter is nil (no crash)
+-- Test: bubble hidden with nil getter
 do
     local ic = Intercom.new(nil)
-    ic.sprite.x = 0
-    ic.sprite.y = 600
-    ic.sprite.width = 120
-    ic:draw_bubble()
-    print("PASS: intercom: draw_bubble no-ops with nil getter")
+    ic:update(0)
+    assert(ic.bubble.visible == false, "bubble should be hidden when no getter")
+    print("PASS: intercom: bubble hidden with nil getter")
 end
 
--- Test: draw_bubble is a no-op when customer bubble not visible
+-- Test: bubble hidden when customer bubble not visible
 do
-    local customer = {
-        bubble       = { visible = false },
-        done_talking = true,
-        state        = "waiting",
-        plant_type   = 1,
-    }
+    local customer = { bubble = { visible = false }, done_talking = true,
+                       state = "waiting", plant_type = 1 }
     local ic = Intercom.new(function() return customer end)
-    ic.sprite.x = 0
-    ic.sprite.y = 600
-    ic.sprite.width = 120
-    ic:draw_bubble()
-    print("PASS: intercom: draw_bubble no-ops when customer bubble not visible")
+    ic:update(0)
+    assert(ic.bubble.visible == false, "bubble should be hidden when customer bubble not visible")
+    print("PASS: intercom: bubble hidden when customer bubble not visible")
 end
 
--- Test: draw_bubble does not crash when customer is in display state
+-- Test: bubble shown when customer is in display state
 do
-    local customer = {
-        bubble       = { visible = true },
-        done_talking = true,
-        state        = "waiting",
-        plant_type   = 1,
-    }
+    local customer = { bubble = { visible = true }, done_talking = true,
+                       state = "waiting", plant_type = 2 }
     local ic = Intercom.new(function() return customer end)
-    ic.sprite.x = 0
-    ic.sprite.y = 600
-    ic.sprite.width = 120
-    ic:draw_bubble()
-    print("PASS: intercom: draw_bubble runs without error in display state")
+    ic:update(0)
+    assert(ic.bubble.visible == true, "bubble should be visible in display state")
+    print("PASS: intercom: bubble shown in customer display state")
+end
+
+-- Test: bubble hidden when customer is in talking_after state
+do
+    local customer = { bubble = { visible = true }, done_talking = true,
+                       state = "talking_after", plant_type = 1 }
+    local ic = Intercom.new(function() return customer end)
+    ic:update(0)
+    assert(ic.bubble.visible == false, "bubble should be hidden during talking_after")
+    print("PASS: intercom: bubble hidden during talking_after")
+end
+
+-- Test: bubble hidden when customer has not finished talking
+do
+    local customer = { bubble = { visible = true }, done_talking = false,
+                       state = "waiting", plant_type = 1 }
+    local ic = Intercom.new(function() return customer end)
+    ic:update(0)
+    assert(ic.bubble.visible == false, "bubble should be hidden while customer still talking")
+    print("PASS: intercom: bubble hidden while customer still talking")
 end
 
 print("ALL TESTS PASSED")
