@@ -159,6 +159,11 @@ function StoreScene:on_enter()
         return scene._last_active_slot
     end
 
+    -- Wire drone if purchased while the scene was already initialized
+    if gs.has_drone and not self._water_drone then
+        self._water_drone = WaterDrone.new(gs.store, gs)
+    end
+
     -- Sync movement speed with game state
     self.player3d.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
 
