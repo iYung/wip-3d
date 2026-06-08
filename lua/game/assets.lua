@@ -64,6 +64,9 @@ for lvl = 1, 3 do
     A.ads[lvl] = try_img("assets/ads_" .. lvl .. ".png")
 end
 
+A.intercom    = try_img("assets/intercom.png")
+A.water_drone = try_img("assets/water_drone.png")
+
 A.accessories = {}
 function A.load_accessory(name)
     if A.accessories[name] ~= nil then return A.accessories[name] end

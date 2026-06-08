@@ -13,6 +13,7 @@ local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
 local Sound          = require("lua/game/sound")
+local WaterDrone     = require("lua/game/water_drone")
 
 -- Map layout: cashier room (north) / separator row / store room (grows south).
 -- The separator runs east-west, so passage cols are fixed regardless of store depth.
@@ -129,12 +130,13 @@ end
 local StoreScene = setmetatable({}, { __index = Scene3D })
 StoreScene.__index = StoreScene
 
-function StoreScene.new(game_state, input, scene_manager)
+function StoreScene.new(game_state, input, scene_manager, is_new_game)
     local self              = Scene3D.new()
     setmetatable(self, StoreScene)
     self.game_state         = game_state
     self.input              = input
     self.scene_manager      = scene_manager
+    self._is_new_game       = is_new_game
     self._initialized       = false
     self._last_active_slot  = nil
     self._hover_tile        = nil
@@ -185,8 +187,10 @@ function StoreScene:_setup_store()
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(100, -1000, 0)
-    self._spawn_timer       = Timer.new(spawn_cooldown(gs))
+    self._spawn_timer       = Timer.new(self._is_new_game and 0.1 or spawn_cooldown(gs))
+    self._water_drone       = gs.has_drone and WaterDrone.new(gs.store, gs) or nil
     self._active_script_key = nil
+    self._active_script     = nil
     self._script_cooldowns  = {}
     self._cust_3d_x        = CASHIER_POS_X
     self._cust_anim        = nil
@@ -200,6 +204,7 @@ end
 
 function StoreScene:update(dt)
     local gs = self.game_state
+    if self._water_drone then self._water_drone:update(dt) end
     local p  = self.player3d
 
     -- Sync 3D move speed from game state
@@ -315,12 +320,14 @@ function StoreScene:_handle_pick_up_down()
     local slot   = self._last_active_slot
 
     if p.y <= CASHIER_THRESH then
-        if self._customer:arrived() and not self._cust_anim then
+        if self._customer:arrived() and not self._cust_anim
+           and not (self._active_script and self._active_script.no_dismiss) then
             self._customer:dismiss()
             Sound.play("dismiss_customer")
             if self._active_script_key then
                 self._script_cooldowns[self._active_script_key] = DISMISS_COOLDOWN_SALES
                 self._active_script_key = nil
+                self._active_script     = nil
             end
         end
         return
@@ -373,6 +380,7 @@ function StoreScene:_handle_interact()
             if self._active_script_key then
                 gs.seen_scripts[self._active_script_key] = true
                 self._active_script_key = nil
+                self._active_script     = nil
             end
             for key, count in pairs(self._script_cooldowns) do
                 local rem = count - 1
@@ -392,7 +400,8 @@ function StoreScene:_handle_interact()
     end
 
     -- Garbage bin discard
-    if player.held_item
+    if p.y > CASHIER_THRESH
+       and player.held_item
        and player.held_item.sellable ~= false
        and slot and slot.item and slot.item.is_garbage_bin then
         player.held_item = nil
@@ -435,10 +444,12 @@ function StoreScene:_next_customer_cfg()
     if #qualified > 0 then
         local script            = qualified[math.random(#qualified)]
         self._active_script_key = script.id .. ":" .. script.chapter
+        self._active_script     = script
         return script
     end
 
     self._active_script_key = nil
+    self._active_script     = nil
     local keys = {}
     for pt in pairs(gs.unlocked_plants) do keys[#keys + 1] = pt end
     if #keys == 0 then return nil end
