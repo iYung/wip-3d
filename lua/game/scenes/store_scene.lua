@@ -622,18 +622,23 @@ function StoreScene:_draw_customer_dialog()
 end
 
 function StoreScene:_draw_intercom_request(gs)
-    -- Find the first intercom with a visible request (held or in a slot)
+    -- Find an intercom with a visible request that the player is near
+    local p = self.player3d
     local req_img = nil
     local held = gs.player.held_item
     if held and held.is_intercom and held.bubble.visible and held.bubble.image then
-        req_img = held.bubble.image
+        req_img = held.bubble.image  -- always near when held
     end
     if not req_img then
         for _, slot in ipairs(gs.store:all_slots()) do
             if slot.item and slot.item.is_intercom
                and slot.item.bubble.visible and slot.item.bubble.image then
-                req_img = slot.item.bubble.image
-                break
+                local dx = p.x - slot.px
+                local dy = p.y - slot.py
+                if dx * dx + dy * dy <= INTERACT_RANGE * INTERACT_RANGE then
+                    req_img = slot.item.bubble.image
+                    break
+                end
             end
         end
     end
