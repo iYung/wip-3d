@@ -29,11 +29,11 @@ local function face_slot(ctx, slot_px, elapsed)
     -- cross the separator at a wall column and get stuck.
     local p = ctx.scene.player3d
     if p.y < 4.0 then
-        elapsed = nav_to(ctx, 6.0, 5.5, elapsed)
+        elapsed = nav_to(ctx, 6.0, 6.0, elapsed)
     end
-    -- Stand one row south of slot row 1 (y=5.5) so the look-ray hits at t≈0.5.
-    elapsed = nav_to(ctx, slot_px, 5.5, elapsed)
-    if p.y < 5.5 then p.y = 5.5 end
+    -- Stand 1.5 rows south of slot row 1 (y=6.0) so the look-ray hits at t=1.0 (HOVER_MIN_T).
+    elapsed = nav_to(ctx, slot_px, 6.0, elapsed)
+    if p.y < 6.0 then p.y = 6.0 end
     p.angle = -math.pi / 2
     return elapsed
 end
