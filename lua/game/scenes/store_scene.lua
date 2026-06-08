@@ -12,6 +12,7 @@ local COOLDOWN_TIERS = require("lua/game/data/cooldown_tiers")
 local Customer       = require("lua/game/customer")
 local A              = require("lua/game/assets")
 local ColorReplace   = require("lua/game/shaders/color_replace")
+local WallPattern    = require("lua/game/shaders/wall_pattern")
 local Sound          = require("lua/game/sound")
 local WaterDrone     = require("lua/game/water_drone")
 
@@ -516,7 +517,11 @@ function StoreScene:draw()
     end
 
     -- 3D world
-    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile, {[1] = A.store_wall})
+    local wall_shader = A.wall_pattern and {
+        apply = function() WallPattern.apply(A.wall_pattern, A.store_wall) end,
+        clear = WallPattern.clear,
+    } or nil
+    self.raycaster:draw(self.map, p.x, p.y, p.angle, self._hover_tile, {[1] = A.store_wall}, wall_shader)
     self.raycaster:draw_sprites(sprites, p.x, p.y, p.angle)
 
     -- Screen-space HUD

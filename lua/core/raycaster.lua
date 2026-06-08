@@ -28,7 +28,7 @@ function Raycaster:_get_tex_quads(tex)
     return quads
 end
 
-function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures)
+function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures, wall_shader)
     love.graphics.setColor(0.15, 0.15, 0.25, 1)
     love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
     local fs = self._floor_shader
@@ -41,6 +41,7 @@ function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.rectangle("fill", 0, SH / 2, SW, SH / 2)
     love.graphics.setShader()
+    if wall_shader then wall_shader.apply() end
 
     for col = 0, SW - 1 do
         local ray_angle = angle + (col / SW - 0.5) * FOV
@@ -96,6 +97,7 @@ function Raycaster:draw(map, px, py, angle, hover_tile, wall_textures)
         end
     end
 
+    if wall_shader then wall_shader.clear() end
     love.graphics.setColor(1, 1, 1, 1)
 end
 

@@ -67,6 +67,8 @@ end
 A.intercom     = try_img("assets/intercom.png")
 A.water_drone  = try_img("assets/water_drone.png")
 A.water_drone2 = try_img("assets/water_drone2.png")
+A.wall_pattern = try_img("assets/wall_pattern.png")
+if A.wall_pattern then A.wall_pattern:setWrap("repeat", "repeat") end
 
 A.accessories = {}
 function A.load_accessory(name)
