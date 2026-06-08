@@ -497,7 +497,7 @@ function StoreScene:draw()
 
     -- Water drone billboard
     if self._water_drone then
-        local drone_img = self._water_drone.frame == 1 and A.water_drone or A.water_drone2
+        local drone_img = (self._water_drone.frame == 2 and A.water_drone2) or A.water_drone
         if drone_img then
             sprites[#sprites + 1] = {
                 x       = self._water_drone.x,
