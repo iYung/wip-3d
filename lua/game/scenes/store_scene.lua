@@ -76,7 +76,7 @@ local PLAYER_START_X  = 6.0   -- passage centre x; aligned so walking north goes
 local PLAYER_START_A  = -math.pi / 2  -- facing north
 
 local INTERACT_RANGE  = 3.0   -- grid units: max look-ray distance for slot hover
-local HOVER_MIN_T     = 0.5  -- ignore tiles the ray enters closer than this (player is on the edge)
+local HOVER_MIN_T     = 1.0  -- ignore tiles the ray enters closer than this (player is on the edge)
 local COLLISION_M     = 0.25  -- grid units: wall collision margin
 
 local BASE_PX_SPEED   = 220   -- reference 2D speed (px/s)
