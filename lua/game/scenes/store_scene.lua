@@ -495,6 +495,20 @@ function StoreScene:draw()
         end
     end
 
+    -- Water drone billboard
+    if self._water_drone then
+        local drone_img = self._water_drone.frame == 1 and A.water_drone or A.water_drone2
+        if drone_img then
+            sprites[#sprites + 1] = {
+                x       = self._water_drone.x,
+                y       = self._water_drone.y,
+                image   = drone_img,
+                scale   = 0.5,
+                voffset = 1.4,
+            }
+        end
+    end
+
     -- Customer billboard
     if self._customer:active() or self._cust_anim ~= nil then
         local cust_img = (self._cust_anim and self._cust_walk_frame) and A.customer_walk or A.customer
