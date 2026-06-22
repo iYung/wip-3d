@@ -55,7 +55,7 @@ A.sneakers           = try_img("assets/sneakers.png")
 A.expand_slot        = try_img("assets/expand_slot.png")
 A.heat_lamp_icon     = try_img("assets/heat_lamp_icon.png")
 A.heat_lamps = {}
-for lvl = 1, 3 do
+for lvl = 1, 6 do
     A.heat_lamps[lvl] = try_img("assets/heat_lamp_" .. lvl .. ".png")
 end
 
@@ -69,6 +69,11 @@ A.water_drone  = try_img("assets/water_drone.png")
 A.water_drone2 = try_img("assets/water_drone2.png")
 A.wall_pattern = try_img("assets/wall_pattern.png")
 if A.wall_pattern then A.wall_pattern:setWrap("repeat", "repeat") end
+
+A.coin  = img("assets/coin.png")
+A.btn_a = img("assets/btn_a.png")
+A.btn_b = img("assets/btn_b.png")
+A.btn_y = img("assets/btn_y.png")
 
 A.accessories = {}
 function A.load_accessory(name)

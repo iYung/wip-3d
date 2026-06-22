@@ -11,6 +11,7 @@ local GROWTH_TIERS   = require("lua/game/data/growth_tiers")
 local COOLDOWN_TIERS = require("lua/game/data/cooldown_tiers")
 local ColorReplace   = require("lua/game/shaders/color_replace")
 local CRT            = require("lua/game/shaders/crt")
+local UI             = require("lua/game/ui")
 local Sound          = require("lua/game/sound")
 
 local CATALOGUE = {}
@@ -41,6 +42,13 @@ CATALOGUE[#CATALOGUE + 1] = {
     image       = A.grafter_empty,
 }
 CATALOGUE[#CATALOGUE + 1] = {
+    label       = "Intercom",
+    description = "See the plant order\nfrom anywhere.",
+    cost        = 50,
+    kind        = "tool_intercom",
+    image       = A.intercom,
+}
+CATALOGUE[#CATALOGUE + 1] = {
     label       = "Expand Slot",
     description = "Adds a new row of 7 slots\nto the front of the store.",
     cost        = config.SLOT_COST,
@@ -63,13 +71,6 @@ CATALOGUE[#CATALOGUE + 1] = {
     label       = "Marketing",
     description = "More customers, faster!",
     kind        = "customer_cooldown",
-}
-CATALOGUE[#CATALOGUE + 1] = {
-    label       = "Intercom",
-    description = "See the plant order\nfrom anywhere.",
-    cost        = 50,
-    kind        = "tool_intercom",
-    image       = A.intercom,
 }
 CATALOGUE[#CATALOGUE + 1] = {
     label       = "Water Drone",
@@ -123,8 +124,7 @@ function BuyScene:update(dt)
 
     if input:pressed("interact") then
         self:_confirm()
-    elseif input:pressed("pick_up_down") then
-        Sound.play("shop_close")
+    elseif input:pressed("cancel") then
         self.scene_manager:switch(self.store_scene)
     end
 end
@@ -225,7 +225,7 @@ function BuyScene:draw()
             can_buy      = false
         else
             local tier   = SPEED_TIERS[gs.speed_level + 1]
-            display_cost = "$" .. tier.cost
+            display_cost = tostring(tier.cost)
             display_desc = ent.description
             can_buy      = currency >= tier.cost
         end
@@ -236,7 +236,7 @@ function BuyScene:draw()
             can_buy      = false
         else
             local tier   = GROWTH_TIERS[gs.growth_level + 1]
-            display_cost = "$" .. tier.cost
+            display_cost = tostring(tier.cost)
             display_desc = ent.description .. "\n" .. math.floor(tier.mult * 100 - 100) .. "% faster"
             can_buy      = currency >= tier.cost
         end
@@ -247,7 +247,7 @@ function BuyScene:draw()
             can_buy      = false
         else
             local tier   = COOLDOWN_TIERS[gs.cooldown_level + 1]
-            display_cost = "$" .. tier.cost
+            display_cost = tostring(tier.cost)
             display_desc = ent.description .. "\n" .. tier.label
             can_buy      = currency >= tier.cost
         end
@@ -257,12 +257,12 @@ function BuyScene:draw()
             display_desc = "Already installed."
             can_buy      = false
         else
-            display_cost = "$" .. ent.cost
+            display_cost = tostring(ent.cost)
             display_desc = ent.description
             can_buy      = currency >= ent.cost
         end
     else
-        display_cost = "$" .. ent.cost
+        display_cost = tostring(ent.cost)
         display_desc = ent.description
         can_buy      = currency >= ent.cost
     end
@@ -272,11 +272,6 @@ function BuyScene:draw()
     love.graphics.draw(A.buy_bg, 0, 0)
 
     local prev_font = love.graphics.getFont()
-
-    -- currency top-right
-    love.graphics.setFont(font_ui)
-    love.graphics.setColor(0.15, 0.15, 0.15, 1)
-    love.graphics.print("Currency: " .. currency, 56, 44)
 
     -- build desc lines early so we can measure total height
     local desc_lines = {}
@@ -305,7 +300,7 @@ function BuyScene:draw()
             PREVIEW_SIZE / img:getHeight())
     elseif ent.kind == "speed_boost" and ent.image then
         local next_tier = SPEED_TIERS[gs.speed_level + 1]
-        if next_tier then ColorReplace.apply(next_tier.color) end
+        if next_tier then ColorReplace.apply(next_tier.color, next_tier.secondary) end
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(ent.image,
             CENTER_X - PREVIEW_SIZE / 2, y,
@@ -360,8 +355,25 @@ function BuyScene:draw()
     else
         love.graphics.setColor(0.5, 0.1, 0.1, 1)
     end
-    local price_w = font_price:getWidth(display_cost)
-    love.graphics.print(display_cost, CENTER_X - price_w / 2, y)
+    if display_cost == "---" then
+        local price_w = font_price:getWidth(display_cost)
+        love.graphics.print(display_cost, CENTER_X - price_w / 2, y)
+    else
+        local fh      = font_price:getHeight()
+        local coin_w  = A.coin:getWidth() * (fh / A.coin:getHeight())
+        local gap     = 6
+        local num_w   = font_price:getWidth(display_cost)
+        local total_w = coin_w + gap + num_w
+        local bx      = math.floor(CENTER_X - total_w / 2)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(A.coin, bx, y, 0, fh / A.coin:getHeight(), fh / A.coin:getHeight())
+        if can_buy then
+            love.graphics.setColor(0.1, 0.45, 0.1, 1)
+        else
+            love.graphics.setColor(0.5, 0.1, 0.1, 1)
+        end
+        love.graphics.print(display_cost, bx + coin_w + gap, y)
+    end
 
     -- cycle arrows (unchanged)
     love.graphics.setColor(1, 1, 1, 1)
@@ -378,23 +390,56 @@ function BuyScene:draw()
         love.graphics.draw(img, dot_start + (i - 1) * dot_gap - dot_size / 2, CENTER_Y + 252)
     end
 
-    -- controls hint
-    love.graphics.setFont(font_ui)
-    love.graphics.setColor(0.35, 0.35, 0.35, 1)
-    local hints = { "A/D: CYCLE", "F: BUY", "E: CANCEL" }
-    local y = 652
-    for _, hint in ipairs(hints) do
-        love.graphics.print(hint, 56, y)
-        y = y - 20
-    end
-
     love.graphics.setFont(prev_font)
 
-    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setCanvas(prev_canvas)
+    love.graphics.setColor(1, 1, 1, 1)
     CRT.apply()
     love.graphics.draw(self.canvas, 0, 0)
     CRT.clear()
+
+    local hud_margin = 10
+    UI.draw_currency_bubble(currency, hud_margin, hud_margin, font_ui)
+
+    local left_key   = (self.input:key_for("move_left")  or "a"):upper()
+    local right_key  = (self.input:key_for("move_right") or "d"):upper()
+    local f_key      = (self.input:key_for("interact")   or "space"):upper()
+    local cancel_key = (self.input:key_for("cancel")     or "i"):upper()
+    local f_icon     = self.input:icon_key_for("interact")
+    local cancel_icon = self.input:icon_key_for("cancel")
+
+    local function make_label(icon_key, key_text, action_text)
+        if icon_key then
+            return { icon = icon_key, text = ": " .. action_text }
+        end
+        return key_text .. ": " .. action_text
+    end
+
+    local hints = {
+        left_key .. "/" .. right_key .. ": CYCLE",
+        make_label(f_icon, f_key, "BUY"),
+        make_label(cancel_icon, cancel_key, "CANCEL"),
+    }
+
+    UI.draw_hud_box(hints, font_ui, hud_margin)
+
+    love.graphics.setFont(font_ui)
+    love.graphics.setColor(0, 0, 0, 1)
+    local box_h = #hints * 20 + 28
+    local y = 720 - hud_margin - box_h + 14
+    for _, hint in ipairs(hints) do
+        if type(hint) == "table" and hint.icon then
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(A[hint.icon], hud_margin + 14, math.floor(y + (20 - 16) / 2))
+            love.graphics.setColor(0, 0, 0, 1)
+            love.graphics.print(hint.text, hud_margin + 14 + 16 + 2, y)
+        else
+            love.graphics.setColor(0, 0, 0, 1)
+            love.graphics.print(hint, hud_margin + 14, y)
+        end
+        y = y + 20
+    end
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 return BuyScene

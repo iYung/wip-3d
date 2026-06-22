@@ -8,4 +8,5 @@ return Input.new({
     pick_up_down = {"e"},
     interact     = {"f"},
     menu_confirm = {"return", "space", "f"},
+    cancel       = {"i"},
 })

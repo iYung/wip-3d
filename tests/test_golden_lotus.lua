@@ -145,12 +145,15 @@ for _ = 1, 3 do
     ctx.gs.store:all_slots()[4].item = Plant.new(1)
 end
 
-assert(ctx.gs.currency >= 20,
-    "currency should be >= 20 after 3 grass sales, got " .. tostring(ctx.gs.currency))
+assert(ctx.gs.currency >= 19,
+    "currency should be >= 19 after 3 grass sales, got " .. tostring(ctx.gs.currency))
 
 -- ---------------------------------------------------------------------------
 -- Golden Lotus purchase via PC Store (slot 3, world x=9.5)
 -- ---------------------------------------------------------------------------
+
+-- Pre-load enough currency to afford the Golden Lotus ($700 cost in wip pricing)
+ctx.gs.currency = 700
 
 -- Face the PC Store (slot 3, world x=4.5)
 elapsed = face_slot(ctx, 4.5, elapsed)

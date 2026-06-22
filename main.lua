@@ -101,6 +101,7 @@ local canvas
 
 local scene_manager
 local settings_menu
+local _prev_start = false
 
 function love.load()
     canvas       = love.graphics.newCanvas(LOGICAL_W, LOGICAL_H)
@@ -108,19 +109,30 @@ function love.load()
     local gs     = GameState.new()
     scene_manager = SceneManager.new()
     local ss = SettingsState.new()
-    settings_menu = SettingsMenu.new(ss, input)
+    settings_menu = SettingsMenu.new(ss, input, nil, nil)
     scene_manager:switch(StartScene.new(gs, input, scene_manager, function() settings_menu:open(true) end))
     Sound.load()
 end
 
 function love.update(dt)
     Sound.update(dt)
+    -- Track Start every frame so _prev_start is accurate whether menu is open or not.
+    local joy = input._joystick
+    local start_down = joy ~= nil and joy:isConnected() and joy:isGamepadDown("start")
     if settings_menu and settings_menu.is_open then
         settings_menu:update(dt)
     else
         input:update()
+        -- Poll Start button to open settings (event-based love.gamepadpressed
+        -- may not fire on all controllers for the Start/menu button).
+        if start_down and not _prev_start then
+            if scene_manager and scene_manager.current and scene_manager.current.esc_opens_settings then
+                settings_menu:open()
+            end
+        end
         scene_manager:update(dt)
     end
+    _prev_start = start_down
 end
 
 function love.draw()
@@ -140,6 +152,7 @@ function love.draw()
 end
 
 function love.keypressed(key)
+    input._mode = "keyboard"
     if settings_menu and settings_menu.is_open then
         if settings_menu:keypressed(key) then return end
     end
@@ -154,4 +167,43 @@ function love.keypressed(key)
             love.event.quit()
         end
     end
+end
+
+function love.gamepadpressed(joystick, button)
+    input._joystick = joystick
+    input._mode = "gamepad"
+    -- Mark Start as already-seen so the polling check in love.update doesn't
+    -- fire on the same frame as this event and undo what we do here.
+    if button == "start" then _prev_start = true end
+    if settings_menu and settings_menu.is_open then
+        settings_menu:gamepadpressed(button)
+        return
+    end
+    if button == "start" then
+        if settings_menu and scene_manager and scene_manager.current and scene_manager.current.esc_opens_settings then
+            settings_menu:open()
+        end
+    end
+end
+
+function love.joystickadded(joystick)
+    if joystick:isGamepad() and input._joystick == nil then
+        input._joystick = joystick
+    end
+end
+
+function love.joystickremoved(joystick)
+    if joystick == input._joystick then
+        input._joystick = nil
+        for _, j in ipairs(love.joystick.getJoysticks()) do
+            if j:isGamepad() and j:isConnected() then
+                input._joystick = j
+                break
+            end
+        end
+    end
+end
+
+function love.focus(focused)
+    Sound.on_focus(focused)
 end

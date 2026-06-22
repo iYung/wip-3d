@@ -5,9 +5,9 @@ local BuyScene   = require("lua/game/scenes/buy_scene")
 local Intercom   = require("lua/game/items/intercom")
 
 -- CATALOGUE indices (wip-3d order):
--- 1-6: plant types, 7: Watering Can, 8: Grafter, 9: Expand Slot,
--- 10: Sneakers, 11: Heat Lamps, 12: Marketing, 13: Intercom, 14: Water Drone
-local INTERCOM_IDX = 13
+-- 1-6: plant types, 7: Watering Can, 8: Grafter, 9: Intercom,
+-- 10: Expand Slot, 11: Sneakers, 12: Heat Lamps, 13: Marketing, 14: Water Drone
+local INTERCOM_IDX = 9
 
 local function make_buy(ctx)
     return BuyScene.new(ctx.gs, ctx.input, ctx.sm, ctx.sm.current)
