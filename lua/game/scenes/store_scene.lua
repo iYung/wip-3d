@@ -156,6 +156,7 @@ end
 
 function StoreScene:on_enter()
     local gs = self.game_state
+    Sound.stop_music("menu")
 
     if not self._initialized then
         self._initialized = true
@@ -205,7 +206,7 @@ function StoreScene:_setup_store()
     end)
 
     local geom = store_geometry(gs.store:active_rows())
-    self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A)
+    self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A, self.input)
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(100, -1000, 0)

@@ -42,7 +42,9 @@ function StartScene:on_enter()
     self._img_sub_logo  = love.graphics.newImage("assets/sub_logo.png")
     self._img_btn       = love.graphics.newImage("assets/menu_btn.png")
     self._img_btn_sel   = love.graphics.newImage("assets/menu_btn_selected.png")
-    Sound.fade_music("bg", 0, 2.0)
+    for _, name in ipairs({"bg", "bg1", "bg2", "bg3", "bg4"}) do
+        Sound.fade_music(name, 0, 2.0)
+    end
     Sound.fade_music("menu", 1, 2.0)
 end
 
