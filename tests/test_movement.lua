@@ -6,9 +6,9 @@ do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
-    ctx.move_input:hold("forward")
+    ctx.move_input:hold("move_up")
     runner.tick(ctx, 200)
-    ctx.move_input:release("forward")
+    ctx.move_input:release("move_up")
 
     assert(p.y < 3.0,
         "expected player to move north significantly, got y=" .. p.y)
@@ -25,9 +25,9 @@ do
     local ctx = runner.setup()
     local p   = ctx.scene.player3d
 
-    ctx.move_input:hold("forward")   -- straight north through passage
+    ctx.move_input:hold("move_up")   -- straight north through passage
     runner.tick(ctx, 100)
-    ctx.move_input:release("forward")
+    ctx.move_input:release("move_up")
 
     assert(p.y < 4.0,
         "expected player to reach cashier zone (y < 4.0), got y=" .. p.y)

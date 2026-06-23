@@ -12,7 +12,7 @@ do
     local ctx = runner.setup()
     local start_x = ctx.scene.player3d.x
     local start_y = ctx.scene.player3d.y
-    ctx.move_input:hold("forward")
+    ctx.move_input:hold("move_up")
     runner.tick(ctx, 30)
     assert(
         start_x ~= ctx.scene.player3d.x or start_y ~= ctx.scene.player3d.y,
@@ -25,7 +25,7 @@ end
 do
     local ctx = runner.setup()
     local start_angle = ctx.scene.player3d.angle
-    ctx.move_input:hold("right")
+    ctx.move_input:hold("move_right")
     runner.tick(ctx, 30)
     assert(
         ctx.scene.player3d.angle > start_angle,
@@ -38,7 +38,7 @@ end
 -- Test 4: Currency unchanged by movement
 do
     local ctx = runner.setup()
-    ctx.move_input:hold("forward")
+    ctx.move_input:hold("move_up")
     runner.tick(ctx, 60)
     assert(ctx.gs.currency == 1000, "expected currency == 1000 after movement, got " .. tostring(ctx.gs.currency))
     print("PASS: currency unchanged by movement")

@@ -206,7 +206,7 @@ function StoreScene:_setup_store()
     end)
 
     local geom = store_geometry(gs.store:active_rows())
-    self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A, self.input)
+    self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A)
 
     -- Customer: pixel positions unused in 3D; state machine & dialog still drive logic
     self._customer          = Customer.new(100, -1000, 0)
@@ -232,6 +232,8 @@ function StoreScene:update(dt)
 
     -- Sync 3D move speed from game state
     p.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
+    -- Propagate joystick so player3d's private input can poll gamepad.
+    p.input._joystick = self.input._joystick
 
     -- Movement + collision
     local ox, oy = p.x, p.y
