@@ -25,7 +25,7 @@ return {
         id             = "mayor_bloom",
         chapter        = 2,
         accessory      = "secretary_glasses",
-        trigger        = { plant_type = 3, count = 20 },
+        trigger        = { plant_type = 5, count = 4 },
         name           = "Mayor Bloom",
         voice_pitch    = 0.82,
         primary_color     = {0.75, 0.25, 0.40, 1},
@@ -87,7 +87,7 @@ return {
     {
         id             = "the_collector",
         chapter        = 1,
-        accessory      = "shades",
+        accessory      = "anon",
         trigger        = { plant_type = 5, count = 13 },
         name           = "The Collector",
         voice_pitch    = 0.78,
@@ -107,7 +107,7 @@ return {
     {
         id             = "the_collector",
         chapter        = 2,
-        accessory      = "shades",
+        accessory      = "anon",
         trigger        = { plant_type = 6, count = 5 },
         name           = "The Collector",
         voice_pitch    = 0.78,
@@ -494,6 +494,25 @@ return {
             "Amazing! You're a natural at this!",
         },
     },
+    {
+        id             = "sage",
+        chapter        = 5,
+        accessory      = "monocle",
+        trigger        = { plant_type = 3, count = 5 },
+        name           = "Sir Moneyton",
+        voice_pitch    = 0.88,
+        primary_color     = {0.35, 0.58, 0.38, 1},
+        secondary_color = {0.55, 0.40, 0.25, 1},
+        plant_type     = 2,
+        messages       = {
+            "The shop looks excellent! You've really hopping around.",
+            "You can hop faster if you get new shoes. You can buy them on your laptop!",
+            "Maybe you can get a new pair after you get me a new cactus!",
+        },
+        after_messages = {
+            "Thank you! And remember to look through your laptop. There are more upgrades than just the shoes.",
+        },
+    },
 
     -- Romeo (hopeless romantic, 3-chapter arc; cactus → cactus → tulip, always wants a rose)
     {
@@ -742,12 +761,54 @@ return {
         },
     },
 
+    -- DJ Frogga (beat inspo, 2-chapter arc; cactus → tulip)
+    {
+        id              = "dj_frogga",
+        chapter         = 1,
+        accessory       = "shades",
+        trigger         = { plant_type = 2, count = 15 },
+        name            = "DJ Frogga",
+        voice_pitch     = 1.10,
+        primary_color   = {0.50, 0.15, 0.75, 1},
+        secondary_color = {0.15, 0.90, 0.60, 1},
+        plant_type      = 2,
+        messages        = {
+            "Yo, what's good!",
+            "I'm DJ Frogga, the hottest DJ in Frogtown right now.",
+            "I'm working on the sickest beat and I need some inspo.",
+            "You got something spiky with a little attitude?",
+        },
+        after_messages  = {
+            "Yooo, this is it. I can feel the beat already.",
+        },
+    },
+    {
+        id              = "dj_frogga",
+        chapter         = 2,
+        accessory       = "shades",
+        trigger         = { plant_type = 4, count = 17 },
+        name            = "DJ Frogga",
+        voice_pitch     = 1.10,
+        primary_color   = {0.50, 0.15, 0.75, 1},
+        secondary_color = {0.15, 0.90, 0.60, 1},
+        plant_type      = 4,
+        messages        = {
+            "Yo, it's me, DJ Frogga!",
+            "My last track went crazy. Frogs were jumping on the drop.",
+            "Now I'm working on something softer. Something smooth.",
+            "You got something for inspo? I need something that sends those smooth vibes over to me.",
+        },
+        after_messages  = {
+            "Oooh yes. The vibes are immaculate.",
+        },
+    },
+
     -- Wallace (well-meaning disaster, 3-chapter arc; rose → daisy → daisy)
     {
         id              = "wallace",
         chapter         = 1,
         accessory       = "neckbeard",
-        trigger         = { plant_type = 3, count = 25 },
+        trigger         = { plant_type = 3, count = 18 },
         name            = "Wallace",
         voice_pitch     = 0.95,
         primary_color   = {0.65, 0.30, 0.25, 1},
@@ -768,7 +829,7 @@ return {
         id              = "wallace",
         chapter         = 2,
         accessory       = "neckbeard",
-        trigger         = { plant_type = 5, count = 10 },
+        trigger         = { plant_type = 4, count = 10 },
         name            = "Wallace",
         voice_pitch     = 0.95,
         primary_color   = {0.65, 0.30, 0.25, 1},
@@ -789,7 +850,7 @@ return {
         id              = "wallace",
         chapter         = 3,
         accessory       = "neckbeard",
-        trigger         = { plant_type = 5, count = 12 },
+        trigger         = { plant_type = 5, count = 10 },
         name            = "Wallace",
         voice_pitch     = 0.95,
         primary_color   = {0.65, 0.30, 0.25, 1},
@@ -806,26 +867,5 @@ return {
             "She says she's not surprised anymore. That feels like progress.",
         },
     },
-    {
-        id              = "wallace",
-        chapter         = 4,
-        accessory       = "neckbeard",
-        trigger         = { plant_type = 6, count = 1 },
-        name            = "Wallace",
-        voice_pitch     = 0.95,
-        primary_color   = {0.65, 0.30, 0.25, 1},
-        secondary_color = {0.85, 0.70, 0.55, 1},
-        plant_type      = 6,
-        messages        = {
-            "Hey man. It's me again.",
-            "Remember my two raccoons? My wife didn't like them so I tried to get them to win her over.",
-            "My plan was simple: I saw on some show that rodents can sit on your head and make you cook really really good French food.",
-            "I don't know how they did it, we just burnt the house down.",
-            "Now she won't speak with me. Help. Please.",
-        },
-        after_messages  = {
-            "Thank you, she's gonna love this!",
-        },
-    },
-
 }
+

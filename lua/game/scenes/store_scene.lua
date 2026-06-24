@@ -6,6 +6,8 @@ local WateringCan    = require("lua/game/items/watering_can")
 local PCStore        = require("lua/game/items/pc_store")
 local GarbageBin     = require("lua/game/items/garbage_bin")
 local BuyScene       = require("lua/game/scenes/buy_scene")
+local WinScene       = require("lua/game/scenes/win_scene")
+local GoldenIdol     = require("lua/game/items/golden_idol")
 local PLANT_DATA     = require("lua/game/data/plant_data")
 local CUSTOMER_SCRIPTS = require("lua/game/data/customer_scripts")
 local COOLDOWN_TIERS = require("lua/game/data/cooldown_tiers")
@@ -150,6 +152,7 @@ function StoreScene.new(game_state, input, scene_manager, is_new_game)
     self._last_active_slot  = nil
     self._hover_tile        = nil
     self._last_active_rows  = nil
+    self._last_script_id    = nil
     self.esc_opens_settings = true
     return self
 end
@@ -170,6 +173,8 @@ function StoreScene:on_enter()
     if not _bg_playing then
         Sound.fade_music(self._bg_list[self._bg_index], 1, 2)
     end
+
+    self:_wire_golden_idol()
 
     -- Patch player.active_slot so item interact() calls use 3D proximity
     local scene = self
@@ -205,6 +210,9 @@ function StoreScene:_setup_store()
         return BuyScene.new(gs, self_ref.input, self_ref.scene_manager, self_ref)
     end)
 
+    self._win_scene = WinScene.new(gs, self.input, self.scene_manager, self)
+    self._win_scene_factory = function() return self._win_scene end
+
     local geom = store_geometry(gs.store:active_rows())
     self.player3d = Player3D.new(PLAYER_START_X, geom.player_y, PLAYER_START_A)
 
@@ -227,6 +235,7 @@ end
 
 function StoreScene:update(dt)
     local gs = self.game_state
+    gs.play_time = gs.play_time + dt
     if self._water_drone then self._water_drone:update(dt) end
     local p  = self.player3d
 
@@ -414,6 +423,7 @@ function StoreScene:_handle_interact()
                 self._active_script_key = nil
                 self._active_script     = nil
             end
+            self._last_script_id = nil
             for key, count in pairs(self._script_cooldowns) do
                 local rem = count - 1
                 if rem <= 0 then self._script_cooldowns[key] = nil
@@ -453,6 +463,19 @@ function StoreScene:_handle_interact()
     end
 end
 
+function StoreScene:_wire_golden_idol()
+    local gs      = self.game_state
+    local factory = self._win_scene_factory
+    for _, slot in ipairs(gs.store:all_slots()) do
+        if slot.item and slot.item.name == "Golden Idol" then
+            slot.item.win_scene_factory = factory
+        end
+    end
+    if gs.player.held_item and gs.player.held_item.name == "Golden Idol" then
+        gs.player.held_item.win_scene_factory = factory
+    end
+end
+
 function StoreScene:_next_customer_cfg()
     local gs = self.game_state
 
@@ -474,10 +497,20 @@ function StoreScene:_next_customer_cfg()
     end
 
     if #qualified > 0 then
-        local script            = qualified[math.random(#qualified)]
-        self._active_script_key = script.id .. ":" .. script.chapter
-        self._active_script     = script
-        return script
+        local pool = {}
+        for _, script in ipairs(qualified) do
+            if script.id ~= self._last_script_id then
+                pool[#pool + 1] = script
+            end
+        end
+        if #pool > 0 then
+            local script            = pool[math.random(#pool)]
+            self._last_script_id    = script.id
+            self._active_script_key = script.id .. ":" .. script.chapter
+            self._active_script     = script
+            return script
+        end
+        -- Only the last-seen character qualifies; fall through to generic customer.
     end
 
     self._active_script_key = nil

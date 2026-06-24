@@ -74,7 +74,7 @@ do
     end)
     local buy = make_buy(ctx)
     ctx.gs.currency = 0
-    buy.selected = 2   -- Cactus costs $3
+    buy.selected = 2   -- Cactus costs $5
     buy:_confirm()
     assert(ctx.gs.currency == 0, "currency should be unchanged when broke")
     assert(ctx.gs.player.held_item == nil,

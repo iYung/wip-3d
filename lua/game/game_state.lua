@@ -16,6 +16,8 @@ function GameState.new()
     self.growth_level    = 0
     self.cooldown_level  = 0
     self.has_drone       = false
+    self.play_time       = 0
+    self.first_idol_at   = nil
     self.growth_mult     = 1.0
     self.unlocked_plants = { [1] = true }
     self.stage3_counts   = {}
