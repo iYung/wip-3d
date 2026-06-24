@@ -1,7 +1,18 @@
-local ITEMS = { "Fullscreen / Window", "SFX Volume", "Music Volume", "Keybinds", "Exit Settings", "Leave Game" }
+local ITEMS = { "Fullscreen / Window", "SFX Volume", "Music Volume", "Keybinds",
+                "Save Game", "Exit Settings", "Leave Game" }
 
-local _ACTION_LIST   = {"move_up","move_down","move_left","move_right","pick_up_down","interact"}
-local _ACTION_LABELS = {"move up","move down","move left","move right","pick up/down","interact"}
+local function _visible_items(opaque, mode)
+    local result = {}
+    for i = 1, #ITEMS do
+        if not (opaque and i == 5) and not (mode == "gamepad" and i == 4) then
+            result[#result + 1] = i
+        end
+    end
+    return result
+end
+
+local _ACTION_LIST   = {"move_up","move_down","move_left","move_right","pick_up_down","interact","cancel"}
+local _ACTION_LABELS = {"move up","move down","move left","move right","pick up/down","interact","cancel"}
 
 local _MODIFIERS = {
     lshift=true, rshift=true, lctrl=true, rctrl=true,
@@ -16,10 +27,32 @@ local BTN_H   = 54
 local BTN_X   = (W - BTN_W) / 2
 local BTN_GAP = 74
 
+local LABEL_W    = 180
+local VAL_W      = 110
+local BAR_GAP    = 10
+local LABEL_SX = LABEL_W / BTN_W   -- horizontal scale for label bar image
+local VAL_SX   = VAL_W  / BTN_W    -- horizontal scale for value bar image
+
+local function _joy_nav(input)
+    if not input or not input._joystick or not input._joystick:isConnected() then
+        return { up=false, down=false, left=false, right=false, confirm=false }
+    end
+    local joy = input._joystick
+    local ax = joy:getGamepadAxis("leftx")
+    local ay = joy:getGamepadAxis("lefty")
+    return {
+        up      = ay < -0.3 or joy:isGamepadDown("dpup"),
+        down    = ay >  0.3 or joy:isGamepadDown("dpdown"),
+        left    = ax < -0.3 or joy:isGamepadDown("dpleft"),
+        right   = ax >  0.3 or joy:isGamepadDown("dpright"),
+        confirm = joy:isGamepadDown("a"),
+    }
+end
+
 local SettingsMenu = {}
 SettingsMenu.__index = SettingsMenu
 
-function SettingsMenu.new(settings_state, input)
+function SettingsMenu.new(settings_state, input, on_save, on_leave)
     local self = setmetatable({}, SettingsMenu)
     self.is_open = false
     self.selected = 1
@@ -31,6 +64,8 @@ function SettingsMenu.new(settings_state, input)
     self._prev_escape  = false
     self._state = settings_state
     self._input = input
+    self._on_save  = on_save
+    self._on_leave = on_leave
     self._subscreen = nil
     self._subscreen_selected = 1
     self._capturing = nil
@@ -38,6 +73,9 @@ function SettingsMenu.new(settings_state, input)
     self._prev_sub_down    = false
     self._prev_sub_confirm = false
     self._prev_sub_escape  = false
+    self._shake_row   = nil
+    self._shake_timer = 0
+    self._saved = false
     self._img_btn     = love.graphics.newImage("assets/menu_btn.png")
     self._img_btn_sel = love.graphics.newImage("assets/menu_btn_selected.png")
     self._img_bgs  = {
@@ -47,6 +85,7 @@ function SettingsMenu.new(settings_state, input)
     self._bg_frame = 1
     self._bg_timer = 0
     self._font_btn    = love.graphics.newFont(22)
+    self._font_vol    = love.graphics.newFont(15)
     self._btn_y0      = H / 2 - (#ITEMS - 1) * BTN_GAP / 2 - BTN_H / 2
     self._sub_btn_y0  = H / 2 - #_ACTION_LIST * BTN_GAP / 2 - BTN_H / 2  -- centres 7 sub-screen rows
     return self
@@ -58,6 +97,7 @@ function SettingsMenu:open(opaque)
     self.selected = 1
     self._subscreen = nil
     self._capturing = nil
+    self._saved = false
     -- Snapshot current key state so keys held at open time don't immediately fire
     self._prev_up      = love.keyboard.isDown("up")    or love.keyboard.isDown("w")
     self._prev_down    = love.keyboard.isDown("down")  or love.keyboard.isDown("s")
@@ -66,6 +106,15 @@ function SettingsMenu:open(opaque)
     self._prev_confirm = love.keyboard.isDown("e")     or love.keyboard.isDown("f")
                       or love.keyboard.isDown("return") or love.keyboard.isDown("space")
     self._prev_escape  = love.keyboard.isDown("escape")
+    local _jn = _joy_nav(self._input)
+    self._prev_up      = self._prev_up      or _jn.up
+    self._prev_down    = self._prev_down    or _jn.down
+    self._prev_left    = self._prev_left    or _jn.left
+    self._prev_right   = self._prev_right   or _jn.right
+    self._prev_confirm = self._prev_confirm or _jn.confirm
+    local joy = self._input._joystick
+    self._prev_escape  = self._prev_escape
+        or (joy ~= nil and joy:isConnected() and joy:isGamepadDown("start"))
 end
 
 function SettingsMenu:close()
@@ -79,6 +128,11 @@ function SettingsMenu:update(dt)
         self._bg_frame = (self._bg_frame % 2) + 1
     end
 
+    if self._shake_timer > 0 then
+        self._shake_timer = math.max(0, self._shake_timer - dt)
+        if self._shake_timer == 0 then self._shake_row = nil end
+    end
+
     if self._subscreen == "keybinds" then
         if self._capturing ~= nil then
             return
@@ -90,6 +144,13 @@ function SettingsMenu:update(dt)
                      or love.keyboard.isDown(self._state.keybinds.interact     or "f")
                      or love.keyboard.isDown("return") or love.keyboard.isDown("space")
         local escape  = love.keyboard.isDown("escape")
+            or (self._input._joystick ~= nil
+                and self._input._joystick:isConnected()
+                and self._input._joystick:isGamepadDown("start"))
+        local _jn = _joy_nav(self._input)
+        up      = up      or _jn.up
+        down    = down    or _jn.down
+        confirm = confirm or _jn.confirm
 
         local sub_count = #_ACTION_LIST + 1
         if up and not self._prev_sub_up then
@@ -123,12 +184,42 @@ function SettingsMenu:update(dt)
     local confirm = love.keyboard.isDown("e")      or love.keyboard.isDown("f")
                  or love.keyboard.isDown("return") or love.keyboard.isDown("space")
     local escape  = love.keyboard.isDown("escape")
+    local _jn = _joy_nav(self._input)
+    up      = up      or _jn.up
+    down    = down    or _jn.down
+    left    = left    or _jn.left
+    right   = right   or _jn.right
+    confirm = confirm or _jn.confirm
+    escape  = escape
+        or (self._input._joystick ~= nil
+            and self._input._joystick:isConnected()
+            and self._input._joystick:isGamepadDown("start"))
+
+    -- Clamp: if mode changed while open and selected item is now hidden, reset to first visible
+    do
+        local vis_check = _visible_items(self._opaque, self._input._mode)
+        local sel_ok = false
+        for _, idx in ipairs(vis_check) do if idx == self.selected then sel_ok = true; break end end
+        if not sel_ok and #vis_check > 0 then self.selected = vis_check[1] end
+    end
 
     if up and not self._prev_up then
-        self.selected = ((self.selected - 2) % #ITEMS) + 1
+        local vis = _visible_items(self._opaque, self._input._mode)
+        for j, idx in ipairs(vis) do
+            if idx == self.selected then
+                self.selected = vis[((j - 2) % #vis) + 1]
+                break
+            end
+        end
     end
     if down and not self._prev_down then
-        self.selected = (self.selected % #ITEMS) + 1
+        local vis = _visible_items(self._opaque, self._input._mode)
+        for j, idx in ipairs(vis) do
+            if idx == self.selected then
+                self.selected = vis[(j % #vis) + 1]
+                break
+            end
+        end
     end
     if confirm and not self._prev_confirm then
         self:_confirm()
@@ -170,10 +261,23 @@ function SettingsMenu:_confirm()
                               or love.keyboard.isDown(self._state.keybinds.interact     or "f")
                               or love.keyboard.isDown("return") or love.keyboard.isDown("space")
         self._prev_sub_escape  = love.keyboard.isDown("escape")
+        local _jn_entry = _joy_nav(self._input)
+        self._prev_sub_up      = self._prev_sub_up      or _jn_entry.up
+        self._prev_sub_down    = self._prev_sub_down    or _jn_entry.down
+        self._prev_sub_confirm = self._prev_sub_confirm or _jn_entry.confirm
     elseif self.selected == 5 then
-        self:close()
+        if not self._opaque and self._on_save then
+            self._on_save()
+            self._saved = true
+        end
     elseif self.selected == 6 then
-        love.event.quit()
+        self:close()
+    elseif self.selected == 7 then
+        if self._on_leave then
+            self._on_leave()
+        else
+            love.event.quit()
+        end
     end
 end
 
@@ -191,9 +295,30 @@ function SettingsMenu:keypressed(key)
         return true
     end
     if _MODIFIERS[key] then return false end
+    for i, action in ipairs(_ACTION_LIST) do
+        if action ~= self._capturing and self._state.keybinds[action] == key then
+            self._shake_row   = i
+            self._shake_timer = 0.5
+            return true
+        end
+    end
     self._state:set_keybind(self._capturing, key)
     self._input._map = self._state:key_map()
     self._capturing = nil
+    return true
+end
+
+function SettingsMenu:gamepadpressed(button)
+    if button ~= "start" then return false end
+    if self._subscreen == "keybinds" and self._capturing == nil then
+        self._subscreen = nil
+        return true
+    end
+    if self._capturing ~= nil then
+        self._capturing = nil
+        return true
+    end
+    self:close()
     return true
 end
 
@@ -215,19 +340,31 @@ function SettingsMenu:draw()
         for i = 1, #_ACTION_LIST do
             local y = self._sub_btn_y0 + (i - 1) * BTN_GAP
             local img = i == self._subscreen_selected and self._img_btn_sel or self._img_btn
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(img, BTN_X, y)
-
-            local right_label
-            if self._capturing == _ACTION_LIST[i] then
-                right_label = "[press a key]"
-            else
-                right_label = "[" .. (self._state.keybinds[_ACTION_LIST[i]] or "unbound"):upper() .. "]"
+            local ty = y + (BTN_H - self._font_btn:getHeight()) / 2
+            local ox = 0
+            local row_r, row_g, row_b = 1, 1, 1
+            if self._shake_row == i and self._shake_timer > 0 then
+                ox = math.sin(self._shake_timer * 40) * 8 * (self._shake_timer / 0.5)
+                row_r, row_g, row_b = 1, 0.25, 0.25
             end
-
+            -- Label bar
+            love.graphics.setColor(row_r, row_g, row_b, 1)
+            love.graphics.draw(img, BTN_X + ox, y, 0, LABEL_SX, 1)
+            love.graphics.printf(_ACTION_LABELS[i], BTN_X + ox, ty, LABEL_W, "center")
+            -- Value bar
+            love.graphics.setColor(row_r, row_g, row_b, 1)
+            love.graphics.draw(img, BTN_X + LABEL_W + BAR_GAP + ox, y, 0, VAL_SX, 1)
+            if self._capturing == _ACTION_LIST[i] then
+                love.graphics.printf("[press a key]", BTN_X + LABEL_W + BAR_GAP + ox, ty, VAL_W, "center")
+            elseif self._state.keybinds[_ACTION_LIST[i]] then
+                love.graphics.printf(self._state.keybinds[_ACTION_LIST[i]]:upper(), BTN_X + LABEL_W + BAR_GAP + ox, ty, VAL_W, "center")
+            else
+                love.graphics.setFont(self._font_vol)
+                local vty = y + (BTN_H - self._font_vol:getHeight()) / 2
+                love.graphics.printf("UNBOUND", BTN_X + LABEL_W + BAR_GAP + ox, vty, VAL_W, "center")
+                love.graphics.setFont(self._font_btn)
+            end
             love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.print(_ACTION_LABELS[i], BTN_X + 10, y + (BTN_H - self._font_btn:getHeight()) / 2)
-            love.graphics.printf(right_label, BTN_X, y + (BTN_H - self._font_btn:getHeight()) / 2, BTN_W - 10, "right")
         end
 
         local ry  = self._sub_btn_y0 + #_ACTION_LIST * BTN_GAP
@@ -251,8 +388,10 @@ function SettingsMenu:draw()
     end
 
     love.graphics.setFont(self._font_btn)
-    for i = 1, #ITEMS do
-        local y   = self._btn_y0 + (i - 1) * BTN_GAP
+    local vis    = _visible_items(self._opaque, self._input._mode)
+    local btn_y0 = H / 2 - (#vis - 1) * BTN_GAP / 2 - BTN_H / 2
+    for j, i in ipairs(vis) do
+        local y   = btn_y0 + (j - 1) * BTN_GAP
         local img = i == self.selected and self._img_btn_sel or self._img_btn
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(img, BTN_X, y)
@@ -269,7 +408,10 @@ function SettingsMenu:draw()
             love.graphics.print("Music Volume", BTN_X + 10, ty)
             love.graphics.printf("< " .. tostring(self._state.music_volume) .. "% >", BTN_X, ty, BTN_W - 10, "right")
         else
-            love.graphics.printf((i == 6 and not self._opaque) and "Main Menu" or ITEMS[i], BTN_X, ty, BTN_W, "center")
+            local label = (i == 5 and self._saved) and "Saved!"
+                       or (i == 7 and not self._opaque) and "Main Menu"
+                       or ITEMS[i]
+            love.graphics.printf(label, BTN_X, ty, BTN_W, "center")
         end
     end
 

@@ -15,6 +15,7 @@ local ColorReplace   = require("lua/game/shaders/color_replace")
 local WallPattern    = require("lua/game/shaders/wall_pattern")
 local Sound          = require("lua/game/sound")
 local WaterDrone     = require("lua/game/water_drone")
+local UI             = require("lua/game/ui")
 
 -- Map layout: cashier room (north) / separator row / store room (grows south).
 -- The separator runs east-west, so passage cols are fixed regardless of store depth.
@@ -89,6 +90,11 @@ local function spawn_cooldown(gs)
     return COOLDOWN_TIERS[gs.cooldown_level].cooldown
 end
 
+local function customer_walk_speed(gs)
+    if gs.cooldown_level == 0 then return 80 end
+    return COOLDOWN_TIERS[gs.cooldown_level].walk_speed
+end
+
 local SW = 1280
 local SH = 720
 
@@ -139,6 +145,8 @@ function StoreScene.new(game_state, input, scene_manager, is_new_game)
     self.scene_manager      = scene_manager
     self._is_new_game       = is_new_game
     self._initialized       = false
+    self._bg_list  = {"bg1", "bg2", "bg3", "bg4"}
+    self._bg_index = math.random(4)
     self._last_active_slot  = nil
     self._hover_tile        = nil
     self._last_active_rows  = nil
@@ -148,10 +156,19 @@ end
 
 function StoreScene:on_enter()
     local gs = self.game_state
+    Sound.stop_music("menu")
 
     if not self._initialized then
         self._initialized = true
         self:_setup_store()
+    end
+
+    local _bg_playing = false
+    for _, name in ipairs(self._bg_list) do
+        if Sound.is_music_playing(name) then _bg_playing = true; break end
+    end
+    if not _bg_playing then
+        Sound.fade_music(self._bg_list[self._bg_index], 1, 2)
     end
 
     -- Patch player.active_slot so item interact() calls use 3D proximity
@@ -215,6 +232,8 @@ function StoreScene:update(dt)
 
     -- Sync 3D move speed from game state
     p.move_speed = gs.player.speed / BASE_PX_SPEED * BASE_3D_SPEED
+    -- Propagate joystick so player3d's private input can poll gamepad.
+    p.input._joystick = self.input._joystick
 
     -- Movement + collision
     local ox, oy = p.x, p.y
@@ -289,6 +308,7 @@ function StoreScene:update(dt)
         if cd == 0 then
             local cfg = self:_next_customer_cfg()
             if cfg then
+                cfg.walk_speed = customer_walk_speed(gs)
                 self._customer:show(cfg)
                 self._cust_3d_x       = CASHIER_ENTRY_X
                 self._cust_anim       = "in"
@@ -298,6 +318,7 @@ function StoreScene:update(dt)
         elseif self._spawn_timer:update(dt) then
             local cfg = self:_next_customer_cfg()
             if cfg then
+                cfg.walk_speed = customer_walk_speed(gs)
                 self._customer:show(cfg)
                 self._cust_3d_x       = CASHIER_ENTRY_X
                 self._cust_anim       = "in"
@@ -318,6 +339,11 @@ function StoreScene:update(dt)
     -- Action input (E / F — updated globally by love.update before this)
     if self.input:pressed("pick_up_down") then self:_handle_pick_up_down() end
     if self.input:pressed("interact")     then self:_handle_interact()      end
+
+    if not Sound.is_music_playing(self._bg_list[self._bg_index]) then
+        self._bg_index = (self._bg_index % #self._bg_list) + 1
+        Sound.fade_music(self._bg_list[self._bg_index], 1, 2)
+    end
 end
 
 function StoreScene:_handle_pick_up_down()
@@ -536,8 +562,7 @@ function StoreScene:_draw_hud()
     local hud    = self:_hud_labels()
 
     -- Currency: top-left
-    love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.print("$" .. gs.currency, 10, 10)
+    UI.draw_currency_bubble(gs.currency, 10, 10, love.graphics.getFont())
 
     -- Held item: bottom-right corner (FPS-style)
     if player.held_item then
@@ -559,17 +584,28 @@ function StoreScene:_draw_hud()
         end
     end
 
-    -- Context labels: bottom-left, stacked upward
+    -- Context labels: bottom-left
     local labels = {}
     if hud.slot then labels[#labels + 1] = hud.slot end
     if hud.f    then labels[#labels + 1] = hud.f    end
     if hud.e    then labels[#labels + 1] = hud.e    end
 
-    local ly = 700
-    love.graphics.setColor(1, 1, 1, 0.9)
-    for _, label in ipairs(labels) do
-        love.graphics.print(label, 10, ly)
-        ly = ly - 20
+    UI.draw_hud_box(labels, love.graphics.getFont())
+
+    love.graphics.setColor(0, 0, 0, 1)
+    local box_h = #labels * 20 + 28
+    local y = 720 - 10 - box_h + 14
+    for _, entry in ipairs(labels) do
+        if type(entry) == "table" and entry.icon then
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(A[entry.icon], 10 + 14, math.floor(y + (20 - 16) / 2))
+            love.graphics.setColor(0, 0, 0, 1)
+            love.graphics.print(entry.text, 10 + 14 + 16 + 2, y)
+        else
+            love.graphics.setColor(0, 0, 0, 1)
+            love.graphics.print(entry, 10 + 14, y)
+        end
+        y = y + 20
     end
 
     -- Customer dialog: shown when player is in cashier room

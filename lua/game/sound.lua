@@ -13,11 +13,19 @@ local _EVENT_NAMES = {
     "water_plant",
     "plant_ready",
     "clone_success",
-"shop_navigate",
+    "shop_navigate",
     "shop_buy",
     "fail",
-"menu_navigate",
+    "menu_navigate",
     "menu_confirm",
+    "dismiss_customer",
+    "dialogue_skip",
+    "dialogue_advance",
+    "sell_plant",
+    "discard_plant",
+    "open_shop",
+    "shop_close",
+    "clone_fail",
 }
 
 function Sound.load()
@@ -41,6 +49,7 @@ function Sound.load()
             fade_target = 1,
             fade_rate = 0,
             stop_on_done = false,
+            playing_intent = true,
         }
         menu_src:play()
     end
@@ -54,8 +63,27 @@ function Sound.load()
             fade_target = 1,
             fade_rate = 0,
             stop_on_done = false,
+            playing_intent = false,
         }
         -- bg track starts stopped and silent; do not call play
+    end
+    local _bg_names = { "bg1", "bg2", "bg3", "bg4" }
+    local _bg_files = {
+        "assets/music/background.mp3",
+        "assets/music/background2.mp3",
+        "assets/music/background3.mp3",
+        "assets/music/background4.mp3",
+    }
+    for i, name in ipairs(_bg_names) do
+        if love.filesystem.getInfo(_bg_files[i]) then
+            local src = love.audio.newSource(_bg_files[i], "stream")
+            src:setLooping(false)
+            src:setVolume(0)
+            _music_tracks[name] = {
+                src = src, fade_vol = 1, fade_target = 1,
+                fade_rate = 0, stop_on_done = false, playing_intent = false,
+            }
+        end
     end
 end
 
@@ -110,6 +138,7 @@ function Sound.update(dt)
                 entry.fade_rate = 0
                 if entry.stop_on_done then
                     entry.src:stop()
+                    entry.playing_intent = false
                     entry.stop_on_done = false
                 end
             end
@@ -126,6 +155,7 @@ function Sound.play_music(name)
         entry.stop_on_done = false
         entry.src:setVolume(_music_volume)
         entry.src:play()
+        entry.playing_intent = true
     end
 end
 
@@ -136,6 +166,7 @@ function Sound.fade_music(name, target_vol, duration)
             entry.fade_vol = 0
             entry.src:setVolume(0)
             entry.src:play()
+            entry.playing_intent = true
         end
         entry.fade_target = target_vol
         entry.fade_rate = (target_vol - entry.fade_vol) / duration
@@ -147,6 +178,7 @@ function Sound.stop_music(name)
     local entry = _music_tracks[name]
     if entry then
         entry.src:stop()
+        entry.playing_intent = false
         entry.fade_vol = 1
         entry.fade_target = 1
         entry.fade_rate = 0
@@ -158,6 +190,46 @@ function Sound.is_music_playing(name)
     local entry = _music_tracks[name]
     if entry == nil then return false end
     return entry.src:isPlaying()
+end
+
+function Sound.play_random_music(names, fade_duration)
+    -- Filter to only names that exist in _music_tracks
+    local valid = {}
+    for _, name in ipairs(names) do
+        if _music_tracks[name] then
+            valid[#valid + 1] = name
+        end
+    end
+    if #valid == 0 then return end
+
+    -- Stop any of the valid tracks that are currently playing
+    for _, name in ipairs(valid) do
+        local entry = _music_tracks[name]
+        if entry.src:isPlaying() then
+            entry.src:stop()
+            entry.playing_intent = false
+            entry.fade_vol = 1
+            entry.fade_target = 1
+            entry.fade_rate = 0
+            entry.stop_on_done = false
+        end
+    end
+
+    -- Pick one at random and fade it in
+    local picked = valid[math.random(#valid)]
+    Sound.fade_music(picked, 1, fade_duration)
+end
+
+function Sound.on_focus(focused)
+    if not love.audio then return end
+    if focused then
+        for _, entry in pairs(_music_tracks) do
+            if entry.playing_intent == true and entry.src:isPlaying() == false then
+                entry.src:setVolume(entry.fade_vol * _music_volume)
+                entry.src:play()
+            end
+        end
+    end
 end
 
 return Sound
