@@ -59,7 +59,7 @@ do
     end)
     local store_scene = ctx.sm.current
     local idol = GoldenIdol.new()
-    ctx.gs.store.slots[1].item = idol
+    ctx.gs.store:all_slots()[1].item = idol
 
     store_scene:on_enter()   -- triggers _wire_golden_idol
     assert(idol.win_scene_factory ~= nil,
