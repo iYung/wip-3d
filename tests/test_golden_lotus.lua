@@ -31,7 +31,7 @@ local function face_slot(ctx, slot_px, elapsed)
     if p.y < 4.0 then
         elapsed = nav_to(ctx, 6.0, 6.0, elapsed)
     end
-    -- Stand 1.5 rows south of slot row 1 (y=6.0) so the look-ray hits at t=1.0 (HOVER_MIN_T).
+    -- Stand 1.5 rows south of slot row 1 (y=6.0) so the look-ray hits at t=1.0 (above HOVER_MIN_T=0.5).
     elapsed = nav_to(ctx, slot_px, 6.0, elapsed)
     if p.y < 6.0 then p.y = 6.0 end
     p.angle = -math.pi / 2
