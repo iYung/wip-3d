@@ -728,47 +728,56 @@ function StoreScene:_hud_labels()
     local slot_item = slot and slot.item
     local in_cash   = p.y <= CASHIER_THRESH and not self._cust_anim
 
+    local e_key  = (self.input:key_for("pick_up_down") or "e"):upper()
+    local f_key  = (self.input:key_for("interact")     or "f"):upper()
+    local e_icon = self.input:icon_key_for("pick_up_down")
+    local f_icon = self.input:icon_key_for("interact")
+    local function make_label(icon_key, key_text, action_text)
+        if icon_key then return { icon = icon_key, text = ": " .. action_text } end
+        return key_text .. ": " .. action_text
+    end
+
     local slot_label = not in_cash and slot_item and slot_item.name
                        and ("HOVER: " .. slot_item.name:upper())
 
     local e_label
     if in_cash and self._customer:arrived() then
-        e_label = "E: DISMISS"
+        e_label = make_label(e_icon, e_key, "DISMISS")
     elseif not in_cash then
         if held and slot and not slot_item then
-            e_label = "E: PUT DOWN"
+            e_label = make_label(e_icon, e_key, "PUT DOWN")
         elseif not held and slot_item and slot_item.carriable then
-            e_label = "E: PICK UP"
+            e_label = make_label(e_icon, e_key, "PICK UP")
         end
     end
 
     local f_label
     if in_cash and self._customer and self._customer.state == "talking_after" then
         if not self._customer:line_complete() then
-            f_label = "F: SKIP"
+            f_label = make_label(f_icon, f_key, "SKIP")
         else
-            f_label = "F: CONTINUE"
+            f_label = make_label(f_icon, f_key, "CONTINUE")
         end
     elseif in_cash and self._customer:arrived() then
         if self._customer:on_last_message() then
             if held and held.plant_type == self._customer.plant_type and held.stage == 3 then
-                f_label = "F: SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")"
+                f_label = make_label(f_icon, f_key, "SELL TO CUSTOMER ($" .. plant_sell_value(held) .. ")")
             end
         elseif not self._customer:line_complete() then
-            f_label = "F: SKIP"
+            f_label = make_label(f_icon, f_key, "SKIP")
         else
-            f_label = "F: NEXT"
+            f_label = make_label(f_icon, f_key, "NEXT")
         end
     elseif not in_cash then
         if not held and slot_item and slot_item.buy_scene_factory then
-            f_label = "F: OPEN SHOP"
+            f_label = make_label(f_icon, f_key, "OPEN SHOP")
         elseif held and held.name == "Watering Can" and slot_item and slot_item.plant_type then
-            f_label = "F: WATER"
+            f_label = make_label(f_icon, f_key, "WATER")
         elseif held and held.name == "Grafter"
                and slot_item and slot_item.stage == 3 then
-            f_label = "F: CLONE"
+            f_label = make_label(f_icon, f_key, "CLONE")
         elseif held and held.sellable ~= false and slot_item and slot_item.is_garbage_bin then
-            f_label = "F: DISCARD"
+            f_label = make_label(f_icon, f_key, "DISCARD")
         end
     end
 

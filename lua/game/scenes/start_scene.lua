@@ -58,7 +58,7 @@ function StartScene:update(dt)
         self.selected = (self.selected % #ITEMS) + 1
         Sound.play("menu_navigate")
     end
-    if self.input:pressed("menu_confirm") then
+    if self.input:pressed("interact") then
         self:_confirm()
     end
 end
