@@ -28,6 +28,10 @@ for pt = 1, 6 do
     end
 end
 
+A.golden_idol = img("assets/golden_idol.png")
+A.win_scene   = img("assets/win_scene.png")
+A.coin        = img("assets/coin.png")
+
 A.watering_can  = img("assets/watering_can.png")
 A.grafter_empty  = img("assets/grafter_empty.png")
 A.grafter_loaded = img("assets/grafter_loaded.png")
@@ -70,10 +74,13 @@ A.water_drone2 = try_img("assets/water_drone2.png")
 A.wall_pattern = try_img("assets/wall_pattern.png")
 if A.wall_pattern then A.wall_pattern:setWrap("repeat", "repeat") end
 
-A.coin  = img("assets/coin.png")
-A.btn_a = img("assets/btn_a.png")
-A.btn_b = img("assets/btn_b.png")
-A.btn_y = img("assets/btn_y.png")
+A.btn_a      = try_img("assets/btn_a.png")
+A.btn_b      = try_img("assets/btn_b.png")
+A.btn_y      = try_img("assets/btn_y.png")
+A.dpad_up    = try_img("assets/dpad_up.png")
+A.dpad_down  = try_img("assets/dpad_down.png")
+A.dpad_left  = try_img("assets/dpad_left.png")
+A.dpad_right = try_img("assets/dpad_right.png")
 
 A.accessories = {}
 function A.load_accessory(name)

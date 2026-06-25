@@ -112,6 +112,7 @@ function love.load()
     settings_menu = SettingsMenu.new(ss, input, nil, nil)
     scene_manager:switch(StartScene.new(gs, input, scene_manager, function() settings_menu:open(true) end))
     Sound.load()
+    love.mouse.setVisible(false)
 end
 
 function love.update(dt)

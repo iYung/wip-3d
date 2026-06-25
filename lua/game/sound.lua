@@ -171,6 +171,7 @@ function Sound.fade_music(name, target_vol, duration)
         entry.fade_target = target_vol
         entry.fade_rate = (target_vol - entry.fade_vol) / duration
         entry.stop_on_done = (target_vol == 0)
+        entry.playing_intent = (target_vol > 0)
     end
 end
 
@@ -224,7 +225,7 @@ function Sound.on_focus(focused)
     if not love.audio then return end
     if focused then
         for _, entry in pairs(_music_tracks) do
-            if entry.playing_intent == true and entry.src:isPlaying() == false then
+            if entry.playing_intent == true and not entry.src:isPlaying() then
                 entry.src:setVolume(entry.fade_vol * _music_volume)
                 entry.src:play()
             end

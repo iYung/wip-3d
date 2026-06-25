@@ -120,8 +120,8 @@ do
         end
     end
 
-    assert(#sage_entries == 4,
-        "expected 4 Sage chapters, got " .. #sage_entries)
+    assert(#sage_entries == 5,
+        "expected 5 Sage chapters, got " .. #sage_entries)
     for i, entry in ipairs(sage_entries) do
         assert(entry.chapter == i,
             "expected Sage chapter=" .. i .. ", got " .. tostring(entry.chapter))
@@ -132,7 +132,7 @@ do
     end
     assert(sage_entries[1].trigger.count == 0,
         "expected Sage chapter 1 trigger count=0 (guaranteed early), got " .. tostring(sage_entries[1].trigger.count))
-    print("PASS: Sage 4-chapter arc present in customer_scripts with correct structure")
+    print("PASS: Sage 5-chapter arc present in customer_scripts with correct structure")
 end
 
 -- Test 8: make_full_text returns raw message, no name prefix

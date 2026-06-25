@@ -45,6 +45,7 @@ Completed step files are moved to [`archive/`](archive/).
 | `plant.lua` | 6 types, 3 stages each; per-type cooldown from `plant_data`; stage PNGs rendered as-is (no tinting); yellow bubble via `draw_bubble()` |
 | `grafter.lua` | Clones a stage-3 plant (resets original to stage 1, stores clone); `unload()` method handles image swap back to empty; orange PNG (empty) / yellow PNG (loaded) |
 | `sell_bin.lua` | Sell station; F while holding any sellable item sells it for currency; red PNG |
+| `golden_idol.lua` | Collectible end-game item; `interact()` calls `win_scene_factory()` and switches to WinScene; `win_scene_factory` is wired by StoreScene on enter |
 
 ### Scenes (`lua/game/scenes/`)
 
@@ -54,6 +55,7 @@ Completed step files are moved to [`archive/`](archive/).
 | `store_scene.lua` | Main loop — player moves, camera follows on x then clamps to world bounds, pick up/interact handled here; cashier zone logic (F skips reveal → advances → sells → talking_after → advances after_messages → walks out; E dismisses); `esc_opens_settings = true` so main.lua intercepts Escape for the settings menu; unified parallax tiles `store_bg_*` across full world width |
 | `buy_scene.lua` | Carousel UI — 10 items (6 plants + Watering Can + Grafter + Expand Slot + Heat Lamps); A/D cycle, F buy, E cancel; `esc_opens_settings = true` |
 | `settings_menu.lua` | Pause overlay — 6 buttons: Fullscreen/Window, SFX Volume, Music Volume, Keybinds, Exit Settings, Leave Game; keybinds sub-screen captures a single key press; loads assets directly (not via `A.`); delegates all mutations to `SettingsState` |
+| `win_scene.lua` | End-game screen shown when the Golden Idol is bought; displays win background shader, play-time elapsed, and a cancel hint to return to StoreScene |
 
 ### Data (`lua/game/data/`)
 
@@ -134,6 +136,8 @@ See open questions in `game-design.md`.
 
 ### Recently completed
 
+- **wip-parity-7** — Nineteen gaps closed. Golden Idol item (`golden_idol.lua`) and Win scene (`win_scene.lua`) added as the game-ending path: buying the idol triggers `WinScene` via `win_scene_factory` wired in `StoreScene._setup_store`; WinScene displays elapsed play time and a cancel hint over a `win_bg.glsl` rotating background. `plant_data.lua` rebalanced (Grass $0/$3, Rose $20/$20, Tulip $75/$50, Daisy $300/$200, Golden Lotus $700/$400 with 30/60-second cooldowns). `growth_tiers.lua` expanded from 3 to 6 tiers. `customer_scripts.lua` expanded: chef_brio (ch1–4), dj_frogga (ch1–2), wallace (ch1–3), mayor_bloom ch4, mechafrog ch4, dottie ch4, agent_frogsby ch4, sage ch5, romeo ch4, glen ch4 added; The Collector updated to use the "anon" accessory. `game_state.lua` now tracks `play_time` and `first_idol_at`. `store_scene.lua` gained `_last_script_id` dedup (no same scripted customer twice in a row). `settings_menu.lua` hides "Leave Game" when opened from the start screen (opaque mode). `customer.lua` typewriter word-wrap flicker fixed. `pc_store.lua` renamed to "Laptop". Grafter sound `"clone_fail"` → `"fail"`. `assets.lua` adds coin/golden_idol/win_scene images, heat_lamp loop frames 1–6, and gamepad icons via `try_img`. New assets: heat_lamp frames 4–6, gamepad icons (btn_a/b/y, dpad), anon/chef_fit/neckbeard accessories, `win_bg.glsl` shader. `sound.lua` gains `playing_intent` + `Sound.on_focus` for music resume on window focus. `main.lua`: OS cursor hidden, `love.focus` handler wired.
+
 - **wip-parity-6** — Twelve gaps closed: `customer_scripts.lua` copied from wip verbatim (40 entries — adds chef_brio ch1-4, wallace ch1-4, mayor_bloom ch4, mechafrog ch4, dottie ch4, agent_frogsby ch4, romeo ch4, glen ch4); `growth_tiers.lua` expanded from 3 to 6 tiers (max cost=500, mult=3.00); `plant_data.lua` copied from wip (rebalanced costs/sells — Grass $0/$3, Cactus $5/$8, Golden Lotus $700/$400); `cooldown_tiers.lua` gains `walk_speed` per tier (100/120/150 px/s); `assets.lua` adds A.coin/btn_a/btn_b/btn_y and heat_lamps loop extended to 6; new `lua/game/ui.lua` (`draw9`, `draw_hud_box`, `draw_currency_bubble`); `customer.lua` migrated from local `draw9` to `UI.draw9`; `sound.lua` gains `playing_intent` tracking, bg1–bg4 non-looping tracks, `play_random_music`, `on_focus`, and 8 new `_EVENT_NAMES`; `lua/core/input.lua` replaced verbatim from wip (`_PAD_LABELS`, gamepad polling, `key_for`, `icon_key_for`, `_mode`); `lua/game/input.lua` adds `cancel = {"i"}`; `store_scene.lua` adds bg music rotation, `customer_walk_speed` helper, and `UI.draw_currency_bubble`/`draw_hud_box` for HUD; `buy_scene.lua` gets cancel key, Intercom moved to position 9, coin-icon price display, HUD overlay, and `ColorReplace` secondary color; `settings_menu.lua` gains Save Game button, `_visible_items` filtering, `_joy_nav` helper, shake feedback on duplicate key, and `cancel` action in keybinds; `main.lua` adds `love.gamepadpressed`, `love.joystickadded`, `love.joystickremoved`, `love.focus`; image assets coin/btn_a/btn_b/btn_y and music files background2-4.mp3 added; test files updated to reflect new catalogue indices and plant prices
 
 - **Hover tile min distance** — `HOVER_MIN_T` raised from 0.5 → 1.0 grid units so the hovered tile is never highlighted when closer than 1 unit to the player; `test_hover_distance.lua` added to cover the new exclusion zone and the exact-boundary case
@@ -175,5 +179,4 @@ See open questions in `game-design.md`.
 
 ## Cut / Not Yet Built
 
-- Win condition or idle loop
 - Customer patience timer (customer never leaves until served)

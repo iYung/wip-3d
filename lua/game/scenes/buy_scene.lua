@@ -3,6 +3,7 @@ local Plant       = require("lua/game/items/plant")
 local WateringCan = require("lua/game/items/watering_can")
 local Grafter     = require("lua/game/items/grafter")
 local Intercom    = require("lua/game/items/intercom")
+local GoldenIdol  = require("lua/game/items/golden_idol")
 local config      = require("lua/game/config")
 local PLANT_DATA  = require("lua/game/data/plant_data")
 local A           = require("lua/game/assets")
@@ -79,6 +80,7 @@ CATALOGUE[#CATALOGUE + 1] = {
     kind        = "drone",
     image       = A.water_drone,
 }
+CATALOGUE[#CATALOGUE + 1] = { label = "Golden Idol", description = "A shiny golden idol.\nPurely decorative.", cost = 4000, kind = "golden_idol", image = A.golden_idol }
 
 local PREVIEW_SIZE = 160
 local CENTER_X     = 640
@@ -111,6 +113,7 @@ function BuyScene:on_enter() end
 function BuyScene:on_exit() end
 
 function BuyScene:update(dt)
+    self.game_state.play_time = self.game_state.play_time + dt
     local input = self.input
     local n     = #CATALOGUE
 
@@ -206,6 +209,11 @@ function BuyScene:_confirm()
     elseif kind == "expand" then
         gs.store:grow()
         Sound.play("shop_buy")
+    elseif kind == "golden_idol" then
+        gs.first_idol_at    = gs.first_idol_at or gs.play_time
+        gs.player.held_item = GoldenIdol.new()
+        Sound.play("shop_buy")
+        self.scene_manager:switch(self.store_scene)
     end
 end
 
