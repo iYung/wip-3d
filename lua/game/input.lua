@@ -7,6 +7,5 @@ return Input.new({
     move_right   = {"right", "d"},
     pick_up_down = {"e"},
     interact     = {"f"},
-    menu_confirm = {"return", "space", "f"},
     cancel       = {"i"},
 })

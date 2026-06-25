@@ -303,7 +303,13 @@ function SettingsMenu:keypressed(key)
         end
     end
     self._state:set_keybind(self._capturing, key)
-    self._input._map = self._state:key_map()
+    for action, key in pairs(self._state.keybinds) do
+        if key ~= nil then
+            self._input._map[action] = {key}
+        else
+            self._input._map[action] = nil
+        end
+    end
     self._capturing = nil
     return true
 end

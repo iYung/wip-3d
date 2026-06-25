@@ -64,16 +64,16 @@ s:update(0)
 assert(s.selected == 4, "move_up from 1 should wrap to 4, got " .. s.selected)
 print("PASS: move_up wrap 1->4")
 
--- Test 8: menu_confirm on item 4 (Exit) calls love.event.quit
-local s2 = make_scene("menu_confirm")
+-- Test 8: interact on item 4 (Exit) calls love.event.quit
+local s2 = make_scene("interact")
 s2.selected = 4
 _quit_called = false
 s2:update(0)
 assert(_quit_called, "confirming Exit (item 4) should call love.event.quit")
 print("PASS: confirm Exit calls quit")
 
--- Test 9: menu_confirm on item 3 (Settings) calls open_settings callback
-local s3 = make_scene("menu_confirm")
+-- Test 9: interact on item 3 (Settings) calls open_settings callback
+local s3 = make_scene("interact")
 s3.selected = 3
 _settings_opened = false
 s3:update(0)
