@@ -81,7 +81,7 @@ PNG files for all sprites — player variants, plants (18 total: 6 types × 3 st
 | Player size | 6U × 12U (120×240) |
 | All items | 6U × 6U (120×120) |
 | Customer bubble | 6U × 6U (120×120) — matches plant sprite size |
-| Plant bubble | 3U × 3U (60×60) |
+| Plant bubble | 7U × 7U (140×140) |
 | Initial slots | 10 |
 | Player speed | 220 px/s (base); upgradeable |
 | Camera lerp | 0.85 (smooth follow on x, locked y) |
