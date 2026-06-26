@@ -31,7 +31,7 @@ function Plant.new(plant_type)
     ss:set("1")
     self.sprite = ss
 
-    self.bubble         = Sprite.new(0, 0, 6 * U, 6 * U)  -- 120x120
+    self.bubble         = Sprite.new(0, 0, 7 * U, 7 * U)  -- 140x140
     self.bubble.image   = A.plant_bubble
     self.bubble.color   = {1, 1, 1, 1}
     self.bubble.visible = false
@@ -72,7 +72,7 @@ function Plant:draw_bubble()
     local active = self.sprite:_active()
     if active then
         self.bubble.x = active.x + active.width / 2 - self.bubble.width / 2
-        self.bubble.y = active.y - self.bubble.height - 10
+        self.bubble.y = active.y - self.bubble.height + 20
     end
     self.bubble:draw()
 end

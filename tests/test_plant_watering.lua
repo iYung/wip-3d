@@ -51,4 +51,15 @@ do
     print("PASS: plant: water() returns true advancing stage 2 to 3")
 end
 
+-- ── Test 5: bubble is sized 7 * U ────────────────────────────────────────────
+do
+    local U = require("lua/game/config").U
+    local p = Plant.new(1)
+    assert(p.bubble.width  == 7 * U,
+        "bubble width should be 7*U=" .. (7*U) .. ", got " .. tostring(p.bubble.width))
+    assert(p.bubble.height == 7 * U,
+        "bubble height should be 7*U=" .. (7*U) .. ", got " .. tostring(p.bubble.height))
+    print("PASS: plant: bubble size is 7 * U")
+end
+
 print("ALL TESTS PASSED")
